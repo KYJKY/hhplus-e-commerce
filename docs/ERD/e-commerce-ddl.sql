@@ -130,9 +130,6 @@ CREATE TABLE point_accounts
   PRIMARY KEY (id)
 ) COMMENT '포인트 계정';
 
-ALTER TABLE point_accounts
-  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
-
 CREATE TABLE point_transactions
 (
   id               BIGINT        NOT NULL AUTO_INCREMENT COMMENT '포인트 거래 ID',
@@ -226,9 +223,6 @@ CREATE TABLE user_profiles
   PRIMARY KEY (id)
 ) COMMENT '유저 프로필';
 
-ALTER TABLE user_profiles
-  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
-
 CREATE TABLE users
 (
   id             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '유저 ID',
@@ -247,11 +241,6 @@ ALTER TABLE users
 
 ALTER TABLE users
   ADD CONSTRAINT UQ_email UNIQUE (email);
-
-ALTER TABLE user_profiles
-  ADD CONSTRAINT FK_users_TO_user_profiles
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
 
 ALTER TABLE user_address
   ADD CONSTRAINT FK_user_profiles_TO_user_address
@@ -328,11 +317,6 @@ ALTER TABLE order_items
     FOREIGN KEY (product_option_id)
     REFERENCES product_options (id);
 
-ALTER TABLE point_accounts
-  ADD CONSTRAINT FK_users_TO_point_accounts
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
-
 ALTER TABLE point_transactions
   ADD CONSTRAINT FK_users_TO_point_transactions
     FOREIGN KEY (user_id)
@@ -357,3 +341,13 @@ ALTER TABLE data_transmissions
   ADD CONSTRAINT FK_orders_TO_data_transmissions
     FOREIGN KEY (order_id)
     REFERENCES orders (id);
+
+ALTER TABLE point_accounts
+  ADD CONSTRAINT FK_users_TO_point_accounts
+    FOREIGN KEY (user_id)
+    REFERENCES users (id);
+
+ALTER TABLE user_profiles
+  ADD CONSTRAINT FK_users_TO_user_profiles
+    FOREIGN KEY (user_id)
+    REFERENCES users (id);
