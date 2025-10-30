@@ -1,0 +1,7 @@
+{
+  "transactionId": 1001,
+  "userId": 100,
+  "amount": 50000,
+  "balanceAfter": 550000,
+  "chargedAt": "2025-01-31T10:00:00Z"
+}

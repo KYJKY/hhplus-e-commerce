@@ -1,0 +1,113 @@
+openapi: 3.0.3
+
+info:
+  title: E-Commerce API
+  version: 1.0.0
+  description: |
+    이커머스 백엔드 시스템 REST API
+
+    ## 개요
+    이 API는 의류 판매 이커머스의 핵심 기능을 제공합니다.
+
+    ## 주요 기능
+    - **상품 관리**: 상품 조회, 재고 확인, 인기 상품 통계
+    - **주문/결제**: 장바구니, 주문 생성, 포인트 결제, 쿠폰 적용
+    - **포인트 시스템**: 충전, 사용, 잔액 조회
+    - **쿠폰 시스템**: 선착순 발급, 유효성 검증
+
+    ## 기술 스택
+    - 언어: TypeScript
+    - 프레임워크: NestJS
+    - 데이터베이스: MySQL 8.0
+
+    ## 관련 문서
+    - [요구사항 문서](../requirements/)
+    - [시퀀스 다이어그램](../sequence-diagram/)
+    - [ERD](../ERD/)
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: 로컬 개발 서버
+  - url: http://localhost:4010
+    description: Mock API Server (Prism)
+    
+tags:
+  - name: Product
+    description: 상품 관리 API
+  - name: Order
+    description: 주문 관리 API
+  - name: Payment
+    description: 포인트 관리 API
+  - name: Coupon
+    description: 쿠폰 관리 API
+  - name: Cart
+    description: 장바구니 API
+  - name: User
+    description: 사용자 관리 API
+
+paths:
+  # Product APIs
+  /products:
+    $ref: './paths/products.yaml#/~1products'
+  /products/{productId}:
+    $ref: './paths/products.yaml#/~1products~1{productId}'
+  /products/{productId}/options:
+    $ref: './paths/products.yaml#/~1products~1{productId}~1options'
+  /products/popular:
+    $ref: './paths/products.yaml#/~1products~1popular'
+
+  # Order APIs
+  /orders:
+    $ref: './paths/orders.yaml#/~1orders'
+  /orders/{orderId}:
+    $ref: './paths/orders.yaml#/~1orders~1{orderId}'
+  /orders/{orderId}/items:
+    $ref: './paths/orders.yaml#/~1orders~1{orderId}~1items'
+
+  # Payment APIs
+  /payments/charge:
+    $ref: './paths/payments.yaml#/~1payments~1charge'
+  /payments/balance:
+    $ref: './paths/payments.yaml#/~1payments~1balance'
+  /payments/transactions:
+    $ref: './paths/payments.yaml#/~1payments~1transactions'
+
+  # Coupon APIs
+  /coupons/issue:
+    $ref: './paths/coupons.yaml#/~1coupons~1issue'
+  /coupons/my:
+    $ref: './paths/coupons.yaml#/~1coupons~1my'
+  /coupons/{couponId}:
+    $ref: './paths/coupons.yaml#/~1coupons~1{couponId}'
+  /coupons/types:
+    $ref: './paths/coupons.yaml#/~1coupons~1types'
+
+  # Cart APIs
+  /cart:
+    $ref: './paths/cart.yaml#/~1cart'
+  /cart/items:
+    $ref: './paths/cart.yaml#/~1cart~1items'
+  /cart/items/{itemId}:
+    $ref: './paths/cart.yaml#/~1cart~1items~1{itemId}'
+
+  # User APIs
+  /users/me:
+    $ref: './paths/users.yaml#/~1users~1me'
+  /users/me/addresses:
+    $ref: './paths/users.yaml#/~1users~1me~1addresses'
+  /users/me/addresses/{addressId}:
+    $ref: './paths/users.yaml#/~1users~1me~1addresses~1{addressId}'
+
+components:
+  schemas:
+    # Common schemas
+    Error:
+      $ref: './schemas/common.yaml#/components/schemas/Error'
+    PaginationRequest:
+      $ref: './schemas/common.yaml#/components/schemas/PaginationRequest'
+    PaginationResponse:
+      $ref: './schemas/common.yaml#/components/schemas/PaginationResponse'

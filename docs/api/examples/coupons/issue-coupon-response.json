@@ -1,0 +1,9 @@
+{
+  "couponId": 101,
+  "couponName": "신규 가입 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 5000,
+  "status": "AVAILABLE",
+  "expiresAt": "2025-02-28T23:59:59Z",
+  "issuedAt": "2025-01-31T10:00:00Z"
+}

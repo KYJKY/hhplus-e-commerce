@@ -1,0 +1,61 @@
+{
+  "products": [
+    {
+      "productId": 1,
+      "productName": "기본 라운드 티셔츠",
+      "thumbnailUrl": "https://example.com/images/product1.jpg",
+      "minPrice": 29000,
+      "maxPrice": 35000,
+      "viewCount": 1523,
+      "categories": [
+        {
+          "categoryId": 1,
+          "categoryName": "상의"
+        },
+        {
+          "categoryId": 10,
+          "categoryName": "티셔츠"
+        }
+      ]
+    },
+    {
+      "productId": 2,
+      "productName": "슬림핏 청바지",
+      "thumbnailUrl": "https://example.com/images/product2.jpg",
+      "minPrice": 59000,
+      "maxPrice": 69000,
+      "viewCount": 2341,
+      "categories": [
+        {
+          "categoryId": 2,
+          "categoryName": "하의"
+        },
+        {
+          "categoryId": 20,
+          "categoryName": "청바지"
+        }
+      ]
+    },
+    {
+      "productId": 3,
+      "productName": "후드 집업",
+      "thumbnailUrl": "https://example.com/images/product3.jpg",
+      "minPrice": 49000,
+      "maxPrice": 59000,
+      "viewCount": 987,
+      "categories": [
+        {
+          "categoryId": 1,
+          "categoryName": "상의"
+        },
+        {
+          "categoryId": 11,
+          "categoryName": "후드"
+        }
+      ]
+    }
+  ],
+  "totalCount": 150,
+  "currentPage": 1,
+  "totalPages": 8
+}

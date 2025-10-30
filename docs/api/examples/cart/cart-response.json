@@ -1,0 +1,49 @@
+{
+  "userId": 100,
+  "items": [
+    {
+      "cartItemId": 1,
+      "productId": 1,
+      "productName": "기본 라운드 티셔츠",
+      "thumbnailUrl": "https://example.com/images/product1.jpg",
+      "optionId": 101,
+      "optionName": "블랙 / L",
+      "price": 29000,
+      "quantity": 2,
+      "subtotal": 58000,
+      "stockQuantity": 180,
+      "isAvailable": true,
+      "addedAt": "2025-01-30T15:00:00Z"
+    },
+    {
+      "cartItemId": 2,
+      "productId": 2,
+      "productName": "슬림핏 청바지",
+      "thumbnailUrl": "https://example.com/images/product2.jpg",
+      "optionId": 201,
+      "optionName": "네이비 / 30",
+      "price": 59000,
+      "quantity": 1,
+      "subtotal": 59000,
+      "stockQuantity": 50,
+      "isAvailable": true,
+      "addedAt": "2025-01-31T09:30:00Z"
+    },
+    {
+      "cartItemId": 3,
+      "productId": 1,
+      "productName": "기본 라운드 티셔츠",
+      "thumbnailUrl": "https://example.com/images/product1.jpg",
+      "optionId": 104,
+      "optionName": "화이트 / S",
+      "price": 29000,
+      "quantity": 1,
+      "subtotal": 29000,
+      "stockQuantity": 0,
+      "isAvailable": false,
+      "addedAt": "2025-01-28T11:00:00Z"
+    }
+  ],
+  "totalItems": 3,
+  "totalAmount": 146000
+}

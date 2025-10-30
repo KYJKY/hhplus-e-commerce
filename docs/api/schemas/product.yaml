@@ -1,0 +1,206 @@
+components:
+  schemas:
+    ProductListResponse:
+      type: object
+      required:
+        - products
+      allOf:
+        - type: object
+          properties:
+            products:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductSummary'
+        - $ref: './common.yaml#/components/schemas/PaginationResponse'
+
+    ProductSummary:
+      type: object
+      required:
+        - productId
+        - productName
+        - thumbnailUrl
+        - minPrice
+        - maxPrice
+        - viewCount
+        - categories
+      properties:
+        productId:
+          type: integer
+          description: 상품 ID
+          example: 10
+        productName:
+          type: string
+          description: 상품명
+          example: "기본 라운드 티셔츠"
+        thumbnailUrl:
+          type: string
+          description: 썸네일 이미지 URL
+          example: "https://example.com/images/product10.jpg"
+        minPrice:
+          type: integer
+          description: 최저 가격 (옵션 중 최저가)
+          example: 29000
+        maxPrice:
+          type: integer
+          description: 최고 가격 (옵션 중 최고가)
+          example: 35000
+        viewCount:
+          type: integer
+          description: 조회수
+          example: 1523
+        categories:
+          type: array
+          items:
+            $ref: './common.yaml#/components/schemas/Category'
+
+    ProductDetailResponse:
+      type: object
+      required:
+        - productId
+        - productName
+        - productDescription
+        - thumbnailUrl
+        - isActive
+        - viewCount
+        - categories
+        - options
+        - createdAt
+      properties:
+        productId:
+          type: integer
+          description: 상품 ID
+          example: 10
+        productName:
+          type: string
+          description: 상품명
+          example: "기본 라운드 티셔츠"
+        productDescription:
+          type: string
+          description: 상품 설명
+          example: "편안한 착용감의 기본 라운드 티셔츠입니다"
+        thumbnailUrl:
+          type: string
+          description: 썸네일 이미지 URL
+          example: "https://example.com/images/product10.jpg"
+        isActive:
+          type: boolean
+          description: 판매 활성화 여부
+          example: true
+        viewCount:
+          type: integer
+          description: 조회수
+          example: 1523
+        categories:
+          type: array
+          items:
+            $ref: './common.yaml#/components/schemas/Category'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOption'
+        createdAt:
+          type: string
+          format: date-time
+          description: 등록일시
+          example: "2025-01-01T00:00:00Z"
+
+    ProductOption:
+      type: object
+      required:
+        - optionId
+        - optionName
+        - optionDescription
+        - price
+        - stockQuantity
+        - isAvailable
+      properties:
+        optionId:
+          type: integer
+          description: 옵션 ID
+          example: 101
+        optionName:
+          type: string
+          description: 옵션명
+          example: "블랙 / L"
+        optionDescription:
+          type: string
+          description: 옵션 설명
+          example: "색상: 블랙, 사이즈: L"
+        price:
+          type: integer
+          description: 가격
+          example: 29000
+        stockQuantity:
+          type: integer
+          description: 재고 수량
+          example: 150
+        isAvailable:
+          type: boolean
+          description: 판매 가능 여부
+          example: true
+
+    PopularProductsResponse:
+      type: object
+      required:
+        - period
+        - products
+      properties:
+        period:
+          type: object
+          description: 집계 기간
+          required:
+            - startDate
+            - endDate
+          properties:
+            startDate:
+              type: string
+              format: date
+              description: 시작일
+              example: "2025-01-28"
+            endDate:
+              type: string
+              format: date
+              description: 종료일
+              example: "2025-01-31"
+        products:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/PopularProduct'
+
+    PopularProduct:
+      type: object
+      required:
+        - rank
+        - productId
+        - productName
+        - thumbnailUrl
+        - salesCount
+        - salesAmount
+      properties:
+        rank:
+          type: integer
+          description: 순위
+          minimum: 1
+          maximum: 5
+          example: 1
+        productId:
+          type: integer
+          description: 상품 ID
+          example: 10
+        productName:
+          type: string
+          description: 상품명
+          example: "기본 라운드 티셔츠"
+        thumbnailUrl:
+          type: string
+          description: 썸네일 이미지 URL
+          example: "https://example.com/images/product10.jpg"
+        salesCount:
+          type: integer
+          description: 판매 수량
+          example: 523
+        salesAmount:
+          type: integer
+          description: 판매 금액
+          example: 15167000

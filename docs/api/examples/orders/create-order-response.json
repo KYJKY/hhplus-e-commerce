@@ -1,0 +1,47 @@
+{
+  "orderId": 123,
+  "orderNumber": "ORD-20250131-000123",
+  "userId": 100,
+  "status": "PAID",
+  "totalAmount": 87000,
+  "discountAmount": 5000,
+  "finalAmount": 82000,
+  "shippingAddress": {
+    "recipientName": "홍길동",
+    "phoneNumber": "010-1234-5678",
+    "postalCode": "12345",
+    "address": "서울특별시 강남구 테헤란로 123",
+    "detailAddress": "4층 401호"
+  },
+  "appliedCoupon": {
+    "couponId": 5,
+    "couponName": "신규 가입 쿠폰",
+    "discountAmount": 5000
+  },
+  "items": [
+    {
+      "orderItemId": 301,
+      "productId": 1,
+      "productName": "기본 라운드 티셔츠",
+      "productThumbnailUrl": "https://example.com/images/product1.jpg",
+      "optionId": 101,
+      "optionName": "블랙 / L",
+      "price": 29000,
+      "quantity": 2,
+      "subtotal": 58000
+    },
+    {
+      "orderItemId": 302,
+      "productId": 1,
+      "productName": "기본 라운드 티셔츠",
+      "productThumbnailUrl": "https://example.com/images/product1.jpg",
+      "optionId": 105,
+      "optionName": "화이트 / M",
+      "price": 29000,
+      "quantity": 1,
+      "subtotal": 29000
+    }
+  ],
+  "createdAt": "2025-01-31T10:30:00Z",
+  "paidAt": "2025-01-31T10:30:05Z"
+}

@@ -1,0 +1,211 @@
+components:
+  schemas:
+    OrderStatus:
+      type: string
+      enum:
+        - PENDING
+        - PAID
+        - COMPLETED
+        - FAILED
+        - CANCELLED
+      description: |
+        주문 상태
+        - PENDING: 주문 생성 (결제 대기)
+        - PAID: 결제 완료
+        - COMPLETED: 주문 완료 (배송 완료)
+        - FAILED: 결제 실패
+        - CANCELLED: 주문 취소 (1차 개발 범위 제외)
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - cartItemIds
+        - shippingAddress
+      properties:
+        cartItemIds:
+          type: array
+          items:
+            type: integer
+          description: 주문할 장바구니 아이템 ID 목록
+          minItems: 1
+          example: [1, 2, 3]
+        shippingAddress:
+          $ref: './common.yaml#/components/schemas/Address'
+        couponId:
+          type: integer
+          description: 사용할 쿠폰 ID (선택)
+          example: 5
+
+    OrderResponse:
+      type: object
+      required:
+        - orderId
+        - orderNumber
+        - userId
+        - status
+        - totalAmount
+        - discountAmount
+        - finalAmount
+        - shippingAddress
+        - items
+        - createdAt
+      properties:
+        orderId:
+          type: integer
+          description: 주문 ID
+          example: 1
+        orderNumber:
+          type: string
+          description: 주문 번호
+          example: "ORD-20250131-000001"
+        userId:
+          type: integer
+          description: 사용자 ID
+          example: 100
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        totalAmount:
+          type: integer
+          description: 총 상품 금액
+          example: 89000
+        discountAmount:
+          type: integer
+          description: 할인 금액
+          example: 5000
+        finalAmount:
+          type: integer
+          description: 최종 결제 금액
+          example: 84000
+        shippingAddress:
+          $ref: './common.yaml#/components/schemas/Address'
+        appliedCoupon:
+          type: object
+          description: 적용된 쿠폰 정보
+          properties:
+            couponId:
+              type: integer
+              example: 5
+            couponName:
+              type: string
+              example: "신규 가입 쿠폰"
+            discountAmount:
+              type: integer
+              example: 5000
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        createdAt:
+          type: string
+          format: date-time
+          description: 주문 생성 일시
+          example: "2025-01-31T10:30:00Z"
+        paidAt:
+          type: string
+          format: date-time
+          description: 결제 완료 일시
+          example: "2025-01-31T10:30:05Z"
+
+    OrderItem:
+      type: object
+      required:
+        - orderItemId
+        - productId
+        - productName
+        - optionId
+        - optionName
+        - price
+        - quantity
+        - subtotal
+      properties:
+        orderItemId:
+          type: integer
+          description: 주문 항목 ID
+          example: 1
+        productId:
+          type: integer
+          description: 상품 ID
+          example: 10
+        productName:
+          type: string
+          description: 상품명 (주문 시점 스냅샷)
+          example: "기본 라운드 티셔츠"
+        productThumbnailUrl:
+          type: string
+          description: 상품 썸네일 URL
+          example: "https://example.com/images/product10.jpg"
+        optionId:
+          type: integer
+          description: 옵션 ID
+          example: 101
+        optionName:
+          type: string
+          description: 옵션명 (주문 시점 스냅샷)
+          example: "블랙 / L"
+        price:
+          type: integer
+          description: 옵션 가격 (주문 시점 스냅샷)
+          example: 29000
+        quantity:
+          type: integer
+          description: 주문 수량
+          example: 2
+        subtotal:
+          type: integer
+          description: 소계 (price × quantity)
+          example: 58000
+
+    OrderListResponse:
+      type: object
+      required:
+        - orders
+      allOf:
+        - type: object
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderSummary'
+        - $ref: './common.yaml#/components/schemas/PaginationResponse'
+
+    OrderSummary:
+      type: object
+      required:
+        - orderId
+        - orderNumber
+        - status
+        - finalAmount
+        - itemCount
+        - createdAt
+      properties:
+        orderId:
+          type: integer
+          description: 주문 ID
+          example: 1
+        orderNumber:
+          type: string
+          description: 주문 번호
+          example: "ORD-20250131-000001"
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        finalAmount:
+          type: integer
+          description: 최종 결제 금액
+          example: 84000
+        itemCount:
+          type: integer
+          description: 주문 항목 수
+          example: 3
+        firstProductName:
+          type: string
+          description: 첫 번째 상품명
+          example: "기본 라운드 티셔츠"
+        firstProductThumbnailUrl:
+          type: string
+          description: 첫 번째 상품 썸네일
+          example: "https://example.com/images/product10.jpg"
+        createdAt:
+          type: string
+          format: date-time
+          description: 주문 생성 일시
+          example: "2025-01-31T10:30:00Z"
