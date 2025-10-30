@@ -1,0 +1,111 @@
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: 에러 코드
+          example: "INSUFFICIENT_INVENTORY"
+        message:
+          type: string
+          description: 에러 메시지
+          example: "재고가 부족합니다"
+        details:
+          type: object
+          description: 추가 상세 정보
+          additionalProperties: true
+          example:
+            productId: 123
+            requestedQuantity: 10
+            availableQuantity: 5
+
+    PaginationRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          default: 1
+          description: 페이지 번호
+          example: 1
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          description: 페이지 크기
+          example: 20
+
+    PaginationResponse:
+      type: object
+      required:
+        - totalCount
+        - currentPage
+        - totalPages
+      properties:
+        totalCount:
+          type: integer
+          description: 전체 항목 수
+          example: 150
+        currentPage:
+          type: integer
+          description: 현재 페이지
+          example: 1
+        totalPages:
+          type: integer
+          description: 전체 페이지 수
+          example: 8
+
+    Category:
+      type: object
+      required:
+        - categoryId
+        - categoryName
+      properties:
+        categoryId:
+          type: integer
+          description: 카테고리 ID
+          example: 1
+        categoryName:
+          type: string
+          description: 카테고리명
+          example: "상의"
+
+    Address:
+      type: object
+      required:
+        - recipientName
+        - phoneNumber
+        - postalCode
+        - address
+        - detailAddress
+      properties:
+        recipientName:
+          type: string
+          description: 수령인 이름
+          maxLength: 50
+          example: "홍길동"
+        phoneNumber:
+          type: string
+          description: 전화번호
+          pattern: '^\d{3}-\d{3,4}-\d{4}$'
+          example: "010-1234-5678"
+        postalCode:
+          type: string
+          description: 우편번호
+          pattern: '^\d{5}$'
+          example: "12345"
+        address:
+          type: string
+          description: 주소
+          maxLength: 200
+          example: "서울특별시 강남구 테헤란로 123"
+        detailAddress:
+          type: string
+          description: 상세주소
+          maxLength: 200
+          example: "4층 401호"

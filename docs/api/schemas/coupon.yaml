@@ -1,0 +1,206 @@
+components:
+  schemas:
+    CouponStatus:
+      type: string
+      enum:
+        - AVAILABLE
+        - USED
+      description: |
+        쿠폰 상태
+        - AVAILABLE: 사용 가능
+        - USED: 사용됨
+
+    DiscountType:
+      type: string
+      enum:
+        - FIXED
+        - PERCENTAGE
+      description: |
+        할인 타입
+        - FIXED: 고정 금액 할인
+        - PERCENTAGE: 비율 할인
+
+    IssueCouponRequest:
+      type: object
+      required:
+        - couponTypeId
+      properties:
+        couponTypeId:
+          type: integer
+          description: 쿠폰 타입 ID
+          example: 1
+
+    IssueCouponResponse:
+      type: object
+      required:
+        - couponId
+        - couponName
+        - discountType
+        - discountValue
+        - status
+        - expiresAt
+        - issuedAt
+      properties:
+        couponId:
+          type: integer
+          description: 발급된 사용자 쿠폰 ID
+          example: 101
+        couponName:
+          type: string
+          description: 쿠폰명
+          example: "신규 가입 쿠폰"
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: integer
+          description: "할인 값 (FIXED: 금액, PERCENTAGE: 비율)"
+          example: 5000
+        status:
+          $ref: '#/components/schemas/CouponStatus'
+        expiresAt:
+          type: string
+          format: date-time
+          description: 만료 일시
+          example: "2025-02-28T23:59:59Z"
+        issuedAt:
+          type: string
+          format: date-time
+          description: 발급 일시
+          example: "2025-01-31T10:00:00Z"
+
+    UserCoupon:
+      type: object
+      required:
+        - couponId
+        - couponTypeId
+        - couponName
+        - discountType
+        - discountValue
+        - status
+        - issuedAt
+        - expiresAt
+      properties:
+        couponId:
+          type: integer
+          description: 사용자 쿠폰 ID
+          example: 101
+        couponTypeId:
+          type: integer
+          description: 쿠폰 타입 ID
+          example: 1
+        couponName:
+          type: string
+          description: 쿠폰명
+          example: "신규 가입 쿠폰"
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: integer
+          description: 할인 값
+          example: 5000
+        status:
+          $ref: '#/components/schemas/CouponStatus'
+        issuedAt:
+          type: string
+          format: date-time
+          description: 발급 일시
+          example: "2025-01-31T10:00:00Z"
+        expiresAt:
+          type: string
+          format: date-time
+          description: 만료 일시
+          example: "2025-02-28T23:59:59Z"
+        usedAt:
+          type: string
+          format: date-time
+          description: 사용 일시 (사용된 경우)
+          example: "2025-02-01T14:30:00Z"
+        orderId:
+          type: integer
+          description: 사용된 주문 ID (사용된 경우)
+          example: 123
+
+    UserCouponListResponse:
+      type: object
+      required:
+        - coupons
+      properties:
+        coupons:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserCoupon'
+        availableCount:
+          type: integer
+          description: 사용 가능한 쿠폰 수
+          example: 2
+        usedCount:
+          type: integer
+          description: 사용된 쿠폰 수
+          example: 1
+
+    CouponType:
+      type: object
+      required:
+        - couponTypeId
+        - couponName
+        - discountType
+        - discountValue
+        - maxQuantity
+        - issuedQuantity
+        - validFrom
+        - validUntil
+      properties:
+        couponTypeId:
+          type: integer
+          description: 쿠폰 타입 ID
+          example: 1
+        couponName:
+          type: string
+          description: 쿠폰명
+          example: "신규 가입 쿠폰"
+        couponDescription:
+          type: string
+          description: 쿠폰 설명
+          example: "신규 가입 고객을 위한 5,000원 할인 쿠폰"
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: integer
+          description: 할인 값
+          example: 5000
+        maxQuantity:
+          type: integer
+          description: 최대 발급 수량
+          example: 1000
+        issuedQuantity:
+          type: integer
+          description: 현재 발급된 수량
+          example: 523
+        remainingQuantity:
+          type: integer
+          description: 남은 수량
+          example: 477
+        validFrom:
+          type: string
+          format: date-time
+          description: 유효 기간 시작
+          example: "2025-01-01T00:00:00Z"
+        validUntil:
+          type: string
+          format: date-time
+          description: 유효 기간 종료
+          example: "2025-12-31T23:59:59Z"
+        isAvailable:
+          type: boolean
+          description: 발급 가능 여부
+          example: true
+
+    CouponTypeListResponse:
+      type: object
+      required:
+        - couponTypes
+      properties:
+        couponTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CouponType'

@@ -1,0 +1,167 @@
+components:
+  schemas:
+    AddCartItemRequest:
+      type: object
+      required:
+        - optionId
+        - quantity
+      properties:
+        optionId:
+          type: integer
+          description: 상품 옵션 ID
+          example: 101
+        quantity:
+          type: integer
+          description: 수량 (1~99)
+          minimum: 1
+          maximum: 99
+          example: 2
+
+    UpdateCartItemRequest:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: integer
+          description: 수량 (1~99)
+          minimum: 1
+          maximum: 99
+          example: 3
+
+    CartItem:
+      type: object
+      required:
+        - cartItemId
+        - productId
+        - productName
+        - thumbnailUrl
+        - optionId
+        - optionName
+        - price
+        - quantity
+        - subtotal
+        - stockQuantity
+        - isAvailable
+        - addedAt
+      properties:
+        cartItemId:
+          type: integer
+          description: 장바구니 항목 ID
+          example: 1
+        productId:
+          type: integer
+          description: 상품 ID
+          example: 10
+        productName:
+          type: string
+          description: 상품명
+          example: "기본 라운드 티셔츠"
+        thumbnailUrl:
+          type: string
+          description: 썸네일 이미지 URL
+          example: "https://example.com/images/product10.jpg"
+        optionId:
+          type: integer
+          description: 옵션 ID
+          example: 101
+        optionName:
+          type: string
+          description: 옵션명
+          example: "블랙 / L"
+        price:
+          type: integer
+          description: 옵션 가격 (현재 가격)
+          example: 29000
+        quantity:
+          type: integer
+          description: 수량
+          example: 2
+        subtotal:
+          type: integer
+          description: 소계 (price × quantity)
+          example: 58000
+        stockQuantity:
+          type: integer
+          description: 현재 재고 수량
+          example: 150
+        isAvailable:
+          type: boolean
+          description: 구매 가능 여부
+          example: true
+        addedAt:
+          type: string
+          format: date-time
+          description: 장바구니 추가 일시
+          example: "2025-01-31T09:00:00Z"
+
+    CartResponse:
+      type: object
+      required:
+        - userId
+        - items
+        - totalItems
+        - totalAmount
+      properties:
+        userId:
+          type: integer
+          description: 사용자 ID
+          example: 100
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        totalItems:
+          type: integer
+          description: 총 항목 수
+          example: 3
+        totalAmount:
+          type: integer
+          description: 총 금액
+          example: 145000
+
+    CartItemResponse:
+      type: object
+      required:
+        - cartItemId
+        - productId
+        - productName
+        - optionId
+        - optionName
+        - price
+        - quantity
+        - addedAt
+      properties:
+        cartItemId:
+          type: integer
+          description: 장바구니 항목 ID
+          example: 1
+        productId:
+          type: integer
+          description: 상품 ID
+          example: 10
+        productName:
+          type: string
+          description: 상품명
+          example: "기본 라운드 티셔츠"
+        optionId:
+          type: integer
+          description: 옵션 ID
+          example: 101
+        optionName:
+          type: string
+          description: 옵션명
+          example: "블랙 / L"
+        price:
+          type: integer
+          description: 옵션 가격
+          example: 29000
+        quantity:
+          type: integer
+          description: 수량
+          example: 2
+        addedAt:
+          type: string
+          format: date-time
+          description: 추가 일시
+          example: "2025-01-31T09:00:00Z"

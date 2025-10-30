@@ -1,0 +1,122 @@
+components:
+  schemas:
+    PointTransactionType:
+      type: string
+      enum:
+        - CHARGE
+        - USE
+        - REFUND
+      description: |
+        포인트 트랜잭션 타입
+        - CHARGE: 충전
+        - USE: 사용 (결제)
+        - REFUND: 환불 (1차 개발 범위 제외)
+
+    ChargePointRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: integer
+          description: 충전 금액 (1,000원 ~ 1,000,000원, 1,000원 단위)
+          minimum: 1000
+          maximum: 1000000
+          multipleOf: 1000
+          example: 50000
+
+    ChargePointResponse:
+      type: object
+      required:
+        - transactionId
+        - userId
+        - amount
+        - balanceAfter
+        - chargedAt
+      properties:
+        transactionId:
+          type: integer
+          description: 트랜잭션 ID
+          example: 1001
+        userId:
+          type: integer
+          description: 사용자 ID
+          example: 100
+        amount:
+          type: integer
+          description: 충전 금액
+          example: 50000
+        balanceAfter:
+          type: integer
+          description: 충전 후 잔액
+          example: 550000
+        chargedAt:
+          type: string
+          format: date-time
+          description: 충전 일시
+          example: "2025-01-31T10:00:00Z"
+
+    PointBalanceResponse:
+      type: object
+      required:
+        - userId
+        - balance
+      properties:
+        userId:
+          type: integer
+          description: 사용자 ID
+          example: 100
+        balance:
+          type: integer
+          description: 현재 잔액
+          example: 550000
+        maxBalance:
+          type: integer
+          description: 최대 보유 가능 잔액
+          example: 10000000
+
+    PointTransaction:
+      type: object
+      required:
+        - transactionId
+        - type
+        - amount
+        - balanceAfter
+        - createdAt
+      properties:
+        transactionId:
+          type: integer
+          description: 트랜잭션 ID
+          example: 1001
+        type:
+          $ref: '#/components/schemas/PointTransactionType'
+        amount:
+          type: integer
+          description: 금액 (충전/사용/환불 금액)
+          example: 50000
+        balanceAfter:
+          type: integer
+          description: 거래 후 잔액
+          example: 550000
+        orderId:
+          type: integer
+          description: 주문 ID (USE, REFUND 타입인 경우)
+          example: 123
+        createdAt:
+          type: string
+          format: date-time
+          description: 거래 일시
+          example: "2025-01-31T10:00:00Z"
+
+    PointTransactionListResponse:
+      type: object
+      required:
+        - transactions
+      allOf:
+        - type: object
+          properties:
+            transactions:
+              type: array
+              items:
+                $ref: '#/components/schemas/PointTransaction'
+        - $ref: './common.yaml#/components/schemas/PaginationResponse'
