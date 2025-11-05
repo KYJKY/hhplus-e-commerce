@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { configuration, validate } from './config';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { configuration, validate } from './config';
       validate,
       envFilePath: ['.env'],
     }),
+    UserModule,
   ],
   controllers: [],
   providers: [],
