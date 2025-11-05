@@ -54,7 +54,7 @@ export interface IRepository<T extends BaseEntity> {
   /**
    * 모든 엔티티 삭제 (테스트용)
    */
-  clear(): Promise<void>;
+  clear(): Promise<boolean>;
 
   /**
    * 엔티티 개수 조회

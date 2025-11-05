@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import type { BaseEntity, IRepository } from './repository.interface';
 
 /**
@@ -11,6 +12,14 @@ export abstract class BaseInMemoryRepository<T extends BaseEntity>
   private currentId = 1;
   private readonly locks: Map<number, Promise<void>> = new Map();
 
+  protected delay<T>(data: T): Promise<T> {
+    return new Promise((r) =>
+      setTimeout(() => {
+        r(data);
+      }, randomInt(200)),
+    );
+  }
+
   /**
    * 다음 ID 생성
    */
@@ -23,44 +32,50 @@ export abstract class BaseInMemoryRepository<T extends BaseEntity>
    */
   async findById(id: number): Promise<T | null> {
     const entity = this.entities.get(id);
-    return entity ? this.clone(entity) : null;
+    const result = entity ? this.clone(entity) : null;
+    return await this.delay(result);
   }
 
   /**
    * 조건에 맞는 단일 엔티티 조회
    */
   async findOne(predicate: (entity: T) => boolean): Promise<T | null> {
+    let result: T | null = null;
     for (const entity of this.entities.values()) {
       if (predicate(entity)) {
-        return this.clone(entity);
+        result = this.clone(entity);
+        break;
       }
     }
-    return null;
+    return await this.delay(result);
   }
 
   /**
    * 모든 엔티티 조회
    */
   async findAll(): Promise<T[]> {
-    return Array.from(this.entities.values()).map((entity) =>
+    const result = Array.from(this.entities.values()).map((entity) =>
       this.clone(entity),
     );
+    return await this.delay(result);
   }
 
   /**
    * 조건에 맞는 엔티티 목록 조회
    */
   async findMany(predicate: (entity: T) => boolean): Promise<T[]> {
-    return Array.from(this.entities.values())
+    const result = Array.from(this.entities.values())
       .filter(predicate)
       .map((entity) => this.clone(entity));
+    return await this.delay(result);
   }
 
   /**
    * 엔티티 존재 여부 확인
    */
   async exists(id: number): Promise<boolean> {
-    return this.entities.has(id);
+    const result = this.entities.has(id);
+    return await this.delay(result);
   }
 
   /**
@@ -70,7 +85,8 @@ export abstract class BaseInMemoryRepository<T extends BaseEntity>
     const id = this.getNextId();
     const entity = { ...entityData, id } as T;
     this.entities.set(id, entity);
-    return this.clone(entity);
+    const result = this.clone(entity);
+    return await this.delay(result);
   }
 
   /**
@@ -79,45 +95,53 @@ export abstract class BaseInMemoryRepository<T extends BaseEntity>
   async update(id: number, entityData: Partial<T>): Promise<T | null> {
     const existingEntity = this.entities.get(id);
     if (!existingEntity) {
-      return null;
+      return await this.delay(null);
     }
 
     const updatedEntity = { ...existingEntity, ...entityData };
     this.entities.set(id, updatedEntity);
-    return this.clone(updatedEntity);
+    const result = this.clone(updatedEntity);
+    return await this.delay(result);
   }
 
   /**
    * 엔티티 삭제
    */
   async delete(id: number): Promise<boolean> {
-    return this.entities.delete(id);
+    const result = this.entities.delete(id);
+    return await this.delay(result);
   }
 
   /**
    * 모든 엔티티 삭제 (테스트용)
    */
-  async clear(): Promise<void> {
+  async clear(): Promise<boolean> {
     this.entities.clear();
     this.currentId = 1;
     this.locks.clear();
+
+    return await this.delay(true);
   }
 
   /**
    * 엔티티 개수 조회
    */
   async count(predicate?: (entity: T) => boolean): Promise<number> {
+    let result: number;
+
     if (!predicate) {
-      return this.entities.size;
+      result = this.entities.size;
+    } else {
+      let count = 0;
+      for (const entity of this.entities.values()) {
+        if (predicate(entity)) {
+          count++;
+        }
+      }
+      result = count;
     }
 
-    let count = 0;
-    for (const entity of this.entities.values()) {
-      if (predicate(entity)) {
-        count++;
-      }
-    }
-    return count;
+    return await this.delay(result);
   }
 
   /**
