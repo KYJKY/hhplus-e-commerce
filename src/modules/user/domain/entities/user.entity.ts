@@ -1,3 +1,9 @@
+import {
+  InvalidNameLengthException,
+  InvalidDisplayNameLengthException,
+  InvalidPhoneNumberFormatException,
+} from '../exceptions';
+
 /**
  * User 생성 속성
  */
@@ -14,6 +20,15 @@ export interface CreateUserProps {
   deletedAt?: string | null;
   createdAt: string;
   updatedAt?: string | null;
+}
+
+/**
+ * User 프로필 수정 속성
+ */
+export interface UpdateUserProfileProps {
+  name?: string;
+  displayName?: string;
+  phoneNumber?: string;
 }
 
 /**
@@ -41,6 +56,13 @@ export class User {
   static create(props: CreateUserProps): User {
     // 검증
     this.validateEmail(props.email);
+    this.validateName(props.name);
+    if (props.displayName) {
+      this.validateDisplayName(props.displayName);
+    }
+    if (props.phoneNumber) {
+      this.validatePhoneNumber(props.phoneNumber);
+    }
     this.validatePoint(props.point ?? 0);
 
     return new User(
@@ -57,6 +79,34 @@ export class User {
       props.createdAt,
       props.updatedAt ?? null,
     );
+  }
+
+  /**
+   * 프로필 수정
+   */
+  updateProfile(props: UpdateUserProfileProps): void {
+    if (props.name !== undefined) {
+      User.validateName(props.name);
+      // name은 readonly이므로 직접 수정 불가, 새로운 방식 필요
+      // 하지만 엔티티 내부에서는 수정 가능하도록 처리
+      (this as any).name = props.name;
+    }
+
+    if (props.displayName !== undefined) {
+      if (props.displayName) {
+        User.validateDisplayName(props.displayName);
+      }
+      this.displayName = props.displayName;
+    }
+
+    if (props.phoneNumber !== undefined) {
+      if (props.phoneNumber) {
+        User.validatePhoneNumber(props.phoneNumber);
+      }
+      this.phoneNumber = props.phoneNumber;
+    }
+
+    this.updatedAt = new Date().toISOString();
   }
 
   chargePoint(amount: number): void {
@@ -88,6 +138,36 @@ export class User {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new Error('Invalid email format');
+    }
+  }
+
+  /**
+   * 이름 검증 (2~50자)
+   */
+  private static validateName(name: string): void {
+    if (!name || name.trim().length < 2 || name.trim().length > 50) {
+      throw new InvalidNameLengthException();
+    }
+  }
+
+  /**
+   * 닉네임 검증 (2~20자)
+   */
+  private static validateDisplayName(displayName: string): void {
+    if (!displayName || displayName.trim().length < 2 || displayName.trim().length > 20) {
+      throw new InvalidDisplayNameLengthException();
+    }
+  }
+
+  /**
+   * 전화번호 형식 검증
+   * 하이픈 포함 또는 제외 형식 모두 허용
+   * 예: 010-1234-5678, 01012345678
+   */
+  private static validatePhoneNumber(phoneNumber: string): void {
+    const phoneRegex = /^(\d{2,3}-?\d{3,4}-?\d{4})$/;
+    if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
+      throw new InvalidPhoneNumberFormatException();
     }
   }
 
