@@ -288,4 +288,56 @@ export class UserService {
 
     return await this.userAddressRepository.findDefaultByUserId(userId);
   }
+
+  /**
+   * 포인트 충전 (내부 API)
+   * @param userId - 사용자 ID
+   * @param amount - 충전할 포인트
+   */
+  async chargeUserPoint(
+    userId: number,
+    amount: number,
+  ): Promise<{
+    previousBalance: number;
+    currentBalance: number;
+  }> {
+    const user = await this.getUserById(userId);
+    const previousBalance = user.getPoint();
+
+    user.chargePoint(amount);
+    await this.userRepository.update(userId, user);
+
+    const currentBalance = user.getPoint();
+
+    return {
+      previousBalance,
+      currentBalance,
+    };
+  }
+
+  /**
+   * 포인트 차감 (내부 API)
+   * @param userId - 사용자 ID
+   * @param amount - 차감할 포인트
+   */
+  async deductUserPoint(
+    userId: number,
+    amount: number,
+  ): Promise<{
+    previousBalance: number;
+    currentBalance: number;
+  }> {
+    const user = await this.getUserById(userId);
+    const previousBalance = user.getPoint();
+
+    user.deductPoint(amount);
+    await this.userRepository.update(userId, user);
+
+    const currentBalance = user.getPoint();
+
+    return {
+      previousBalance,
+      currentBalance,
+    };
+  }
 }

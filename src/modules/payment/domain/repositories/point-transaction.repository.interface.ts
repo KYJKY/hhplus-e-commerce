@@ -4,7 +4,8 @@ import { PointTransaction } from '../entities/point-transaction.entity';
 /**
  * PointTransaction Repository 인터페이스
  */
-export interface IPointTransactionRepository extends IRepository<PointTransaction> {
+export interface IPointTransactionRepository
+  extends IRepository<PointTransaction> {
   /**
    * 사용자 ID로 거래 내역 조회
    */
@@ -52,5 +53,8 @@ export interface IPointTransactionRepository extends IRepository<PointTransactio
   /**
    * 사용자의 최근 거래 조회
    */
-  findLatestByUserId(userId: number, limit: number): Promise<PointTransaction[]>;
+  findLatestByUserId(
+    userId: number,
+    limit: number,
+  ): Promise<PointTransaction[]>;
 }

@@ -69,9 +69,7 @@ export class PointTransaction {
   /**
    * 거래 유형 검증
    */
-  private static validateTransactionType(
-    transactionType: string,
-  ): void {
+  private static validateTransactionType(transactionType: string): void {
     const validTypes = ['CHARGE', 'USE', 'REFUND'];
     if (!validTypes.includes(transactionType)) {
       throw new Error(`Invalid transaction type: ${transactionType}`);

@@ -131,9 +131,7 @@ export class Payment {
   /**
    * 결제 상태 검증
    */
-  private static validatePaymentStatus(
-    paymentStatus: string,
-  ): void {
+  private static validatePaymentStatus(paymentStatus: string): void {
     const validStatuses = ['SUCCESS', 'FAILED', 'CANCELLED'];
     if (!validStatuses.includes(paymentStatus)) {
       throw new Error(`Invalid payment status: ${paymentStatus}`);

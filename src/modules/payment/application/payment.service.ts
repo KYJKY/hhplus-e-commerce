@@ -1,9 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { IPointTransactionRepository } from '../domain/repositories/point-transaction.repository.interface';
 import type { IPaymentRepository } from '../domain/repositories/payment.repository.interface';
-import type { IUserRepository } from '../../user/domain/repositories/user.repository.interface';
+import { UserService } from '../../user/application/user.service';
 import {
-  OrderNotFoundException,
   PaymentNotFoundException,
   PaymentAccessDeniedException,
   InsufficientBalanceException,
@@ -15,7 +14,6 @@ import {
   InvalidAmountException,
   InvalidDateRangeException,
 } from '../domain/exceptions';
-import { UserNotFoundException } from '../../user/domain/exceptions';
 import { PointTransaction } from '../domain/entities/point-transaction.entity';
 import { Payment } from '../domain/entities/payment.entity';
 
@@ -26,8 +24,7 @@ export class PaymentService {
     private readonly pointTransactionRepository: IPointTransactionRepository,
     @Inject('IPaymentRepository')
     private readonly paymentRepository: IPaymentRepository,
-    @Inject('IUserRepository')
-    private readonly userRepository: IUserRepository,
+    private readonly userService: UserService,
   ) {}
 
   /**
@@ -38,10 +35,7 @@ export class PaymentService {
     balance: number;
     lastUpdatedAt: string | null;
   }> {
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    const user = await this.userService.getUserById(userId);
 
     // 최근 거래 조회
     const latestTransactions =
@@ -74,10 +68,7 @@ export class PaymentService {
     createdAt: string;
   }> {
     // 사용자 확인
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    const user = await this.userService.getUserById(userId);
 
     // 충전 금액 검증
     if (amount < 1000 || amount > 1000000) {
@@ -96,10 +87,10 @@ export class PaymentService {
     }
 
     // 포인트 충전
-    user.chargePoint(amount);
-    await this.userRepository.update(userId, user);
-
-    const currentBalance = user.getPoint();
+    const { currentBalance } = await this.userService.chargeUserPoint(
+      userId,
+      amount,
+    );
 
     // 포인트 거래 내역 생성
     const now = new Date().toISOString();
@@ -153,10 +144,7 @@ export class PaymentService {
     totalPages: number;
   }> {
     // 사용자 확인
-    const user = await this.userRepository.findById(params.userId);
-    if (!user) {
-      throw new UserNotFoundException(params.userId);
-    }
+    await this.userService.getUserById(params.userId);
 
     // 날짜 범위 검증
     if (params.startDate && params.endDate) {
@@ -217,10 +205,7 @@ export class PaymentService {
     }
 
     // 사용자 확인
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    const user = await this.userService.getUserById(userId);
 
     // 중복 결제 확인
     const existingPayment = await this.paymentRepository.findByOrderId(orderId);
@@ -236,10 +221,10 @@ export class PaymentService {
     }
 
     // 포인트 차감
-    user.deductPoint(amount);
-    await this.userRepository.update(userId, user);
-
-    const currentBalance = user.getPoint();
+    const { currentBalance } = await this.userService.deductUserPoint(
+      userId,
+      amount,
+    );
 
     const now = new Date().toISOString();
 
@@ -309,10 +294,7 @@ export class PaymentService {
     totalPages: number;
   }> {
     // 사용자 확인
-    const user = await this.userRepository.findById(params.userId);
-    if (!user) {
-      throw new UserNotFoundException(params.userId);
-    }
+    await this.userService.getUserById(params.userId);
 
     const page = params.page ?? 1;
     const size = params.size ?? 20;
@@ -359,10 +341,7 @@ export class PaymentService {
     failureReason: string | null;
   }> {
     // 사용자 확인
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    await this.userService.getUserById(userId);
 
     // 결제 조회
     const payment = await this.paymentRepository.findByIdAndUserId(
@@ -379,8 +358,9 @@ export class PaymentService {
     }
 
     // 관련 포인트 거래 내역 조회
-    const transactions =
-      await this.pointTransactionRepository.findByOrderId(payment.orderId);
+    const transactions = await this.pointTransactionRepository.findByOrderId(
+      payment.orderId,
+    );
     const useTransaction = transactions.find((t) => t.isUse());
 
     return {
@@ -415,10 +395,7 @@ export class PaymentService {
     failedAt: string;
   }> {
     // 사용자 확인
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    await this.userService.getUserById(userId);
 
     const now = new Date().toISOString();
 
@@ -468,10 +445,7 @@ export class PaymentService {
     }
 
     // 사용자 확인
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    const user = await this.userService.getUserById(userId);
 
     const currentBalance = user.getPoint();
     const isAvailable = currentBalance >= amount;
@@ -499,10 +473,7 @@ export class PaymentService {
     lastPaymentAt: string | null;
   }> {
     // 사용자 확인
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    const user = await this.userService.getUserById(userId);
 
     const statistics =
       await this.paymentRepository.getPaymentStatistics(userId);
@@ -530,18 +501,15 @@ export class PaymentService {
     transactionType: 'REFUND';
   }> {
     // 사용자 확인
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new UserNotFoundException(userId);
-    }
+    const user = await this.userService.getUserById(userId);
 
     const previousBalance = user.getPoint();
 
     // 포인트 복원
-    user.chargePoint(amount);
-    await this.userRepository.update(userId, user);
-
-    const currentBalance = user.getPoint();
+    const { currentBalance } = await this.userService.chargeUserPoint(
+      userId,
+      amount,
+    );
 
     // 포인트 거래 내역 생성 (REFUND)
     const now = new Date().toISOString();

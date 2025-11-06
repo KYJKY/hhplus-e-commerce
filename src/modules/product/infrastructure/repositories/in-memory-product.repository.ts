@@ -166,7 +166,7 @@ export class InMemoryProductRepository
     totalPages: number;
   }> {
     // 활성화되고 삭제되지 않은 상품만 조회
-    let products = await this.findMany(
+    const products = await this.findMany(
       (p) => p.isActive && p.deletedAt === null,
     );
 

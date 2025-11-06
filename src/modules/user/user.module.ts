@@ -18,8 +18,7 @@ import { InMemoryUserAddressRepository } from './infrastructure/repositories/in-
     },
   ],
   exports: [
-    UserService,
-    'IUserRepository', // PaymentModule에서 사용하기 위해 export
+    UserService, // PaymentModule에서 UserService를 사용하기 위해 export
   ],
 })
 export class UserModule {}

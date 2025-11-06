@@ -116,7 +116,11 @@ export class ChargeAmountUnitErrorException extends HttpException {
  * PAY009: 최대 보유 가능 포인트 초과
  */
 export class MaxBalanceExceededException extends HttpException {
-  constructor(currentBalance: number, chargeAmount: number, maxBalance: number = 10000000) {
+  constructor(
+    currentBalance: number,
+    chargeAmount: number,
+    maxBalance: number = 10000000,
+  ) {
     super(
       {
         errorCode: 'PAY009',
