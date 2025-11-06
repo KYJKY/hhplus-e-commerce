@@ -131,7 +131,9 @@ describe('InMemoryUserAddressRepository', () => {
       expect(address!.isDefault).toBe(false);
 
       // Then: update 메서드 정상 동작
-      expect(() => address!.update({ recipientName: '새수령인' })).not.toThrow();
+      expect(() =>
+        address!.update({ recipientName: '새수령인' }),
+      ).not.toThrow();
       expect(address!.recipientName).toBe('새수령인');
     });
   });
@@ -237,7 +239,7 @@ describe('InMemoryUserAddressRepository', () => {
         recipientName: '김철수2',
         recipientPhone: '010-1111-1111',
         postalCode: '12345',
-        addressDefaultText:'새주소',
+        addressDefaultText: '새주소',
         addressDetailText: null,
         isDefault: false,
         createdAt: new Date().toISOString(),
@@ -400,7 +402,7 @@ describe('InMemoryUserAddressRepository', () => {
         recipientName: '새사용자',
         recipientPhone: '010-1234-5678',
         postalCode: '12345',
-        addressDefaultText:'새주소',
+        addressDefaultText: '새주소',
         addressDetailText: null,
         isDefault: false, // 명시적으로 false
         createdAt: new Date().toISOString(),
@@ -425,7 +427,7 @@ describe('InMemoryUserAddressRepository', () => {
         recipientName: '첫번째',
         recipientPhone: '010-1111-1111',
         postalCode: '11111',
-        addressDefaultText:'첫번째주소',
+        addressDefaultText: '첫번째주소',
         addressDetailText: null,
         isDefault: false,
         createdAt: new Date().toISOString(),
@@ -440,7 +442,7 @@ describe('InMemoryUserAddressRepository', () => {
         recipientName: '두번째',
         recipientPhone: '010-2222-2222',
         postalCode: '22222',
-        addressDefaultText:'두번째주소',
+        addressDefaultText: '두번째주소',
         addressDetailText: null,
         isDefault: false,
         createdAt: new Date().toISOString(),
@@ -464,7 +466,7 @@ describe('InMemoryUserAddressRepository', () => {
         recipientName: '새배송지',
         recipientPhone: '010-9999-9999',
         postalCode: '99999',
-        addressDefaultText:'새주소',
+        addressDefaultText: '새주소',
         addressDetailText: null,
         isDefault: true,
         createdAt: new Date().toISOString(),
@@ -546,7 +548,9 @@ describe('InMemoryUserAddressRepository', () => {
     it('배송지 정보를 수정할 수 있다', async () => {
       // Given: 배송지 1 존재
       // When: 수령인 이름 수정
-      const updated = await repository.update(1, { recipientName: '수정된이름' } as any);
+      const updated = await repository.update(1, {
+        recipientName: '수정된이름',
+      } as any);
 
       // Then: 수정된 배송지 반환
       expect(updated).not.toBeNull();
@@ -569,7 +573,9 @@ describe('InMemoryUserAddressRepository', () => {
     it('수정된 UserAddress 엔티티는 메서드를 포함한다 (toEntity 검증)', async () => {
       // Given: 배송지 1 존재
       // When: 배송지 수정
-      const updated = await repository.update(1, { addressDefaultText:'새주소' } as any);
+      const updated = await repository.update(1, {
+        addressDefaultText: '새주소',
+      } as any);
 
       // Then: UserAddress 엔티티 메서드 사용 가능
       expect(updated).not.toBeNull();

@@ -128,7 +128,9 @@ describe('InMemoryUserRepository', () => {
     it('조건에 맞는 사용자가 없으면 null을 반환한다', async () => {
       // Given: repository
       // When: 존재하지 않는 이름으로 조회
-      const user = await repository.findOne((u) => u.name === '존재하지않는이름');
+      const user = await repository.findOne(
+        (u) => u.name === '존재하지않는이름',
+      );
 
       // Then: null 반환
       expect(user).toBeNull();

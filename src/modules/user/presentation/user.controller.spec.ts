@@ -115,10 +115,14 @@ describe('UserController', () => {
     describe('실패 케이스', () => {
       it('존재하지 않는 사용자 ID로 조회하면 UserNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 999 없음
-        jest.spyOn(service, 'getUserById').mockRejectedValue(new UserNotFoundException(999));
+        jest
+          .spyOn(service, 'getUserById')
+          .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
-        await expect(controller.getUserById(999)).rejects.toThrow(UserNotFoundException);
+        await expect(controller.getUserById(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(service.getUserById).toHaveBeenCalledWith(999);
       });
     });
@@ -162,10 +166,14 @@ describe('UserController', () => {
     describe('실패 케이스', () => {
       it('존재하지 않는 사용자 ID로 조회하면 UserNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 999 없음
-        jest.spyOn(service, 'getProfile').mockRejectedValue(new UserNotFoundException(999));
+        jest
+          .spyOn(service, 'getProfile')
+          .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
-        await expect(controller.getProfile(999)).rejects.toThrow(UserNotFoundException);
+        await expect(controller.getProfile(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(service.getProfile).toHaveBeenCalledWith(999);
       });
     });
@@ -226,7 +234,9 @@ describe('UserController', () => {
     describe('실패 케이스', () => {
       it('존재하지 않는 사용자 ID로 수정하면 UserNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 999 없음
-        jest.spyOn(service, 'updateProfile').mockRejectedValue(new UserNotFoundException(999));
+        jest
+          .spyOn(service, 'updateProfile')
+          .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
         await expect(controller.updateProfile(999, updateDto)).rejects.toThrow(
@@ -302,10 +312,14 @@ describe('UserController', () => {
     describe('실패 케이스', () => {
       it('존재하지 않는 사용자 ID로 조회하면 UserNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 999 없음
-        jest.spyOn(service, 'getAddressList').mockRejectedValue(new UserNotFoundException(999));
+        jest
+          .spyOn(service, 'getAddressList')
+          .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
-        await expect(controller.getAddressList(999)).rejects.toThrow(UserNotFoundException);
+        await expect(controller.getAddressList(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(service.getAddressList).toHaveBeenCalledWith(999);
       });
     });
@@ -441,7 +455,9 @@ describe('UserController', () => {
     describe('실패 케이스', () => {
       it('존재하지 않는 사용자 ID로 생성하면 UserNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 999 없음
-        jest.spyOn(service, 'createAddress').mockRejectedValue(new UserNotFoundException(999));
+        jest
+          .spyOn(service, 'createAddress')
+          .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
         await expect(controller.createAddress(999, createDto)).rejects.toThrow(
@@ -504,12 +520,14 @@ describe('UserController', () => {
     describe('실패 케이스', () => {
       it('존재하지 않는 사용자 ID로 수정하면 UserNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 999 없음
-        jest.spyOn(service, 'updateAddress').mockRejectedValue(new UserNotFoundException(999));
+        jest
+          .spyOn(service, 'updateAddress')
+          .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
-        await expect(controller.updateAddress(999, 1, updateDto)).rejects.toThrow(
-          UserNotFoundException,
-        );
+        await expect(
+          controller.updateAddress(999, 1, updateDto),
+        ).rejects.toThrow(UserNotFoundException);
         expect(service.updateAddress).toHaveBeenCalledWith(999, 1, updateDto);
       });
 
@@ -520,9 +538,9 @@ describe('UserController', () => {
           .mockRejectedValue(new AddressNotFoundException(999));
 
         // When & Then: AddressNotFoundException 발생
-        await expect(controller.updateAddress(1, 999, updateDto)).rejects.toThrow(
-          AddressNotFoundException,
-        );
+        await expect(
+          controller.updateAddress(1, 999, updateDto),
+        ).rejects.toThrow(AddressNotFoundException);
         expect(service.updateAddress).toHaveBeenCalledWith(1, 999, updateDto);
       });
 
@@ -533,9 +551,9 @@ describe('UserController', () => {
           .mockRejectedValue(new AddressAccessDeniedException(99));
 
         // When & Then: AddressAccessDeniedException 발생
-        await expect(controller.updateAddress(1, 99, updateDto)).rejects.toThrow(
-          AddressAccessDeniedException,
-        );
+        await expect(
+          controller.updateAddress(1, 99, updateDto),
+        ).rejects.toThrow(AddressAccessDeniedException);
         expect(service.updateAddress).toHaveBeenCalledWith(1, 99, updateDto);
       });
     });
@@ -562,10 +580,14 @@ describe('UserController', () => {
     describe('실패 케이스', () => {
       it('존재하지 않는 사용자 ID로 삭제하면 UserNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 999 없음
-        jest.spyOn(service, 'deleteAddress').mockRejectedValue(new UserNotFoundException(999));
+        jest
+          .spyOn(service, 'deleteAddress')
+          .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
-        await expect(controller.deleteAddress(999, 1)).rejects.toThrow(UserNotFoundException);
+        await expect(controller.deleteAddress(999, 1)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(service.deleteAddress).toHaveBeenCalledWith(999, 1);
       });
 
@@ -576,7 +598,9 @@ describe('UserController', () => {
           .mockRejectedValue(new AddressNotFoundException(999));
 
         // When & Then: AddressNotFoundException 발생
-        await expect(controller.deleteAddress(1, 999)).rejects.toThrow(AddressNotFoundException);
+        await expect(controller.deleteAddress(1, 999)).rejects.toThrow(
+          AddressNotFoundException,
+        );
         expect(service.deleteAddress).toHaveBeenCalledWith(1, 999);
       });
 
@@ -599,8 +623,13 @@ describe('UserController', () => {
     describe('성공 케이스', () => {
       it('배송지를 기본 배송지로 설정할 수 있다', async () => {
         // Given: 사용자 존재, 배송지 존재
-        const defaultAddress = UserAddress.create({ ...mockAddress, isDefault: true } as any);
-        jest.spyOn(service, 'setDefaultAddress').mockResolvedValue(defaultAddress);
+        const defaultAddress = UserAddress.create({
+          ...mockAddress,
+          isDefault: true,
+        } as any);
+        jest
+          .spyOn(service, 'setDefaultAddress')
+          .mockResolvedValue(defaultAddress);
 
         // When: setDefaultAddress 호출
         const result = await controller.setDefaultAddress(1, 1);
@@ -660,8 +689,13 @@ describe('UserController', () => {
     describe('성공 케이스', () => {
       it('사용자의 기본 배송지를 조회할 수 있다', async () => {
         // Given: 사용자 존재, 기본 배송지 존재
-        const defaultAddress = UserAddress.create({ ...mockAddress, isDefault: true } as any);
-        jest.spyOn(service, 'getDefaultAddress').mockResolvedValue(defaultAddress);
+        const defaultAddress = UserAddress.create({
+          ...mockAddress,
+          isDefault: true,
+        } as any);
+        jest
+          .spyOn(service, 'getDefaultAddress')
+          .mockResolvedValue(defaultAddress);
 
         // When: getDefaultAddress(1) 호출
         const result = await controller.getDefaultAddress(1);
@@ -701,7 +735,9 @@ describe('UserController', () => {
           .mockRejectedValue(new UserNotFoundException(999));
 
         // When & Then: UserNotFoundException 발생
-        await expect(controller.getDefaultAddress(999)).rejects.toThrow(UserNotFoundException);
+        await expect(controller.getDefaultAddress(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(service.getDefaultAddress).toHaveBeenCalledWith(999);
       });
     });

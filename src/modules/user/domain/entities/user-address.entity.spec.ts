@@ -70,7 +70,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, recipientName: '홍' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidRecipientNameException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidRecipientNameException,
+        );
       });
 
       it('수령인 이름이 50자 초과면 InvalidRecipientNameException을 발생시킨다', () => {
@@ -78,7 +80,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, recipientName: 'a'.repeat(51) };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidRecipientNameException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidRecipientNameException,
+        );
       });
 
       it('수령인 이름이 공백만 있으면 InvalidRecipientNameException을 발생시킨다', () => {
@@ -86,7 +90,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, recipientName: '   ' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidRecipientNameException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidRecipientNameException,
+        );
       });
     });
 
@@ -96,7 +102,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, recipientPhone: '123-456' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidPhoneNumberFormatException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidPhoneNumberFormatException,
+        );
       });
 
       it('문자가 포함된 전화번호면 InvalidPhoneNumberFormatException을 발생시킨다', () => {
@@ -104,7 +112,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, recipientPhone: '010-abcd-5678' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidPhoneNumberFormatException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidPhoneNumberFormatException,
+        );
       });
 
       it('너무 짧은 전화번호면 InvalidPhoneNumberFormatException을 발생시킨다', () => {
@@ -112,7 +122,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, recipientPhone: '010-123' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidPhoneNumberFormatException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidPhoneNumberFormatException,
+        );
       });
     });
 
@@ -122,7 +134,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, postalCode: '1234' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidZipCodeFormatException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidZipCodeFormatException,
+        );
       });
 
       it('숫자가 아닌 우편번호면 InvalidZipCodeFormatException을 발생시킨다', () => {
@@ -130,7 +144,9 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, postalCode: '1234a' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidZipCodeFormatException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidZipCodeFormatException,
+        );
       });
 
       it('하이픈이 포함된 우편번호면 InvalidZipCodeFormatException을 발생시킨다', () => {
@@ -138,41 +154,52 @@ describe('UserAddress Entity', () => {
         const props = { ...validAddressProps, postalCode: '123-45' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidZipCodeFormatException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidZipCodeFormatException,
+        );
       });
     });
 
     describe('주소 검증 실패', () => {
       it('빈 주소면 InvalidAddressException을 발생시킨다', () => {
         // Given: 빈 주소
-        const props = { ...validAddressProps, addressDefaultText:'' };
+        const props = { ...validAddressProps, addressDefaultText: '' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidAddressException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidAddressException,
+        );
         expect(() => UserAddress.create(props)).toThrow('Address is required');
       });
 
       it('공백만 있는 주소면 InvalidAddressException을 발생시킨다', () => {
         // Given: 공백 주소
-        const props = { ...validAddressProps, addressDefaultText:'   ' };
+        const props = { ...validAddressProps, addressDefaultText: '   ' };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidAddressException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidAddressException,
+        );
       });
 
       it('200자를 초과하는 주소면 InvalidAddressException을 발생시킨다', () => {
         // Given: 201자 주소
-        const props = { ...validAddressProps, addressDefaultText:'a'.repeat(201) };
+        const props = {
+          ...validAddressProps,
+          addressDefaultText: 'a'.repeat(201),
+        };
 
         // When & Then: 예외 발생
-        expect(() => UserAddress.create(props)).toThrow(InvalidAddressException);
+        expect(() => UserAddress.create(props)).toThrow(
+          InvalidAddressException,
+        );
         expect(() => UserAddress.create(props)).toThrow('Address is too long');
       });
     });
   });
 
   describe('update', () => {
-    let addressDefaultText:UserAddress;
+    let addressDefaultText: UserAddress;
 
     beforeEach(() => {
       address = UserAddress.create(validAddressProps);
@@ -207,7 +234,7 @@ describe('UserAddress Entity', () => {
         // Given: 기존 UserAddress
         const updates = {
           postalCode: '54321',
-          addressDefaultText:'부산시 해운대구 센텀로 100',
+          addressDefaultText: '부산시 해운대구 센텀로 100',
         };
 
         // When: 여러 필드 수정
@@ -259,9 +286,9 @@ describe('UserAddress Entity', () => {
         const invalidPhoneNumber = '123-456';
 
         // When & Then: 예외 발생
-        expect(() => address.update({ recipientPhone: invalidPhoneNumber })).toThrow(
-          InvalidPhoneNumberFormatException,
-        );
+        expect(() =>
+          address.update({ recipientPhone: invalidPhoneNumber }),
+        ).toThrow(InvalidPhoneNumberFormatException);
       });
 
       it('유효하지 않은 우편번호로 수정하면 InvalidZipCodeFormatException을 발생시킨다', () => {
@@ -279,9 +306,9 @@ describe('UserAddress Entity', () => {
         const invalidAddress = '';
 
         // When & Then: 예외 발생
-        expect(() => address.update({ addressDefaultText:invalidAddress })).toThrow(
-          InvalidAddressException,
-        );
+        expect(() =>
+          address.update({ addressDefaultText: invalidAddress }),
+        ).toThrow(InvalidAddressException);
       });
     });
 
@@ -305,7 +332,10 @@ describe('UserAddress Entity', () => {
   describe('setAsDefault', () => {
     it('기본 배송지로 설정할 수 있다', () => {
       // Given: 기본 배송지가 아닌 UserAddress
-      const address = UserAddress.create({ ...validAddressProps, isDefault: false });
+      const address = UserAddress.create({
+        ...validAddressProps,
+        isDefault: false,
+      });
 
       // When: setAsDefault() 호출
       address.setAsDefault();
@@ -317,7 +347,10 @@ describe('UserAddress Entity', () => {
 
     it('이미 기본 배송지인 경우에도 호출할 수 있다', () => {
       // Given: 이미 기본 배송지인 UserAddress
-      const address = UserAddress.create({ ...validAddressProps, isDefault: true });
+      const address = UserAddress.create({
+        ...validAddressProps,
+        isDefault: true,
+      });
 
       // When: setAsDefault() 호출
       address.setAsDefault();
@@ -330,7 +363,10 @@ describe('UserAddress Entity', () => {
   describe('unsetAsDefault', () => {
     it('기본 배송지를 해제할 수 있다', () => {
       // Given: 기본 배송지인 UserAddress
-      const address = UserAddress.create({ ...validAddressProps, isDefault: true });
+      const address = UserAddress.create({
+        ...validAddressProps,
+        isDefault: true,
+      });
 
       // When: unsetAsDefault() 호출
       address.unsetAsDefault();
@@ -342,7 +378,10 @@ describe('UserAddress Entity', () => {
 
     it('이미 기본 배송지가 아닌 경우에도 호출할 수 있다', () => {
       // Given: 기본 배송지가 아닌 UserAddress
-      const address = UserAddress.create({ ...validAddressProps, isDefault: false });
+      const address = UserAddress.create({
+        ...validAddressProps,
+        isDefault: false,
+      });
 
       // When: unsetAsDefault() 호출
       address.unsetAsDefault();

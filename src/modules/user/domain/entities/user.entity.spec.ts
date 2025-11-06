@@ -118,7 +118,9 @@ describe('User Entity', () => {
         const props = { ...validUserProps, displayName: '홍' };
 
         // When & Then: 예외 발생
-        expect(() => User.create(props)).toThrow(InvalidDisplayNameLengthException);
+        expect(() => User.create(props)).toThrow(
+          InvalidDisplayNameLengthException,
+        );
       });
 
       it('닉네임이 20자 초과면 InvalidDisplayNameLengthException을 발생시킨다', () => {
@@ -126,7 +128,9 @@ describe('User Entity', () => {
         const props = { ...validUserProps, displayName: 'a'.repeat(21) };
 
         // When & Then: 예외 발생
-        expect(() => User.create(props)).toThrow(InvalidDisplayNameLengthException);
+        expect(() => User.create(props)).toThrow(
+          InvalidDisplayNameLengthException,
+        );
       });
     });
 
@@ -136,7 +140,9 @@ describe('User Entity', () => {
         const props = { ...validUserProps, phoneNumber: '123-456' };
 
         // When & Then: 예외 발생
-        expect(() => User.create(props)).toThrow(InvalidPhoneNumberFormatException);
+        expect(() => User.create(props)).toThrow(
+          InvalidPhoneNumberFormatException,
+        );
       });
 
       it('문자가 포함된 전화번호면 InvalidPhoneNumberFormatException을 발생시킨다', () => {
@@ -144,7 +150,9 @@ describe('User Entity', () => {
         const props = { ...validUserProps, phoneNumber: '010-abcd-5678' };
 
         // When & Then: 예외 발생
-        expect(() => User.create(props)).toThrow(InvalidPhoneNumberFormatException);
+        expect(() => User.create(props)).toThrow(
+          InvalidPhoneNumberFormatException,
+        );
       });
     });
 
@@ -162,7 +170,9 @@ describe('User Entity', () => {
         const props = { ...validUserProps, point: 10_000_001 };
 
         // When & Then: 에러 발생
-        expect(() => User.create(props)).toThrow('Point cannot exceed 10,000,000');
+        expect(() => User.create(props)).toThrow(
+          'Point cannot exceed 10,000,000',
+        );
       });
     });
   });
@@ -256,9 +266,9 @@ describe('User Entity', () => {
         const invalidDisplayName = 'a'.repeat(21);
 
         // When & Then: 예외 발생
-        expect(() => user.updateProfile({ displayName: invalidDisplayName })).toThrow(
-          InvalidDisplayNameLengthException,
-        );
+        expect(() =>
+          user.updateProfile({ displayName: invalidDisplayName }),
+        ).toThrow(InvalidDisplayNameLengthException);
       });
 
       it('유효하지 않은 전화번호로 수정하면 InvalidPhoneNumberFormatException을 발생시킨다', () => {
@@ -266,9 +276,9 @@ describe('User Entity', () => {
         const invalidPhoneNumber = '123-456';
 
         // When & Then: 예외 발생
-        expect(() => user.updateProfile({ phoneNumber: invalidPhoneNumber })).toThrow(
-          InvalidPhoneNumberFormatException,
-        );
+        expect(() =>
+          user.updateProfile({ phoneNumber: invalidPhoneNumber }),
+        ).toThrow(InvalidPhoneNumberFormatException);
       });
     });
 

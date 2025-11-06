@@ -134,7 +134,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
         // When & Then: UserNotFoundException 발생
-        await expect(service.getUserById(999)).rejects.toThrow(UserNotFoundException);
+        await expect(service.getUserById(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
       });
 
@@ -192,7 +194,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
         // When & Then: UserNotFoundException 발생
-        await expect(service.getProfile(999)).rejects.toThrow(UserNotFoundException);
+        await expect(service.getProfile(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
       });
     });
@@ -212,17 +216,25 @@ describe('UserService', () => {
         // Then: 이름 변경됨
         expect(result.name).toBe('김철수');
         expect(mockUserRepository.findById).toHaveBeenCalledWith(1);
-        expect(mockUserRepository.update).toHaveBeenCalledWith(1, expect.any(User));
+        expect(mockUserRepository.update).toHaveBeenCalledWith(
+          1,
+          expect.any(User),
+        );
       });
 
       it('사용자 닉네임만 수정할 수 있다', async () => {
         // Given: 사용자 존재, 새 닉네임
-        const updatedUser = User.create({ ...mockUser, displayName: '새닉네임' } as any);
+        const updatedUser = User.create({
+          ...mockUser,
+          displayName: '새닉네임',
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
         mockUserRepository.update.mockResolvedValue(updatedUser);
 
         // When: 닉네임만 수정
-        const result = await service.updateProfile(1, { displayName: '새닉네임' });
+        const result = await service.updateProfile(1, {
+          displayName: '새닉네임',
+        });
 
         // Then: 닉네임 변경됨
         expect(result.displayName).toBe('새닉네임');
@@ -230,12 +242,17 @@ describe('UserService', () => {
 
       it('사용자 전화번호만 수정할 수 있다', async () => {
         // Given: 사용자 존재, 새 전화번호
-        const updatedUser = User.create({ ...mockUser, phoneNumber: '010-9876-5432' } as any);
+        const updatedUser = User.create({
+          ...mockUser,
+          phoneNumber: '010-9876-5432',
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
         mockUserRepository.update.mockResolvedValue(updatedUser);
 
         // When: 전화번호만 수정
-        const result = await service.updateProfile(1, { phoneNumber: '010-9876-5432' });
+        const result = await service.updateProfile(1, {
+          phoneNumber: '010-9876-5432',
+        });
 
         // Then: 전화번호 변경됨
         expect(result.phoneNumber).toBe('010-9876-5432');
@@ -280,12 +297,17 @@ describe('UserService', () => {
 
       it('전화번호를 하이픈 없이 수정할 수 있다', async () => {
         // Given: 사용자 존재
-        const updatedUser = User.create({ ...mockUser, phoneNumber: '01012345678' } as any);
+        const updatedUser = User.create({
+          ...mockUser,
+          phoneNumber: '01012345678',
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
         mockUserRepository.update.mockResolvedValue(updatedUser);
 
         // When: 하이픈 없는 전화번호로 수정
-        const result = await service.updateProfile(1, { phoneNumber: '01012345678' });
+        const result = await service.updateProfile(1, {
+          phoneNumber: '01012345678',
+        });
 
         // Then: 전화번호 변경됨
         expect(result.phoneNumber).toBe('01012345678');
@@ -298,9 +320,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
         // When & Then: UserNotFoundException 발생
-        await expect(service.updateProfile(999, { name: '이름' })).rejects.toThrow(
-          UserNotFoundException,
-        );
+        await expect(
+          service.updateProfile(999, { name: '이름' }),
+        ).rejects.toThrow(UserNotFoundException);
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
         expect(mockUserRepository.update).not.toHaveBeenCalled();
       });
@@ -311,9 +333,9 @@ describe('UserService', () => {
         mockUserRepository.update.mockResolvedValue(null);
 
         // When & Then: UserNotFoundException 발생
-        await expect(service.updateProfile(1, { name: '새이름' })).rejects.toThrow(
-          UserNotFoundException,
-        );
+        await expect(
+          service.updateProfile(1, { name: '새이름' }),
+        ).rejects.toThrow(UserNotFoundException);
       });
     });
 
@@ -334,9 +356,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(mockUser);
 
         // When & Then: InvalidNameLengthException 발생
-        await expect(service.updateProfile(1, { name: 'a'.repeat(51) })).rejects.toThrow(
-          InvalidNameLengthException,
-        );
+        await expect(
+          service.updateProfile(1, { name: 'a'.repeat(51) }),
+        ).rejects.toThrow(InvalidNameLengthException);
       });
 
       it('이름이 공백만 있으면 InvalidNameLengthException을 발생시킨다', async () => {
@@ -356,9 +378,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(mockUser);
 
         // When & Then: InvalidDisplayNameLengthException 발생
-        await expect(service.updateProfile(1, { displayName: '홍' })).rejects.toThrow(
-          InvalidDisplayNameLengthException,
-        );
+        await expect(
+          service.updateProfile(1, { displayName: '홍' }),
+        ).rejects.toThrow(InvalidDisplayNameLengthException);
         expect(mockUserRepository.update).not.toHaveBeenCalled();
       });
 
@@ -367,9 +389,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(mockUser);
 
         // When & Then: InvalidDisplayNameLengthException 발생
-        await expect(service.updateProfile(1, { displayName: 'a'.repeat(21) })).rejects.toThrow(
-          InvalidDisplayNameLengthException,
-        );
+        await expect(
+          service.updateProfile(1, { displayName: 'a'.repeat(21) }),
+        ).rejects.toThrow(InvalidDisplayNameLengthException);
       });
     });
 
@@ -379,9 +401,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(mockUser);
 
         // When & Then: InvalidPhoneNumberFormatException 발생
-        await expect(service.updateProfile(1, { phoneNumber: '123-456' })).rejects.toThrow(
-          InvalidPhoneNumberFormatException,
-        );
+        await expect(
+          service.updateProfile(1, { phoneNumber: '123-456' }),
+        ).rejects.toThrow(InvalidPhoneNumberFormatException);
         expect(mockUserRepository.update).not.toHaveBeenCalled();
       });
 
@@ -400,9 +422,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(mockUser);
 
         // When & Then: InvalidPhoneNumberFormatException 발생
-        await expect(service.updateProfile(1, { phoneNumber: '010-123' })).rejects.toThrow(
-          InvalidPhoneNumberFormatException,
-        );
+        await expect(
+          service.updateProfile(1, { phoneNumber: '010-123' }),
+        ).rejects.toThrow(InvalidPhoneNumberFormatException);
       });
     });
 
@@ -487,7 +509,9 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
         // When & Then: UserNotFoundException 발생
-        await expect(service.getAddressList(999)).rejects.toThrow(UserNotFoundException);
+        await expect(service.getAddressList(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
         expect(mockUserAddressRepository.findByUserId).not.toHaveBeenCalled();
       });
@@ -499,7 +523,9 @@ describe('UserService', () => {
       it('사용자 ID와 배송지 ID로 배송지를 조회할 수 있다', async () => {
         // Given: 사용자 존재, 배송지 존재
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
 
         // When: getAddressDetail(1, 1) 호출
         const result = await service.getAddressDetail(1, 1);
@@ -507,13 +533,17 @@ describe('UserService', () => {
         // Then: 배송지 반환
         expect(result).toEqual(mockAddress);
         expect(mockUserRepository.findById).toHaveBeenCalledWith(1);
-        expect(mockUserAddressRepository.findByIdAndUserId).toHaveBeenCalledWith(1, 1);
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).toHaveBeenCalledWith(1, 1);
       });
 
       it('반환된 배송지는 UserAddress 엔티티 인스턴스다', async () => {
         // Given: 사용자 존재, 배송지 존재
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
 
         // When: getAddressDetail 호출
         const result = await service.getAddressDetail(1, 1);
@@ -536,7 +566,9 @@ describe('UserService', () => {
           UserNotFoundException,
         );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
-        expect(mockUserAddressRepository.findByIdAndUserId).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).not.toHaveBeenCalled();
       });
     });
 
@@ -634,12 +666,17 @@ describe('UserService', () => {
         expect(result.recipientName).toBe('김철수');
         expect(mockUserRepository.findById).toHaveBeenCalledWith(1);
         expect(mockUserAddressRepository.countByUserId).toHaveBeenCalledWith(1);
-        expect(mockUserAddressRepository.create).toHaveBeenCalledWith(expect.any(UserAddress));
+        expect(mockUserAddressRepository.create).toHaveBeenCalledWith(
+          expect.any(UserAddress),
+        );
       });
 
       it('addressDetailText가 없어도 배송지를 생성할 수 있다', async () => {
         // Given: addressDetailText 없는 데이터
-        const dataWithoutDetail = { ...createData, addressDetailText: undefined };
+        const dataWithoutDetail = {
+          ...createData,
+          addressDetailText: undefined,
+        };
         const newAddress = UserAddress.create({
           id: 2,
           userId: 1,
@@ -782,7 +819,9 @@ describe('UserService', () => {
           recipientPhone: '010-1111-2222',
         } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
         mockUserAddressRepository.update.mockResolvedValue(updatedAddress);
 
         // When: updateAddress 호출
@@ -792,8 +831,13 @@ describe('UserService', () => {
         expect(result.recipientName).toBe('이영희');
         expect(result.recipientPhone).toBe('010-1111-2222');
         expect(mockUserRepository.findById).toHaveBeenCalledWith(1);
-        expect(mockUserAddressRepository.findByIdAndUserId).toHaveBeenCalledWith(1, 1);
-        expect(mockUserAddressRepository.update).toHaveBeenCalledWith(1, expect.any(UserAddress));
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).toHaveBeenCalledWith(1, 1);
+        expect(mockUserAddressRepository.update).toHaveBeenCalledWith(
+          1,
+          expect.any(UserAddress),
+        );
       });
 
       it('일부 필드만 수정할 수 있다', async () => {
@@ -804,7 +848,9 @@ describe('UserService', () => {
           recipientName: '박민수',
         } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
         mockUserAddressRepository.update.mockResolvedValue(updatedAddress);
 
         // When: 일부 필드만 수정
@@ -817,7 +863,9 @@ describe('UserService', () => {
       it('반환된 배송지는 UserAddress 엔티티 인스턴스다', async () => {
         // Given: 사용자 존재, 배송지 존재
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
         mockUserAddressRepository.update.mockResolvedValue(mockAddress);
 
         // When: updateAddress 호출
@@ -838,7 +886,9 @@ describe('UserService', () => {
           UserNotFoundException,
         );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
-        expect(mockUserAddressRepository.findByIdAndUserId).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).not.toHaveBeenCalled();
         expect(mockUserAddressRepository.update).not.toHaveBeenCalled();
       });
     });
@@ -861,7 +911,9 @@ describe('UserService', () => {
       it('업데이트 후 배송지가 없으면 AddressNotFoundException을 발생시킨다', async () => {
         // Given: 사용자 존재, 배송지 존재하나 업데이트 실패
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
         mockUserAddressRepository.update.mockResolvedValue(null);
 
         // When & Then: AddressNotFoundException 발생
@@ -892,7 +944,9 @@ describe('UserService', () => {
         // Given: 사용자 존재, 배송지 존재
         const addressSpy = jest.spyOn(mockAddress, 'update');
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
         mockUserAddressRepository.update.mockResolvedValue(mockAddress);
 
         // When: updateAddress 호출
@@ -909,7 +963,9 @@ describe('UserService', () => {
       it('배송지를 삭제할 수 있다', async () => {
         // Given: 사용자 존재, 배송지 존재
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
         mockUserAddressRepository.delete.mockResolvedValue(true);
 
         // When: deleteAddress 호출
@@ -917,15 +973,22 @@ describe('UserService', () => {
 
         // Then: 삭제 성공
         expect(mockUserRepository.findById).toHaveBeenCalledWith(1);
-        expect(mockUserAddressRepository.findByIdAndUserId).toHaveBeenCalledWith(1, 1);
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).toHaveBeenCalledWith(1, 1);
         expect(mockUserAddressRepository.delete).toHaveBeenCalledWith(1);
       });
 
       it('기본 배송지를 삭제할 수 있다', async () => {
         // Given: 사용자 존재, 기본 배송지 존재
-        const defaultAddress = UserAddress.create({ ...mockAddress, isDefault: true } as any);
+        const defaultAddress = UserAddress.create({
+          ...mockAddress,
+          isDefault: true,
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(defaultAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          defaultAddress,
+        );
         mockUserAddressRepository.delete.mockResolvedValue(true);
 
         // When: deleteAddress 호출
@@ -942,9 +1005,13 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
         // When & Then: UserNotFoundException 발생
-        await expect(service.deleteAddress(999, 1)).rejects.toThrow(UserNotFoundException);
+        await expect(service.deleteAddress(999, 1)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
-        expect(mockUserAddressRepository.findByIdAndUserId).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).not.toHaveBeenCalled();
         expect(mockUserAddressRepository.delete).not.toHaveBeenCalled();
       });
     });
@@ -957,7 +1024,9 @@ describe('UserService', () => {
         mockUserAddressRepository.exists.mockResolvedValue(false);
 
         // When & Then: AddressNotFoundException 발생
-        await expect(service.deleteAddress(1, 999)).rejects.toThrow(AddressNotFoundException);
+        await expect(service.deleteAddress(1, 999)).rejects.toThrow(
+          AddressNotFoundException,
+        );
         expect(mockUserAddressRepository.exists).toHaveBeenCalledWith(999);
         expect(mockUserAddressRepository.delete).not.toHaveBeenCalled();
       });
@@ -984,10 +1053,17 @@ describe('UserService', () => {
     describe('성공 케이스', () => {
       it('배송지를 기본 배송지로 설정할 수 있다', async () => {
         // Given: 사용자 존재, 배송지 존재
-        const defaultAddress = UserAddress.create({ ...mockAddress, isDefault: true } as any);
+        const defaultAddress = UserAddress.create({
+          ...mockAddress,
+          isDefault: true,
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
-        mockUserAddressRepository.setDefaultAddress.mockResolvedValue(defaultAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
+        mockUserAddressRepository.setDefaultAddress.mockResolvedValue(
+          defaultAddress,
+        );
 
         // When: setDefaultAddress 호출
         const result = await service.setDefaultAddress(1, 1);
@@ -995,16 +1071,27 @@ describe('UserService', () => {
         // Then: 기본 배송지로 설정 성공
         expect(result.isDefault).toBe(true);
         expect(mockUserRepository.findById).toHaveBeenCalledWith(1);
-        expect(mockUserAddressRepository.findByIdAndUserId).toHaveBeenCalledWith(1, 1);
-        expect(mockUserAddressRepository.setDefaultAddress).toHaveBeenCalledWith(1, 1);
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).toHaveBeenCalledWith(1, 1);
+        expect(
+          mockUserAddressRepository.setDefaultAddress,
+        ).toHaveBeenCalledWith(1, 1);
       });
 
       it('반환된 배송지는 UserAddress 엔티티 인스턴스다', async () => {
         // Given: 사용자 존재, 배송지 존재
-        const defaultAddress = UserAddress.create({ ...mockAddress, isDefault: true } as any);
+        const defaultAddress = UserAddress.create({
+          ...mockAddress,
+          isDefault: true,
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(mockAddress);
-        mockUserAddressRepository.setDefaultAddress.mockResolvedValue(defaultAddress);
+        mockUserAddressRepository.findByIdAndUserId.mockResolvedValue(
+          mockAddress,
+        );
+        mockUserAddressRepository.setDefaultAddress.mockResolvedValue(
+          defaultAddress,
+        );
 
         // When: setDefaultAddress 호출
         const result = await service.setDefaultAddress(1, 1);
@@ -1024,8 +1111,12 @@ describe('UserService', () => {
           UserNotFoundException,
         );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
-        expect(mockUserAddressRepository.findByIdAndUserId).not.toHaveBeenCalled();
-        expect(mockUserAddressRepository.setDefaultAddress).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.findByIdAndUserId,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.setDefaultAddress,
+        ).not.toHaveBeenCalled();
       });
     });
 
@@ -1041,7 +1132,9 @@ describe('UserService', () => {
           AddressNotFoundException,
         );
         expect(mockUserAddressRepository.exists).toHaveBeenCalledWith(999);
-        expect(mockUserAddressRepository.setDefaultAddress).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.setDefaultAddress,
+        ).not.toHaveBeenCalled();
       });
     });
 
@@ -1057,7 +1150,9 @@ describe('UserService', () => {
           AddressAccessDeniedException,
         );
         expect(mockUserAddressRepository.exists).toHaveBeenCalledWith(99);
-        expect(mockUserAddressRepository.setDefaultAddress).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.setDefaultAddress,
+        ).not.toHaveBeenCalled();
       });
     });
   });
@@ -1066,9 +1161,14 @@ describe('UserService', () => {
     describe('성공 케이스', () => {
       it('사용자의 기본 배송지를 조회할 수 있다', async () => {
         // Given: 사용자 존재, 기본 배송지 존재
-        const defaultAddress = UserAddress.create({ ...mockAddress, isDefault: true } as any);
+        const defaultAddress = UserAddress.create({
+          ...mockAddress,
+          isDefault: true,
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findDefaultByUserId.mockResolvedValue(defaultAddress);
+        mockUserAddressRepository.findDefaultByUserId.mockResolvedValue(
+          defaultAddress,
+        );
 
         // When: getDefaultAddress(1) 호출
         const result = await service.getDefaultAddress(1);
@@ -1077,7 +1177,9 @@ describe('UserService', () => {
         expect(result).toEqual(defaultAddress);
         expect(result!.isDefault).toBe(true);
         expect(mockUserRepository.findById).toHaveBeenCalledWith(1);
-        expect(mockUserAddressRepository.findDefaultByUserId).toHaveBeenCalledWith(1);
+        expect(
+          mockUserAddressRepository.findDefaultByUserId,
+        ).toHaveBeenCalledWith(1);
       });
 
       it('기본 배송지가 없으면 null을 반환한다', async () => {
@@ -1090,14 +1192,21 @@ describe('UserService', () => {
 
         // Then: null 반환
         expect(result).toBeNull();
-        expect(mockUserAddressRepository.findDefaultByUserId).toHaveBeenCalledWith(1);
+        expect(
+          mockUserAddressRepository.findDefaultByUserId,
+        ).toHaveBeenCalledWith(1);
       });
 
       it('반환된 배송지는 UserAddress 엔티티 인스턴스다', async () => {
         // Given: 사용자 존재, 기본 배송지 존재
-        const defaultAddress = UserAddress.create({ ...mockAddress, isDefault: true } as any);
+        const defaultAddress = UserAddress.create({
+          ...mockAddress,
+          isDefault: true,
+        } as any);
         mockUserRepository.findById.mockResolvedValue(mockUser);
-        mockUserAddressRepository.findDefaultByUserId.mockResolvedValue(defaultAddress);
+        mockUserAddressRepository.findDefaultByUserId.mockResolvedValue(
+          defaultAddress,
+        );
 
         // When: getDefaultAddress 호출
         const result = await service.getDefaultAddress(1);
@@ -1113,9 +1222,13 @@ describe('UserService', () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
         // When & Then: UserNotFoundException 발생
-        await expect(service.getDefaultAddress(999)).rejects.toThrow(UserNotFoundException);
+        await expect(service.getDefaultAddress(999)).rejects.toThrow(
+          UserNotFoundException,
+        );
         expect(mockUserRepository.findById).toHaveBeenCalledWith(999);
-        expect(mockUserAddressRepository.findDefaultByUserId).not.toHaveBeenCalled();
+        expect(
+          mockUserAddressRepository.findDefaultByUserId,
+        ).not.toHaveBeenCalled();
       });
     });
   });

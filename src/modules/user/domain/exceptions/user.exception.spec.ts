@@ -300,7 +300,19 @@ describe('User Domain Exceptions', () => {
       // Then: 모든 코드가 고유함
       const uniqueCodes = new Set(codes);
       expect(uniqueCodes.size).toBe(exceptions.length);
-      expect(codes).toEqual(['U001', 'U002', 'U003', 'U004', 'U005', 'U006', 'U007', 'U008', 'U009', 'U010', 'U011']);
+      expect(codes).toEqual([
+        'U001',
+        'U002',
+        'U003',
+        'U004',
+        'U005',
+        'U006',
+        'U007',
+        'U008',
+        'U009',
+        'U010',
+        'U011',
+      ]);
     });
   });
 });
