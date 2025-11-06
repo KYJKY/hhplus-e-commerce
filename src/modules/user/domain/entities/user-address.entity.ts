@@ -159,7 +159,9 @@ export class UserAddress {
       throw new InvalidAddressException('Address is required');
     }
     if (addressDefaultText.trim().length > 200) {
-      throw new InvalidAddressException('Address is too long (max 200 characters)');
+      throw new InvalidAddressException(
+        'Address is too long (max 200 characters)',
+      );
     }
   }
 }

@@ -89,14 +89,20 @@ export class UserService {
    * @param userId - 사용자 ID
    * @param addressId - 배송지 ID
    */
-  async getAddressDetail(userId: number, addressId: number): Promise<UserAddress> {
+  async getAddressDetail(
+    userId: number,
+    addressId: number,
+  ): Promise<UserAddress> {
     // 사용자 존재 확인
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new UserNotFoundException(userId);
     }
 
-    const address = await this.userAddressRepository.findByIdAndUserId(addressId, userId);
+    const address = await this.userAddressRepository.findByIdAndUserId(
+      addressId,
+      userId,
+    );
     if (!address) {
       // 배송지가 존재하지 않거나 권한이 없는 경우
       const addressExists = await this.userAddressRepository.exists(addressId);
@@ -178,7 +184,10 @@ export class UserService {
     }
 
     // 배송지 조회 및 권한 확인
-    const address = await this.userAddressRepository.findByIdAndUserId(addressId, userId);
+    const address = await this.userAddressRepository.findByIdAndUserId(
+      addressId,
+      userId,
+    );
     if (!address) {
       const addressExists = await this.userAddressRepository.exists(addressId);
       if (addressExists) {
@@ -191,7 +200,10 @@ export class UserService {
     address.update(updateData);
 
     // Repository를 통해 업데이트
-    const updatedAddress = await this.userAddressRepository.update(addressId, address);
+    const updatedAddress = await this.userAddressRepository.update(
+      addressId,
+      address,
+    );
     if (!updatedAddress) {
       throw new AddressNotFoundException(addressId);
     }
@@ -212,7 +224,10 @@ export class UserService {
     }
 
     // 배송지 조회 및 권한 확인
-    const address = await this.userAddressRepository.findByIdAndUserId(addressId, userId);
+    const address = await this.userAddressRepository.findByIdAndUserId(
+      addressId,
+      userId,
+    );
     if (!address) {
       const addressExists = await this.userAddressRepository.exists(addressId);
       if (addressExists) {
@@ -230,7 +245,10 @@ export class UserService {
    * @param userId - 사용자 ID
    * @param addressId - 배송지 ID
    */
-  async setDefaultAddress(userId: number, addressId: number): Promise<UserAddress> {
+  async setDefaultAddress(
+    userId: number,
+    addressId: number,
+  ): Promise<UserAddress> {
     // 사용자 존재 확인
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -238,7 +256,10 @@ export class UserService {
     }
 
     // 배송지 조회 및 권한 확인
-    const address = await this.userAddressRepository.findByIdAndUserId(addressId, userId);
+    const address = await this.userAddressRepository.findByIdAndUserId(
+      addressId,
+      userId,
+    );
     if (!address) {
       const addressExists = await this.userAddressRepository.exists(addressId);
       if (addressExists) {
@@ -248,7 +269,10 @@ export class UserService {
     }
 
     // Repository를 통해 기본 배송지 설정 (기존 기본 배송지 해제 포함)
-    return await this.userAddressRepository.setDefaultAddress(userId, addressId);
+    return await this.userAddressRepository.setDefaultAddress(
+      userId,
+      addressId,
+    );
   }
 
   /**

@@ -20,9 +20,7 @@ export class UserNotFoundException extends UserDomainException {
   constructor(userId?: number) {
     super(
       'U001',
-      userId
-        ? `User with ID ${userId} not found`
-        : 'User not found',
+      userId ? `User with ID ${userId} not found` : 'User not found',
       HttpStatus.NOT_FOUND,
     );
   }
@@ -35,9 +33,7 @@ export class ProfileNotFoundException extends UserDomainException {
   constructor(userId?: number) {
     super(
       'U002',
-      userId
-        ? `Profile for user ${userId} not found`
-        : 'Profile not found',
+      userId ? `Profile for user ${userId} not found` : 'Profile not found',
       HttpStatus.NOT_FOUND,
     );
   }
@@ -74,11 +70,7 @@ export class InvalidNameLengthException extends UserDomainException {
  */
 export class InvalidPhoneNumberFormatException extends UserDomainException {
   constructor() {
-    super(
-      'U005',
-      'Invalid phone number format',
-      HttpStatus.BAD_REQUEST,
-    );
+    super('U005', 'Invalid phone number format', HttpStatus.BAD_REQUEST);
   }
 }
 
@@ -143,11 +135,7 @@ export class InvalidRecipientNameException extends UserDomainException {
  */
 export class InvalidZipCodeFormatException extends UserDomainException {
   constructor() {
-    super(
-      'U010',
-      'Zip code must be 5 digits',
-      HttpStatus.BAD_REQUEST,
-    );
+    super('U010', 'Zip code must be 5 digits', HttpStatus.BAD_REQUEST);
   }
 }
 
@@ -156,10 +144,6 @@ export class InvalidZipCodeFormatException extends UserDomainException {
  */
 export class InvalidAddressException extends UserDomainException {
   constructor(message?: string) {
-    super(
-      'U011',
-      message || 'Invalid address',
-      HttpStatus.BAD_REQUEST,
-    );
+    super('U011', message || 'Invalid address', HttpStatus.BAD_REQUEST);
   }
 }

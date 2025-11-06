@@ -154,7 +154,11 @@ export class User {
    * 닉네임 검증 (2~20자)
    */
   private static validateDisplayName(displayName: string): void {
-    if (!displayName || displayName.trim().length < 2 || displayName.trim().length > 20) {
+    if (
+      !displayName ||
+      displayName.trim().length < 2 ||
+      displayName.trim().length > 20
+    ) {
       throw new InvalidDisplayNameLengthException();
     }
   }

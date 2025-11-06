@@ -139,7 +139,9 @@ export class InMemoryUserAddressRepository
   /**
    * 조건에 맞는 단일 엔티티 조회 오버라이드
    */
-  override async findOne(predicate: (entity: UserAddress) => boolean): Promise<UserAddress | null> {
+  override async findOne(
+    predicate: (entity: UserAddress) => boolean,
+  ): Promise<UserAddress | null> {
     const entity = await super.findOne(predicate);
     return entity ? this.toEntity(entity) : null;
   }
@@ -155,7 +157,9 @@ export class InMemoryUserAddressRepository
   /**
    * 조건에 맞는 엔티티 목록 조회 오버라이드
    */
-  override async findMany(predicate: (entity: UserAddress) => boolean): Promise<UserAddress[]> {
+  override async findMany(
+    predicate: (entity: UserAddress) => boolean,
+  ): Promise<UserAddress[]> {
     const entities = await super.findMany(predicate);
     return entities.map((entity) => this.toEntity(entity));
   }
@@ -163,7 +167,10 @@ export class InMemoryUserAddressRepository
   /**
    * 엔티티 수정 오버라이드
    */
-  override async update(id: number, entityData: Partial<UserAddress>): Promise<UserAddress | null> {
+  override async update(
+    id: number,
+    entityData: Partial<UserAddress>,
+  ): Promise<UserAddress | null> {
     const entity = await super.update(id, entityData);
     return entity ? this.toEntity(entity) : null;
   }
@@ -268,7 +275,11 @@ export class InMemoryUserAddressRepository
     }
 
     const id = this.getNextId();
-    const entity = { ...entityData, id, isDefault: shouldBeDefault } as UserAddress;
+    const entity = {
+      ...entityData,
+      id,
+      isDefault: shouldBeDefault,
+    } as UserAddress;
     this.entities.set(id, entity);
 
     const result = JSON.parse(JSON.stringify(entity));
@@ -298,7 +309,9 @@ export class InMemoryUserAddressRepository
         .filter((addr) => addr.userId === userId)
         .sort((a, b) => {
           // createdAt 기준 내림차순 정렬 (가장 최근 것이 먼저)
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         });
 
       if (remainingPlainAddresses.length > 0) {

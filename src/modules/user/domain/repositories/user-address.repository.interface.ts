@@ -23,7 +23,10 @@ export interface IUserAddressRepository extends IRepository<UserAddress> {
   /**
    * 특정 사용자의 특정 배송지 조회 (권한 확인용)
    */
-  findByIdAndUserId(addressId: number, userId: number): Promise<UserAddress | null>;
+  findByIdAndUserId(
+    addressId: number,
+    userId: number,
+  ): Promise<UserAddress | null>;
 
   /**
    * 사용자의 기본 배송지를 모두 해제
