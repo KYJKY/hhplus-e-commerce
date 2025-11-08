@@ -46,7 +46,6 @@
 
 **예외 처리**:
 - `USER_NOT_FOUND`: 사용자를 찾을 수 없음
-- `POINT_ACCOUNT_NOT_FOUND`: 포인트 계정을 찾을 수 없음
 
 ---
 
@@ -328,8 +327,8 @@
 ## 비즈니스 규칙 요약
 
 ### 포인트 관리 규칙
-1. Users와 PointAccounts는 1:1 관계입니다.
-2. PointAccounts와 PointTransactions는 1:N 관계입니다.
+1. Users 테이블에 포인트 잔액(point)이 포함되어 있습니다.
+2. Users와 PointTransactions는 1:N 관계입니다.
 3. 포인트 잔액은 항상 0 이상이어야 합니다 (음수 불가).
 4. 최대 보유 가능 포인트는 10,000,000원입니다.
 5. 충전 금액은 1,000원 단위, 1,000원 이상 1,000,000원 이하여야 합니다.
@@ -371,15 +370,14 @@
 | PAY002 | ORDER_NOT_FOUND | 주문을 찾을 수 없음 |
 | PAY003 | PAYMENT_NOT_FOUND | 결제를 찾을 수 없음 |
 | PAY004 | PAYMENT_ACCESS_DENIED | 해당 결제에 접근 권한이 없음 |
-| PAY005 | POINT_ACCOUNT_NOT_FOUND | 포인트 계정을 찾을 수 없음 |
-| PAY006 | INSUFFICIENT_BALANCE | 포인트 잔액 부족 |
-| PAY007 | INVALID_PAYMENT_AMOUNT | 유효하지 않은 결제 금액 |
-| PAY008 | INVALID_CHARGE_AMOUNT | 유효하지 않은 충전 금액 (1,000~1,000,000원) |
-| PAY009 | CHARGE_AMOUNT_UNIT_ERROR | 충전 금액이 1,000원 단위가 아님 |
-| PAY010 | MAX_BALANCE_EXCEEDED | 최대 보유 가능 포인트 초과 |
-| PAY011 | DUPLICATE_PAYMENT | 이미 결제된 주문 |
-| PAY012 | PAYMENT_PROCESSING_ERROR | 결제 처리 중 오류 발생 |
-| PAY013 | ALREADY_REFUNDED | 이미 환불된 결제 |
-| PAY014 | INVALID_REFUND_AMOUNT | 유효하지 않은 환불 금액 |
-| PAY015 | INVALID_AMOUNT | 유효하지 않은 금액 |
-| PAY016 | INVALID_DATE_RANGE | 유효하지 않은 날짜 범위 |
+| PAY005 | INSUFFICIENT_BALANCE | 포인트 잔액 부족 |
+| PAY006 | INVALID_PAYMENT_AMOUNT | 유효하지 않은 결제 금액 |
+| PAY007 | INVALID_CHARGE_AMOUNT | 유효하지 않은 충전 금액 (1,000~1,000,000원) |
+| PAY008 | CHARGE_AMOUNT_UNIT_ERROR | 충전 금액이 1,000원 단위가 아님 |
+| PAY009 | MAX_BALANCE_EXCEEDED | 최대 보유 가능 포인트 초과 |
+| PAY010 | DUPLICATE_PAYMENT | 이미 결제된 주문 |
+| PAY011 | PAYMENT_PROCESSING_ERROR | 결제 처리 중 오류 발생 |
+| PAY012 | ALREADY_REFUNDED | 이미 환불된 결제 |
+| PAY013 | INVALID_REFUND_AMOUNT | 유효하지 않은 환불 금액 |
+| PAY014 | INVALID_AMOUNT | 유효하지 않은 금액 |
+| PAY015 | INVALID_DATE_RANGE | 유효하지 않은 날짜 범위 |

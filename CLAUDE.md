@@ -115,8 +115,8 @@ The critical business flow follows this sequence:
 2. **Payment Processing** (PENDING → PAID)
    - Deduct user point balance
    - Deduct inventory atomically
-   - Update order status to PAID
    - Mark coupon as used (if applied)
+   - Update order status to PAID
    - Remove cart items
    - Send data to external platform asynchronously
 
