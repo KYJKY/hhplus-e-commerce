@@ -28,7 +28,6 @@ export class InMemoryUserRepository
       name: '홍길동',
       displayName: '길동이',
       phoneNumber: '010-1234-5678',
-      point: 100000,
       lastLoginAt: now,
       deletedAt: null,
       createdAt: now,
@@ -44,7 +43,6 @@ export class InMemoryUserRepository
       name: '김철수',
       displayName: '철수',
       phoneNumber: '010-2345-6789',
-      point: 50000,
       lastLoginAt: now,
       deletedAt: null,
       createdAt: now,
@@ -60,7 +58,6 @@ export class InMemoryUserRepository
       name: '이영희',
       displayName: '영희',
       phoneNumber: '010-3456-7890',
-      point: 200000,
       lastLoginAt: now,
       deletedAt: null,
       createdAt: now,
@@ -87,7 +84,6 @@ export class InMemoryUserRepository
       name: data.name,
       displayName: data.displayName,
       phoneNumber: data.phoneNumber,
-      point: data.point,
       lastLoginAt: data.lastLoginAt,
       deletedAt: data.deletedAt,
       createdAt: data.createdAt,
@@ -148,9 +144,5 @@ export class InMemoryUserRepository
 
   async findByEmail(email: string): Promise<User | null> {
     return this.findOne((user) => user.email === email);
-  }
-
-  deductPointWithLock(userId: number, amount: number): Promise<User> {
-    throw new Error('Method not implemented.');
   }
 }

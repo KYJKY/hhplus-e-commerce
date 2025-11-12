@@ -11,7 +11,23 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { UserService } from '../application/user.service';
+import {
+  GetUserInfoUseCase,
+  GetUserProfileUseCase,
+  UpdateUserProfileUseCase,
+  GetAddressListUseCase,
+  GetAddressDetailUseCase,
+  CreateAddressUseCase,
+  UpdateAddressUseCase,
+  DeleteAddressUseCase,
+  SetDefaultAddressUseCase,
+  GetDefaultAddressUseCase,
+} from '../application/use-cases';
+import { UpdateUserProfileDto } from '../application/dtos/user-profile.dto';
+import {
+  CreateAddressDto,
+  UpdateAddressDto,
+} from '../application/dtos/user-address.dto';
 import {
   GetUserResponseDto,
   GetProfileResponseDto,
@@ -28,13 +44,23 @@ import {
   DeleteAddressResponseDto,
   SetDefaultAddressResponseDto,
   GetDefaultAddressResponseDto,
-  AddressDto,
 } from './dto/user-address.dto';
 
 @ApiTags('User')
 @Controller('/user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly getUserInfoUseCase: GetUserInfoUseCase,
+    private readonly getUserProfileUseCase: GetUserProfileUseCase,
+    private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private readonly getAddressListUseCase: GetAddressListUseCase,
+    private readonly getAddressDetailUseCase: GetAddressDetailUseCase,
+    private readonly createAddressUseCase: CreateAddressUseCase,
+    private readonly updateAddressUseCase: UpdateAddressUseCase,
+    private readonly deleteAddressUseCase: DeleteAddressUseCase,
+    private readonly setDefaultAddressUseCase: SetDefaultAddressUseCase,
+    private readonly getDefaultAddressUseCase: GetDefaultAddressUseCase,
+  ) {}
 
   /**
    * FR-U-001: 사용자 조회
@@ -55,16 +81,16 @@ export class UserController {
   async getUserById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<GetUserResponseDto> {
-    const user = await this.userService.getUserById(id);
+    const userInfo = await this.getUserInfoUseCase.execute(id);
     return {
-      userId: user.id,
-      email: user.email,
+      userId: userInfo.userId,
+      email: userInfo.email,
       profile: {
-        name: user.name,
-        displayName: user.displayName,
-        phoneNumber: user.phoneNumber,
+        name: userInfo.name,
+        displayName: userInfo.displayName,
+        phoneNumber: userInfo.phoneNumber,
       },
-      createdAt: user.createdAt,
+      createdAt: userInfo.createdAt,
     };
   }
 
@@ -87,13 +113,13 @@ export class UserController {
   async getProfile(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<GetProfileResponseDto> {
-    const user = await this.userService.getProfile(id);
+    const profile = await this.getUserProfileUseCase.execute(id);
     return {
-      userId: user.id,
-      name: user.name,
-      displayName: user.displayName,
-      phoneNumber: user.phoneNumber,
-      updatedAt: user.updatedAt,
+      userId: profile.userId,
+      name: profile.name,
+      displayName: profile.displayName,
+      phoneNumber: profile.phoneNumber,
+      updatedAt: profile.updatedAt,
     };
   }
 
@@ -118,13 +144,20 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: UpdateProfileRequestDto,
   ): Promise<UpdateProfileResponseDto> {
-    const user = await this.userService.updateProfile(id, updateData);
+    const profile = await this.updateUserProfileUseCase.execute(
+      id,
+      new UpdateUserProfileDto(
+        updateData.name,
+        updateData.displayName,
+        updateData.phoneNumber,
+      ),
+    );
     return {
-      userId: user.id,
-      name: user.name,
-      displayName: user.displayName,
-      phoneNumber: user.phoneNumber,
-      updatedAt: user.updatedAt!,
+      userId: profile.userId,
+      name: profile.name,
+      displayName: profile.displayName,
+      phoneNumber: profile.phoneNumber,
+      updatedAt: profile.updatedAt!,
     };
   }
 
@@ -147,16 +180,16 @@ export class UserController {
   async getAddressList(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<GetAddressListResponseDto> {
-    const addresses = await this.userService.getAddressList(id);
+    const addresses = await this.getAddressListUseCase.execute(id);
     return {
       userId: id,
       addresses: addresses.map((addr) => ({
-        addressId: addr.id,
+        addressId: addr.addressId,
         recipientName: addr.recipientName,
-        recipientPhone: addr.recipientPhone,
-        postalCode: addr.postalCode,
-        addressDefaultText: addr.addressDefaultText,
-        addressDetailText: addr.addressDetailText,
+        phoneNumber: addr.phoneNumber,
+        zipCode: addr.zipCode,
+        address: addr.address,
+        detailAddress: addr.detailAddress,
         isDefault: addr.isDefault,
         createdAt: addr.createdAt,
       })),
@@ -185,15 +218,15 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Param('addressId', ParseIntPipe) addressId: number,
   ): Promise<GetAddressDetailResponseDto> {
-    const address = await this.userService.getAddressDetail(id, addressId);
+    const address = await this.getAddressDetailUseCase.execute(id, addressId);
     return {
-      addressId: address.id,
+      addressId: address.addressId,
       userId: address.userId,
       recipientName: address.recipientName,
-      recipientPhone: address.recipientPhone,
-      postalCode: address.postalCode,
-      addressDefaultText: address.addressDefaultText,
-      addressDetailText: address.addressDetailText,
+      phoneNumber: address.phoneNumber,
+      zipCode: address.zipCode,
+      address: address.address,
+      detailAddress: address.detailAddress,
       isDefault: address.isDefault,
       createdAt: address.createdAt,
       updatedAt: address.updatedAt,
@@ -225,15 +258,25 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() createData: CreateAddressRequestDto,
   ): Promise<CreateAddressResponseDto> {
-    const address = await this.userService.createAddress(id, createData);
+    const address = await this.createAddressUseCase.execute(
+      id,
+      new CreateAddressDto(
+        createData.recipientName,
+        createData.phoneNumber,
+        createData.zipCode,
+        createData.address,
+        createData.detailAddress,
+        createData.isDefault,
+      ),
+    );
     return {
-      addressId: address.id,
+      addressId: address.addressId,
       userId: address.userId,
       recipientName: address.recipientName,
-      recipientPhone: address.recipientPhone,
-      postalCode: address.postalCode,
-      addressDefaultText: address.addressDefaultText,
-      addressDetailText: address.addressDetailText,
+      phoneNumber: address.phoneNumber,
+      zipCode: address.zipCode,
+      address: address.address,
+      detailAddress: address.detailAddress,
       isDefault: address.isDefault,
       createdAt: address.createdAt,
     };
@@ -263,19 +306,25 @@ export class UserController {
     @Param('addressId', ParseIntPipe) addressId: number,
     @Body() updateData: UpdateAddressRequestDto,
   ): Promise<UpdateAddressResponseDto> {
-    const address = await this.userService.updateAddress(
+    const address = await this.updateAddressUseCase.execute(
       id,
       addressId,
-      updateData,
+      new UpdateAddressDto(
+        updateData.recipientName,
+        updateData.phoneNumber,
+        updateData.zipCode,
+        updateData.address,
+        updateData.detailAddress,
+      ),
     );
     return {
-      addressId: address.id,
+      addressId: address.addressId,
       userId: address.userId,
       recipientName: address.recipientName,
-      recipientPhone: address.recipientPhone,
-      postalCode: address.postalCode,
-      addressDefaultText: address.addressDefaultText,
-      addressDetailText: address.addressDetailText,
+      phoneNumber: address.phoneNumber,
+      zipCode: address.zipCode,
+      address: address.address,
+      detailAddress: address.detailAddress,
       isDefault: address.isDefault,
       updatedAt: address.updatedAt!,
     };
@@ -300,7 +349,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Param('addressId', ParseIntPipe) addressId: number,
   ): Promise<DeleteAddressResponseDto> {
-    await this.userService.deleteAddress(id, addressId);
+    await this.deleteAddressUseCase.execute(id, addressId);
     return {
       success: true,
       deletedAddressId: addressId,
@@ -329,7 +378,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Param('addressId', ParseIntPipe) addressId: number,
   ): Promise<SetDefaultAddressResponseDto> {
-    await this.userService.setDefaultAddress(id, addressId);
+    await this.setDefaultAddressUseCase.execute(id, addressId);
     return {
       addressId: addressId,
       success: true,
@@ -355,18 +404,18 @@ export class UserController {
   async getDefaultAddress(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<GetDefaultAddressResponseDto | null> {
-    const address = await this.userService.getDefaultAddress(id);
+    const address = await this.getDefaultAddressUseCase.execute(id);
     if (!address) {
       return null;
     }
     return {
-      addressId: address.id,
+      addressId: address.addressId,
       userId: address.userId,
       recipientName: address.recipientName,
-      recipientPhone: address.recipientPhone,
-      postalCode: address.postalCode,
-      addressDefaultText: address.addressDefaultText,
-      addressDetailText: address.addressDetailText,
+      phoneNumber: address.phoneNumber,
+      zipCode: address.zipCode,
+      address: address.address,
+      detailAddress: address.detailAddress,
       isDefault: address.isDefault,
     };
   }

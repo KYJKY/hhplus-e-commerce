@@ -109,28 +109,6 @@ export class User {
     this.updatedAt = new Date().toISOString();
   }
 
-  chargePoint(amount: number): void {
-    // TODO: 포인트 충전 로직 구현
-    if (amount < 1000 || amount > 1_000_000) {
-      // throw new InvalidChargeAmountError();
-    }
-    if (amount % 1000 !== 0) {
-      // throw new InvalidChargeUnitError();
-    }
-    if (this.point + amount > 10_000_000) {
-      // throw new MaxPointExceededError();
-    }
-    this.point += amount;
-  }
-
-  deductPoint(amount: number): void {
-    // TODO: 포인트 차감 로직 구현
-    if (this.point < amount) {
-      //throw new InsufficientPointError();
-    }
-    this.point -= amount;
-  }
-
   /**
    * 이메일 형식 검증
    */
@@ -187,7 +165,38 @@ export class User {
     }
   }
 
+  /**
+   * 포인트 조회
+   */
   getPoint(): number {
     return this.point;
+  }
+
+  /**
+   * 포인트 충전
+   * @param amount - 충전할 포인트
+   */
+  chargePoint(amount: number): void {
+    if (amount < 1000 || amount > 1_000_000) {
+      throw new Error('Charge amount must be between 1,000 and 1,000,000');
+    }
+    if (amount % 1000 !== 0) {
+      throw new Error('Charge amount must be in units of 1,000');
+    }
+    if (this.point + amount > 10_000_000) {
+      throw new Error('Maximum balance of 10,000,000 would be exceeded');
+    }
+    this.point += amount;
+  }
+
+  /**
+   * 포인트 차감
+   * @param amount - 차감할 포인트
+   */
+  deductPoint(amount: number): void {
+    if (this.point < amount) {
+      throw new Error('Insufficient point balance');
+    }
+    this.point -= amount;
   }
 }

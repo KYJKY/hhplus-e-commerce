@@ -8,7 +8,17 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { PaymentService } from '../application/payment.service';
+import {
+  GetBalanceUseCase,
+  ChargePointUseCase,
+  GetPointTransactionsUseCase,
+  ProcessPaymentUseCase,
+  GetPaymentsUseCase,
+  GetPaymentDetailUseCase,
+  ProcessPaymentFailureUseCase,
+  ValidatePointDeductionUseCase,
+  GetPaymentStatisticsUseCase,
+} from '../application/use-cases';
 import {
   GetBalanceResponseDto,
   ChargePointRequestDto,
@@ -30,7 +40,17 @@ import {
 @ApiTags('Payment')
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(
+    private readonly getBalanceUseCase: GetBalanceUseCase,
+    private readonly chargePointUseCase: ChargePointUseCase,
+    private readonly getPointTransactionsUseCase: GetPointTransactionsUseCase,
+    private readonly processPaymentUseCase: ProcessPaymentUseCase,
+    private readonly getPaymentsUseCase: GetPaymentsUseCase,
+    private readonly getPaymentDetailUseCase: GetPaymentDetailUseCase,
+    private readonly processPaymentFailureUseCase: ProcessPaymentFailureUseCase,
+    private readonly validatePointDeductionUseCase: ValidatePointDeductionUseCase,
+    private readonly getPaymentStatisticsUseCase: GetPaymentStatisticsUseCase,
+  ) {}
 
   /**
    * FR-PAY-001: 포인트 잔액 조회
@@ -47,7 +67,7 @@ export class PaymentController {
   async getBalance(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<GetBalanceResponseDto> {
-    return await this.paymentService.getBalance(userId);
+    return await this.getBalanceUseCase.execute(userId);
   }
 
   /**
@@ -78,7 +98,7 @@ export class PaymentController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() body: ChargePointRequestDto,
   ): Promise<ChargePointResponseDto> {
-    return await this.paymentService.chargePoint(userId, body.amount);
+    return await this.chargePointUseCase.execute(userId, body.amount);
   }
 
   /**
@@ -101,10 +121,7 @@ export class PaymentController {
     @Param('userId', ParseIntPipe) userId: number,
     @Query() query: GetPointTransactionsRequestDto,
   ): Promise<GetPointTransactionsResponseDto> {
-    return await this.paymentService.getPointTransactions({
-      userId,
-      ...query,
-    });
+    return await this.getPointTransactionsUseCase.execute(userId, query);
   }
 
   /**
@@ -129,7 +146,7 @@ export class PaymentController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() body: ProcessPaymentRequestDto,
   ): Promise<ProcessPaymentResponseDto> {
-    return await this.paymentService.processPayment(
+    return await this.processPaymentUseCase.execute(
       userId,
       body.orderId,
       body.amount,
@@ -152,10 +169,7 @@ export class PaymentController {
     @Param('userId', ParseIntPipe) userId: number,
     @Query() query: GetPaymentsRequestDto,
   ): Promise<GetPaymentsResponseDto> {
-    return await this.paymentService.getPayments({
-      userId,
-      ...query,
-    });
+    return await this.getPaymentsUseCase.execute(userId, query);
   }
 
   /**
@@ -180,7 +194,7 @@ export class PaymentController {
     @Param('userId', ParseIntPipe) userId: number,
     @Param('paymentId', ParseIntPipe) paymentId: number,
   ): Promise<GetPaymentDetailResponseDto> {
-    return await this.paymentService.getPaymentDetail(userId, paymentId);
+    return await this.getPaymentDetailUseCase.execute(userId, paymentId);
   }
 
   /**
@@ -199,7 +213,7 @@ export class PaymentController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() body: ProcessPaymentFailureRequestDto,
   ): Promise<ProcessPaymentFailureResponseDto> {
-    return await this.paymentService.processPaymentFailure(
+    return await this.processPaymentFailureUseCase.execute(
       userId,
       body.orderId,
       body.amount,
@@ -224,7 +238,7 @@ export class PaymentController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() body: ValidatePointDeductionRequestDto,
   ): Promise<ValidatePointDeductionResponseDto> {
-    return await this.paymentService.validatePointDeduction(
+    return await this.validatePointDeductionUseCase.execute(
       userId,
       body.amount,
     );
@@ -245,6 +259,6 @@ export class PaymentController {
   async getPaymentStatistics(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<GetPaymentStatisticsResponseDto> {
-    return await this.paymentService.getPaymentStatistics(userId);
+    return await this.getPaymentStatisticsUseCase.execute(userId);
   }
 }

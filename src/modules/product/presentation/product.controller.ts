@@ -8,7 +8,18 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { ProductService } from '../application/product.service';
+import {
+  GetProductListUseCase,
+  GetProductDetailUseCase,
+  GetProductOptionsUseCase,
+  GetProductOptionDetailUseCase,
+  CheckStockUseCase,
+  DeductStockUseCase,
+  RestoreStockUseCase,
+  GetPopularProductsUseCase,
+  GetCategoriesUseCase,
+  GetCategoryProductCountUseCase,
+} from '../application/use-cases';
 import {
   GetProductListRequestDto,
   GetProductListResponseDto,
@@ -29,7 +40,18 @@ import {
 @ApiTags('Product')
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly getProductListUseCase: GetProductListUseCase,
+    private readonly getProductDetailUseCase: GetProductDetailUseCase,
+    private readonly getProductOptionsUseCase: GetProductOptionsUseCase,
+    private readonly getProductOptionDetailUseCase: GetProductOptionDetailUseCase,
+    private readonly checkStockUseCase: CheckStockUseCase,
+    private readonly deductStockUseCase: DeductStockUseCase,
+    private readonly restoreStockUseCase: RestoreStockUseCase,
+    private readonly getPopularProductsUseCase: GetPopularProductsUseCase,
+    private readonly getCategoriesUseCase: GetCategoriesUseCase,
+    private readonly getCategoryProductCountUseCase: GetCategoryProductCountUseCase,
+  ) {}
 
   /**
    * FR-P-001: 상품 목록 조회
@@ -44,8 +66,7 @@ export class ProductController {
   async getProductList(
     @Query() query: GetProductListRequestDto,
   ): Promise<GetProductListResponseDto> {
-    const result = await this.productService.getProductList(query);
-    return result;
+    return await this.getProductListUseCase.execute(query);
   }
 
   /**
@@ -64,7 +85,7 @@ export class ProductController {
   async getProductDetail(
     @Param('productId', ParseIntPipe) productId: number,
   ): Promise<GetProductDetailResponseDto> {
-    return await this.productService.getProductDetail(productId);
+    return await this.getProductDetailUseCase.execute(productId);
   }
 
   /**
@@ -82,7 +103,7 @@ export class ProductController {
   async getProductOptions(
     @Param('productId', ParseIntPipe) productId: number,
   ): Promise<GetProductOptionsResponseDto> {
-    return await this.productService.getProductOptions(productId);
+    return await this.getProductOptionsUseCase.execute(productId);
   }
 
   /**
@@ -107,7 +128,7 @@ export class ProductController {
     @Param('productId', ParseIntPipe) productId: number,
     @Param('optionId', ParseIntPipe) optionId: number,
   ): Promise<GetProductOptionDetailResponseDto> {
-    return await this.productService.getProductOptionDetail(
+    return await this.getProductOptionDetailUseCase.execute(
       productId,
       optionId,
     );
@@ -129,7 +150,7 @@ export class ProductController {
     @Param('optionId', ParseIntPipe) optionId: number,
     @Body() body: CheckStockRequestDto,
   ): Promise<CheckStockResponseDto> {
-    return await this.productService.checkStock(optionId, body.quantity);
+    return await this.checkStockUseCase.execute(optionId, body.quantity);
   }
 
   /**
@@ -150,7 +171,7 @@ export class ProductController {
     @Param('optionId', ParseIntPipe) optionId: number,
     @Body() body: DeductStockRequestDto,
   ): Promise<DeductStockResponseDto> {
-    return await this.productService.deductStock(
+    return await this.deductStockUseCase.execute(
       optionId,
       body.quantity,
       body.orderId,
@@ -174,7 +195,7 @@ export class ProductController {
     @Param('optionId', ParseIntPipe) optionId: number,
     @Body() body: RestoreStockRequestDto,
   ): Promise<RestoreStockResponseDto> {
-    return await this.productService.restoreStock(
+    return await this.restoreStockUseCase.execute(
       optionId,
       body.quantity,
       body.orderId,
@@ -192,7 +213,7 @@ export class ProductController {
     type: GetPopularProductsResponseDto,
   })
   async getPopularProducts(): Promise<GetPopularProductsResponseDto> {
-    return await this.productService.getPopularProducts();
+    return await this.getPopularProductsUseCase.execute();
   }
 
   /**
@@ -206,8 +227,7 @@ export class ProductController {
     type: GetCategoriesResponseDto,
   })
   async getCategories(): Promise<GetCategoriesResponseDto> {
-    const categories = await this.productService.getCategories();
-    return { categories };
+    return await this.getCategoriesUseCase.execute();
   }
 
   /**
@@ -225,6 +245,6 @@ export class ProductController {
   async getCategoryProductCount(
     @Param('categoryId', ParseIntPipe) categoryId: number,
   ): Promise<GetCategoryProductCountResponseDto> {
-    return await this.productService.getCategoryProductCount(categoryId);
+    return await this.getCategoryProductCountUseCase.execute(categoryId);
   }
 }

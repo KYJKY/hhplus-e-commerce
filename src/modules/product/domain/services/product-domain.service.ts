@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { IProductRepository } from '../domain/repositories/product.repository.interface';
-import type { IProductOptionRepository } from '../domain/repositories/product-option.repository.interface';
-import type { ICategoryRepository } from '../domain/repositories/category.repository.interface';
-import type { IProductCategoryRepository } from '../domain/repositories/product-category.repository.interface';
+import type { IProductRepository } from '../repositories/product.repository.interface';
+import type { IProductOptionRepository } from '../repositories/product-option.repository.interface';
+import type { ICategoryRepository } from '../repositories/category.repository.interface';
+import type { IProductCategoryRepository } from '../repositories/product-category.repository.interface';
 import {
   ProductNotFoundException,
   ProductDeletedException,
@@ -12,13 +12,21 @@ import {
   InvalidQuantityException,
   CategoryNotFoundException,
   OptionNotAvailableException,
-} from '../domain/exceptions';
-import { Product } from '../domain/entities/product.entity';
-import { ProductOption } from '../domain/entities/product-option.entity';
-import { Category } from '../domain/entities/category.entity';
+} from '../exceptions';
+import { Product } from '../entities/product.entity';
+import { ProductOption } from '../entities/product-option.entity';
+import { Category } from '../entities/category.entity';
 
+/**
+ * Product Domain Service
+ *
+ * Domain Layer의 비즈니스 로직을 담당
+ * - Repository와 직접 상호작용
+ * - 도메인 규칙 강제
+ * - Use Case에서 호출됨
+ */
 @Injectable()
-export class ProductService {
+export class ProductDomainService {
   constructor(
     @Inject('IProductRepository')
     private readonly productRepository: IProductRepository,

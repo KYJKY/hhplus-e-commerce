@@ -12,10 +12,10 @@ export interface CreateUserAddressProps {
   id: number;
   userId: number;
   recipientName: string;
-  recipientPhone: string;
-  postalCode: string;
-  addressDefaultText: string;
-  addressDetailText?: string | null;
+  phoneNumber: string;
+  zipCode: string;
+  address: string;
+  detailAddress?: string | null;
   isDefault: boolean;
   createdAt: string;
   updatedAt?: string | null;
@@ -26,10 +26,10 @@ export interface CreateUserAddressProps {
  */
 export interface UpdateUserAddressProps {
   recipientName?: string;
-  recipientPhone?: string;
-  postalCode?: string;
-  addressDefaultText?: string;
-  addressDetailText?: string | null;
+  phoneNumber?: string;
+  zipCode?: string;
+  address?: string;
+  detailAddress?: string | null;
 }
 
 /**
@@ -40,10 +40,10 @@ export class UserAddress {
     public readonly id: number,
     public readonly userId: number,
     public recipientName: string,
-    public recipientPhone: string,
-    public postalCode: string,
-    public addressDefaultText: string,
-    public addressDetailText: string | null,
+    public phoneNumber: string,
+    public zipCode: string,
+    public address: string,
+    public detailAddress: string | null,
     public isDefault: boolean,
     public readonly createdAt: string,
     public updatedAt: string | null,
@@ -55,18 +55,18 @@ export class UserAddress {
   static create(props: CreateUserAddressProps): UserAddress {
     // 검증
     this.validateRecipientName(props.recipientName);
-    this.validateRecipientPhone(props.recipientPhone);
-    this.validatePostalCode(props.postalCode);
-    this.validateAddressDefaultText(props.addressDefaultText);
+    this.validatePhoneNumber(props.phoneNumber);
+    this.validateZipCode(props.zipCode);
+    this.validateAddress(props.address);
 
     return new UserAddress(
       props.id,
       props.userId,
       props.recipientName,
-      props.recipientPhone,
-      props.postalCode,
-      props.addressDefaultText,
-      props.addressDetailText ?? null,
+      props.phoneNumber,
+      props.zipCode,
+      props.address,
+      props.detailAddress ?? null,
       props.isDefault,
       props.createdAt,
       props.updatedAt ?? null,
@@ -82,23 +82,23 @@ export class UserAddress {
       this.recipientName = props.recipientName;
     }
 
-    if (props.recipientPhone !== undefined) {
-      UserAddress.validateRecipientPhone(props.recipientPhone);
-      this.recipientPhone = props.recipientPhone;
+    if (props.phoneNumber !== undefined) {
+      UserAddress.validatePhoneNumber(props.phoneNumber);
+      this.phoneNumber = props.phoneNumber;
     }
 
-    if (props.postalCode !== undefined) {
-      UserAddress.validatePostalCode(props.postalCode);
-      this.postalCode = props.postalCode;
+    if (props.zipCode !== undefined) {
+      UserAddress.validateZipCode(props.zipCode);
+      this.zipCode = props.zipCode;
     }
 
-    if (props.addressDefaultText !== undefined) {
-      UserAddress.validateAddressDefaultText(props.addressDefaultText);
-      this.addressDefaultText = props.addressDefaultText;
+    if (props.address !== undefined) {
+      UserAddress.validateAddress(props.address);
+      this.address = props.address;
     }
 
-    if (props.addressDetailText !== undefined) {
-      this.addressDetailText = props.addressDetailText ?? null;
+    if (props.detailAddress !== undefined) {
+      this.detailAddress = props.detailAddress ?? null;
     }
 
     this.updatedAt = new Date().toISOString();
@@ -134,9 +134,9 @@ export class UserAddress {
    * 하이픈 포함 또는 제외 형식 모두 허용
    * 예: 010-1234-5678, 01012345678
    */
-  private static validateRecipientPhone(recipientPhone: string): void {
+  private static validatePhoneNumber(phoneNumber: string): void {
     const phoneRegex = /^(\d{2,3}-?\d{3,4}-?\d{4})$/;
-    if (!recipientPhone || !phoneRegex.test(recipientPhone)) {
+    if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
       throw new InvalidPhoneNumberFormatException();
     }
   }
@@ -144,9 +144,9 @@ export class UserAddress {
   /**
    * 우편번호 검증 (5자리 숫자)
    */
-  private static validatePostalCode(postalCode: string): void {
-    const postalCodeRegex = /^\d{5}$/;
-    if (!postalCode || !postalCodeRegex.test(postalCode)) {
+  private static validateZipCode(zipCode: string): void {
+    const zipCodeRegex = /^\d{5}$/;
+    if (!zipCode || !zipCodeRegex.test(zipCode)) {
       throw new InvalidZipCodeFormatException();
     }
   }
@@ -154,11 +154,11 @@ export class UserAddress {
   /**
    * 기본 주소 검증
    */
-  private static validateAddressDefaultText(addressDefaultText: string): void {
-    if (!addressDefaultText || addressDefaultText.trim().length === 0) {
+  private static validateAddress(address: string): void {
+    if (!address || address.trim().length === 0) {
       throw new InvalidAddressException('Address is required');
     }
-    if (addressDefaultText.trim().length > 200) {
+    if (address.trim().length > 200) {
       throw new InvalidAddressException(
         'Address is too long (max 200 characters)',
       );

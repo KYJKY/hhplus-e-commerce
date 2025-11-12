@@ -1,13 +1,33 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './presentation/user.controller';
-import { UserService } from './application/user.service';
 import { InMemoryUserRepository } from './infrastructure/repositories/in-memory-user.repository';
 import { InMemoryUserAddressRepository } from './infrastructure/repositories/in-memory-user-address.repository';
+
+// Domain Services
+import { UserDomainService } from './domain/services/user-domain.service';
+
+// Mappers
+import { UserMapper } from './application/mappers/user.mapper';
+import { UserAddressMapper } from './application/mappers/user-address.mapper';
+
+// Use Cases
+import {
+  GetUserInfoUseCase,
+  GetUserProfileUseCase,
+  UpdateUserProfileUseCase,
+  GetAddressListUseCase,
+  GetAddressDetailUseCase,
+  CreateAddressUseCase,
+  UpdateAddressUseCase,
+  DeleteAddressUseCase,
+  SetDefaultAddressUseCase,
+  GetDefaultAddressUseCase,
+} from './application/use-cases';
 
 @Module({
   controllers: [UserController],
   providers: [
-    UserService,
+    // Repositories
     {
       provide: 'IUserRepository',
       useClass: InMemoryUserRepository,
@@ -16,9 +36,28 @@ import { InMemoryUserAddressRepository } from './infrastructure/repositories/in-
       provide: 'IUserAddressRepository',
       useClass: InMemoryUserAddressRepository,
     },
+
+    // Domain Services
+    UserDomainService,
+
+    // Mappers
+    UserMapper,
+    UserAddressMapper,
+
+    // Use Cases
+    GetUserInfoUseCase,
+    GetUserProfileUseCase,
+    UpdateUserProfileUseCase,
+    GetAddressListUseCase,
+    GetAddressDetailUseCase,
+    CreateAddressUseCase,
+    UpdateAddressUseCase,
+    DeleteAddressUseCase,
+    SetDefaultAddressUseCase,
+    GetDefaultAddressUseCase,
   ],
   exports: [
-    UserService, // PaymentModule에서 UserService를 사용하기 위해 export
+    UserDomainService, // PaymentModule에서 사용하기 위해 export
   ],
 })
 export class UserModule {}
