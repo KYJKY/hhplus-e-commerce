@@ -5,8 +5,10 @@ import { InMemoryProductOptionRepository } from './infrastructure/repositories/i
 import { InMemoryCategoryRepository } from './infrastructure/repositories/in-memory-category.repository';
 import { InMemoryProductCategoryRepository } from './infrastructure/repositories/in-memory-product-category.repository';
 
-// Domain Services
-import { ProductDomainService } from './domain/services/product-domain.service';
+// Domain Services (리팩토링: 3개의 서비스로 분할)
+import { ProductQueryService } from './domain/services/product-query.service';
+import { InventoryDomainService } from './domain/services/inventory-domain.service';
+import { CategoryQueryService } from './domain/services/category-query.service';
 
 // Use Cases
 import {
@@ -43,8 +45,10 @@ import {
       useClass: InMemoryProductCategoryRepository,
     },
 
-    // Domain Services
-    ProductDomainService,
+    // Domain Services (리팩토링: 책임별로 분리)
+    ProductQueryService, // 상품 조회
+    InventoryDomainService, // 재고 관리
+    CategoryQueryService, // 카테고리 조회
 
     // Use Cases
     GetProductListUseCase,
@@ -58,6 +62,11 @@ import {
     GetCategoriesUseCase,
     GetCategoryProductCountUseCase,
   ],
-  exports: [ProductDomainService],
+  exports: [
+    // Order 모듈에서 재고 관리를 위해 InventoryDomainService를 export
+    ProductQueryService,
+    InventoryDomainService,
+    CategoryQueryService,
+  ],
 })
 export class ProductModule {}

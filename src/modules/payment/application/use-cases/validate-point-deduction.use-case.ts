@@ -24,13 +24,17 @@ export class ValidatePointDeductionUseCase {
       throw new InvalidAmountException(amount);
     }
 
-    // 2. User 도메인: 사용자 확인 및 잔액 조회
+    // 2. User 도메인: 사용자 확인
     const user = await this.userDomainService.findUserById(userId);
 
-    // 3. Payment 도메인: 차감 가능 여부 검증
+    // 3. Point VO를 통한 잔액 확인
+    const currentPointVO = user.getPointVO();
+    const currentBalance = currentPointVO.getValue();
+
+    // 4. Payment 도메인: 차감 가능 여부 검증 (VO 활용)
     return await this.paymentDomainService.validatePointDeduction(
       userId,
-      user.getPoint(),
+      currentBalance,
       amount,
     );
   }

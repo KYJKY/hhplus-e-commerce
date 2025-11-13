@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProductDomainService } from '../../domain/services/product-domain.service';
+import { ProductQueryService } from '../../domain/services/product-query.service';
 import {
   GetProductListRequestDto,
   GetProductListResponseDto,
@@ -7,14 +7,16 @@ import {
 
 /**
  * FR-P-001: 상품 목록 조회 Use Case
+ *
+ * 리팩토링: ProductQueryService로 변경
  */
 @Injectable()
 export class GetProductListUseCase {
-  constructor(private readonly productDomainService: ProductDomainService) {}
+  constructor(private readonly productQueryService: ProductQueryService) {}
 
   async execute(
     query: GetProductListRequestDto,
   ): Promise<GetProductListResponseDto> {
-    return await this.productDomainService.getProductList(query);
+    return await this.productQueryService.getProductList(query);
   }
 }

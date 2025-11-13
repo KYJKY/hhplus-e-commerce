@@ -8,25 +8,18 @@ import {
   ProductDeletedException,
   OptionNotFoundException,
   OptionNotBelongToProductException,
-  InsufficientStockException,
-  InvalidQuantityException,
   CategoryNotFoundException,
-  OptionNotAvailableException,
 } from '../exceptions';
-import { Product } from '../entities/product.entity';
-import { ProductOption } from '../entities/product-option.entity';
-import { Category } from '../entities/category.entity';
 
 /**
- * Product Domain Service
+ * Product Query Service
  *
- * Domain Layer의 비즈니스 로직을 담당
- * - Repository와 직접 상호작용
- * - 도메인 규칙 강제
- * - Use Case에서 호출됨
+ * 상품 조회 관련 비즈니스 로직을 담당
+ * - CQRS 패턴의 Query 측면
+ * - 읽기 전용 작업
  */
 @Injectable()
-export class ProductDomainService {
+export class ProductQueryService {
   constructor(
     @Inject('IProductRepository')
     private readonly productRepository: IProductRepository,
@@ -280,110 +273,6 @@ export class ProductDomainService {
   }
 
   /**
-   * FR-P-005: 재고 확인
-   */
-  async checkStock(
-    optionId: number,
-    quantity: number,
-  ): Promise<{
-    optionId: number;
-    productId: number;
-    productName: string;
-    optionName: string;
-    currentStock: number;
-    requestedQuantity: number;
-    isAvailable: boolean;
-  }> {
-    const option = await this.productOptionRepository.findById(optionId);
-    if (!option) {
-      throw new OptionNotFoundException(optionId);
-    }
-
-    const product = await this.productRepository.findById(option.productId);
-    if (!product) {
-      throw new ProductNotFoundException(option.productId);
-    }
-
-    const isAvailable = option.hasEnoughStock(quantity);
-
-    return {
-      optionId: option.id,
-      productId: product.id,
-      productName: product.productName,
-      optionName: option.optionName,
-      currentStock: option.stockQuantity,
-      requestedQuantity: quantity,
-      isAvailable,
-    };
-  }
-
-  /**
-   * FR-P-006: 재고 차감 (내부 API)
-   */
-  async deductStock(
-    optionId: number,
-    quantity: number,
-    orderId: number,
-  ): Promise<{
-    optionId: number;
-    previousStock: number;
-    deductedQuantity: number;
-    currentStock: number;
-  }> {
-    if (quantity <= 0) {
-      throw new InvalidQuantityException(quantity);
-    }
-
-    const option = await this.productOptionRepository.findById(optionId);
-    if (!option) {
-      throw new OptionNotFoundException(optionId);
-    }
-
-    if (!option.hasEnoughStock(quantity)) {
-      throw new InsufficientStockException(
-        optionId,
-        quantity,
-        option.stockQuantity,
-      );
-    }
-
-    return await this.productOptionRepository.deductStock(
-      optionId,
-      quantity,
-      orderId,
-    );
-  }
-
-  /**
-   * FR-P-007: 재고 복원 (내부 API)
-   */
-  async restoreStock(
-    optionId: number,
-    quantity: number,
-    orderId: number,
-  ): Promise<{
-    optionId: number;
-    previousStock: number;
-    restoredQuantity: number;
-    currentStock: number;
-  }> {
-    if (quantity <= 0) {
-      throw new InvalidQuantityException(quantity);
-    }
-
-    const option = await this.productOptionRepository.findById(optionId);
-    if (!option) {
-      throw new OptionNotFoundException(optionId);
-    }
-
-    return await this.productOptionRepository.restoreStock(
-      optionId,
-      quantity,
-      orderId,
-    );
-  }
-
-  /**
    * FR-P-008: 인기 상품 조회 (Top 5)
    * 최근 3일간 판매량 기준 상위 5개 상품 조회
    *
@@ -425,63 +314,6 @@ export class ProductDomainService {
     return {
       period: `${threeDaysAgo.toISOString().split('T')[0]} ~ ${now.toISOString().split('T')[0]}`,
       products,
-    };
-  }
-
-  /**
-   * FR-P-009: 카테고리 목록 조회
-   */
-  async getCategories(): Promise<
-    Array<{
-      categoryId: number;
-      categoryName: string;
-      displayOrder: number;
-      productCount: number;
-    }>
-  > {
-    const categories = await this.categoryRepository.findActiveCategories();
-
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        const productCount =
-          await this.productCategoryRepository.countProductsByCategoryId(
-            category.id,
-          );
-
-        return {
-          categoryId: category.id,
-          categoryName: category.categoryName,
-          displayOrder: category.displayOrder,
-          productCount,
-        };
-      }),
-    );
-
-    return categoriesWithCount;
-  }
-
-  /**
-   * FR-P-010: 카테고리별 상품 수 조회
-   */
-  async getCategoryProductCount(categoryId: number): Promise<{
-    categoryId: number;
-    categoryName: string;
-    productCount: number;
-  }> {
-    const category = await this.categoryRepository.findById(categoryId);
-    if (!category) {
-      throw new CategoryNotFoundException(categoryId);
-    }
-
-    const productCount =
-      await this.productCategoryRepository.countProductsByCategoryId(
-        categoryId,
-      );
-
-    return {
-      categoryId: category.id,
-      categoryName: category.categoryName,
-      productCount,
     };
   }
 }

@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { ProductDomainService } from '../../domain/services/product-domain.service';
+import { ProductQueryService } from '../../domain/services/product-query.service';
 import { GetPopularProductsResponseDto } from '../../presentation/dto';
 
 /**
  * FR-P-008: 인기 상품 조회 Use Case
+ *
+ * 리팩토링: ProductQueryService로 변경
  */
 @Injectable()
 export class GetPopularProductsUseCase {
-  constructor(private readonly productDomainService: ProductDomainService) {}
+  constructor(private readonly productQueryService: ProductQueryService) {}
 
   async execute(): Promise<GetPopularProductsResponseDto> {
-    return await this.productDomainService.getPopularProducts();
+    return await this.productQueryService.getPopularProducts();
   }
 }

@@ -31,20 +31,22 @@ export class ProcessPaymentUseCase {
     // 2. User 도메인: 사용자 확인
     const user = await this.userDomainService.findUserById(userId);
 
-    const previousBalance = user.getPoint();
+    // 3. Point VO를 통한 잔액 확인 및 검증
+    const currentPointVO = user.getPointVO();
+    const previousBalance = currentPointVO.getValue();
 
-    // 3. 잔액 확인
-    if (previousBalance < amount) {
+    // 4. VO를 활용한 잔액 충분 여부 확인
+    if (!currentPointVO.hasSufficientBalance(amount)) {
       throw new InsufficientBalanceException(previousBalance, amount);
     }
 
-    // 4. User 도메인: 포인트 차감
+    // 5. User 도메인: 포인트 차감 (Entity의 deductPoint가 VO 사용)
     const { currentBalance } = await this.userDomainService.deductUserPoint(
       userId,
       amount,
     );
 
-    // 5. Payment 도메인: 결제 정보 및 거래 내역 생성
+    // 6. Payment 도메인: 결제 정보 및 거래 내역 생성
     return await this.paymentDomainService.processPayment(
       userId,
       orderId,

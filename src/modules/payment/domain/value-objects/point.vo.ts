@@ -1,5 +1,11 @@
 import { ValueObject } from '../../../../common/domain/value-object.base';
 import { Money } from '../../../../common/domain/value-objects/money.vo';
+import {
+  InvalidChargeAmountException,
+  ChargeAmountUnitErrorException,
+  MaxBalanceExceededException,
+  InsufficientBalanceException,
+} from '../exceptions';
 
 interface PointProps {
   amount: number;
@@ -57,22 +63,14 @@ export class Point extends ValueObject<PointProps> {
 
   /**
    * 충전 금액 검증
+   * 도메인 예외를 직접 던짐
    */
   static validateChargeAmount(amount: number): void {
-    if (amount < Point.MIN_CHARGE_AMOUNT) {
-      throw new Error(
-        `Charge amount must be at least ${Point.MIN_CHARGE_AMOUNT.toLocaleString()}`,
-      );
-    }
-    if (amount > Point.MAX_CHARGE_AMOUNT) {
-      throw new Error(
-        `Charge amount cannot exceed ${Point.MAX_CHARGE_AMOUNT.toLocaleString()}`,
-      );
+    if (amount < Point.MIN_CHARGE_AMOUNT || amount > Point.MAX_CHARGE_AMOUNT) {
+      throw new InvalidChargeAmountException(amount);
     }
     if (amount % Point.CHARGE_UNIT !== 0) {
-      throw new Error(
-        `Charge amount must be in units of ${Point.CHARGE_UNIT.toLocaleString()}`,
-      );
+      throw new ChargeAmountUnitErrorException(amount);
     }
   }
 
@@ -92,15 +90,14 @@ export class Point extends ValueObject<PointProps> {
 
   /**
    * 포인트 충전
+   * 도메인 예외를 직접 던짐
    */
   charge(amount: number): Point {
     Point.validateChargeAmount(amount);
 
     const newAmount = this.props.amount + amount;
     if (newAmount > Point.MAX_BALANCE) {
-      throw new Error(
-        `Maximum balance of ${Point.MAX_BALANCE.toLocaleString()} would be exceeded`,
-      );
+      throw new MaxBalanceExceededException(this.props.amount, amount);
     }
 
     return Point.create(newAmount);
@@ -108,6 +105,7 @@ export class Point extends ValueObject<PointProps> {
 
   /**
    * 포인트 사용
+   * 도메인 예외를 직접 던짐
    */
   use(amount: number): Point {
     if (amount <= 0) {
@@ -115,7 +113,7 @@ export class Point extends ValueObject<PointProps> {
     }
 
     if (this.props.amount < amount) {
-      throw new Error('Insufficient point balance');
+      throw new InsufficientBalanceException(this.props.amount, amount);
     }
 
     return Point.create(this.props.amount - amount);
@@ -123,6 +121,7 @@ export class Point extends ValueObject<PointProps> {
 
   /**
    * 포인트 환불
+   * 도메인 예외를 직접 던짐
    */
   refund(amount: number): Point {
     if (amount <= 0) {
@@ -131,9 +130,7 @@ export class Point extends ValueObject<PointProps> {
 
     const newAmount = this.props.amount + amount;
     if (newAmount > Point.MAX_BALANCE) {
-      throw new Error(
-        `Maximum balance of ${Point.MAX_BALANCE.toLocaleString()} would be exceeded`,
-      );
+      throw new MaxBalanceExceededException(this.props.amount, amount);
     }
 
     return Point.create(newAmount);
@@ -141,12 +138,14 @@ export class Point extends ValueObject<PointProps> {
 
   /**
    * 포인트 더하기
+   * 도메인 예외를 직접 던짐
    */
   add(other: Point): Point {
     const newAmount = this.props.amount + other.props.amount;
     if (newAmount > Point.MAX_BALANCE) {
-      throw new Error(
-        `Maximum balance of ${Point.MAX_BALANCE.toLocaleString()} would be exceeded`,
+      throw new MaxBalanceExceededException(
+        this.props.amount,
+        other.props.amount,
       );
     }
     return Point.create(newAmount);
