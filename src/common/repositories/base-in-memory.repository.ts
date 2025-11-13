@@ -9,7 +9,7 @@ export abstract class BaseInMemoryRepository<T extends BaseEntity>
   implements IRepository<T>
 {
   protected entities: Map<number, T> = new Map();
-  private currentId = 1;
+  protected currentId = 1;
   private readonly locks: Map<number, Promise<void>> = new Map();
 
   protected delay<T>(data: T): Promise<T> {
@@ -179,6 +179,6 @@ export abstract class BaseInMemoryRepository<T extends BaseEntity>
    * 엔티티 복제 (불변성 보장)
    */
   private clone(entity: T): T {
-    return JSON.parse(JSON.stringify(entity));
+    return JSON.parse(JSON.stringify(entity)) as T;
   }
 }

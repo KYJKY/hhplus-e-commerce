@@ -58,4 +58,4 @@ async function bootstrap() {
   console.log(`Environment: ${nodeEnv}`);
 }
 
-bootstrap();
+void bootstrap();

@@ -13,12 +13,15 @@ import { plainToInstance } from 'class-transformer';
  */
 @Injectable()
 export class ValidationPipe implements PipeTransform<unknown> {
-  async transform(value: unknown, { metatype }: ArgumentMetadata) {
+  async transform(
+    value: unknown,
+    { metatype }: ArgumentMetadata,
+  ): Promise<unknown> {
     if (!metatype || !this.toValidate(metatype)) {
       return value;
     }
 
-    const object = plainToInstance(metatype, value);
+    const object = plainToInstance(metatype, value) as object;
     const errors = await validate(object);
 
     if (errors.length > 0) {

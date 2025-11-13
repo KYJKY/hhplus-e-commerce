@@ -60,13 +60,13 @@ export class InMemoryPointTransactionRepository
     this.entities.set(3, transaction3);
 
     // currentId를 마지막 ID 다음으로 설정
-    (this as any).currentId = 4;
+    this.currentId = 4;
   }
 
   /**
    * Plain object를 PointTransaction 엔티티로 변환
    */
-  private toEntity(data: any): PointTransaction {
+  private toEntity(data: PointTransaction): PointTransaction {
     return PointTransaction.create({
       id: data.id,
       userId: data.userId,

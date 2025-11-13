@@ -63,13 +63,13 @@ export class InMemoryProductRepository
     this.entities.set(3, product3);
 
     // currentId를 마지막 ID 다음으로 설정
-    (this as any).currentId = 4;
+    this.currentId = 4;
   }
 
   /**
    * Plain object를 Product 엔티티로 변환
    */
-  private toEntity(data: any): Product {
+  private toEntity(data: Product): Product {
     return Product.create({
       id: data.id,
       productName: data.productName,
@@ -145,7 +145,8 @@ export class InMemoryProductRepository
    * 카테고리별 상품 조회
    * (InMemory 구현에서는 ProductCategoryRepository와 함께 사용 필요)
    */
-  async findByCategoryId(categoryId: number): Promise<Product[]> {
+  // eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-unused-vars
+  async findByCategoryId(_categoryId: number): Promise<Product[]> {
     // InMemory 구현에서는 별도 로직이 필요하지만, 여기서는 간단히 구현
     // 실제로는 ProductCategoryRepository를 통해 productId를 가져와야 함
     return [];

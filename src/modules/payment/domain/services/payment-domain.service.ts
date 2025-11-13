@@ -377,17 +377,17 @@ export class PaymentDomainService {
   /**
    * FR-PAY-009: 포인트 차감 검증 (내부 API)
    */
-  async validatePointDeduction(
+  validatePointDeduction(
     userId: number,
     currentBalance: number,
     amount: number,
-  ): Promise<{
+  ): {
     userId: number;
     currentBalance: number;
     requestedAmount: number;
     isAvailable: boolean;
     shortage: number;
-  }> {
+  } {
     const isAvailable = currentBalance >= amount;
     const shortage = isAvailable ? 0 : amount - currentBalance;
 

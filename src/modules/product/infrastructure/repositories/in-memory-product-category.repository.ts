@@ -37,6 +37,7 @@ export class InMemoryProductCategoryRepository
   /**
    * 상품에 카테고리 연결
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async addCategoryToProduct(
     productId: number,
     categoryId: number,
@@ -54,6 +55,7 @@ export class InMemoryProductCategoryRepository
   /**
    * 상품에서 카테고리 제거
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async removeCategoryFromProduct(
     productId: number,
     categoryId: number,
@@ -66,6 +68,7 @@ export class InMemoryProductCategoryRepository
   /**
    * 상품의 모든 카테고리 조회
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async findCategoriesByProductId(productId: number): Promise<number[]> {
     return this.productCategories
       .filter((pc) => pc.productId === productId)
@@ -75,6 +78,7 @@ export class InMemoryProductCategoryRepository
   /**
    * 카테고리의 모든 상품 조회
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async findProductsByCategoryId(categoryId: number): Promise<number[]> {
     return this.productCategories
       .filter((pc) => pc.categoryId === categoryId)
@@ -84,6 +88,7 @@ export class InMemoryProductCategoryRepository
   /**
    * 상품의 모든 카테고리 제거
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async removeAllCategoriesFromProduct(productId: number): Promise<void> {
     this.productCategories = this.productCategories.filter(
       (pc) => pc.productId !== productId,
@@ -93,6 +98,7 @@ export class InMemoryProductCategoryRepository
   /**
    * 카테고리별 상품 수 조회
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async countProductsByCategoryId(categoryId: number): Promise<number> {
     return this.productCategories.filter((pc) => pc.categoryId === categoryId)
       .length;

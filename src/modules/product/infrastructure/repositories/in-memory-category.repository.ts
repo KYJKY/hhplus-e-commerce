@@ -65,13 +65,13 @@ export class InMemoryCategoryRepository
     this.entities.set(4, category4);
 
     // currentId를 마지막 ID 다음으로 설정
-    (this as any).currentId = 5;
+    this.currentId = 5;
   }
 
   /**
    * Plain object를 Category 엔티티로 변환
    */
-  private toEntity(data: any): Category {
+  private toEntity(data: Category): Category {
     return Category.create({
       id: data.id,
       categoryName: data.categoryName,

@@ -57,11 +57,11 @@ describe('User Entity', () => {
 
       it('point가 없으면 기본값 0으로 생성된다', () => {
         // Given: point가 없는 정보
-        const props = { ...validUserProps };
-        delete (props as any).point;
+        const props: Partial<typeof validUserProps> = { ...validUserProps };
+        delete props.point;
 
         // When: User.create() 호출
-        const user = User.create(props);
+        const user = User.create(props as typeof validUserProps);
 
         // Then: point = 0
         expect(user.getPoint()).toBe(0);

@@ -32,7 +32,7 @@ export class ValidatePointDeductionUseCase {
     const currentBalance = currentPointVO.getValue();
 
     // 4. Payment 도메인: 차감 가능 여부 검증 (VO 활용)
-    return await this.paymentDomainService.validatePointDeduction(
+    return this.paymentDomainService.validatePointDeduction(
       userId,
       currentBalance,
       amount,

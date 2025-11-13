@@ -31,15 +31,18 @@ export abstract class ValueObject<T> {
    * 얕은 동등성 비교
    */
   private shallowEqual(props1: T, props2: T): boolean {
-    const keys1 = Object.keys(props1 as any);
-    const keys2 = Object.keys(props2 as any);
+    const keys1 = Object.keys(props1 as object);
+    const keys2 = Object.keys(props2 as object);
 
     if (keys1.length !== keys2.length) {
       return false;
     }
 
     for (const key of keys1) {
-      if ((props1 as any)[key] !== (props2 as any)[key]) {
+      if (
+        (props1 as Record<string, unknown>)[key] !==
+        (props2 as Record<string, unknown>)[key]
+      ) {
         return false;
       }
     }

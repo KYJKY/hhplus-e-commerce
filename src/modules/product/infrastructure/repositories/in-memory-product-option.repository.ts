@@ -102,13 +102,13 @@ export class InMemoryProductOptionRepository
     this.entities.set(6, option6);
 
     // currentId를 마지막 ID 다음으로 설정
-    (this as any).currentId = 7;
+    this.currentId = 7;
   }
 
   /**
    * Plain object를 ProductOption 엔티티로 변환
    */
-  private toEntity(data: any): ProductOption {
+  private toEntity(data: ProductOption): ProductOption {
     return ProductOption.create({
       id: data.id,
       productId: data.productId,
@@ -182,7 +182,8 @@ export class InMemoryProductOptionRepository
   async deductStock(
     optionId: number,
     quantity: number,
-    orderId: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _orderId: number,
   ): Promise<{
     optionId: number;
     previousStock: number;
@@ -212,7 +213,8 @@ export class InMemoryProductOptionRepository
   async restoreStock(
     optionId: number,
     quantity: number,
-    orderId: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _orderId: number,
   ): Promise<{
     optionId: number;
     previousStock: number;

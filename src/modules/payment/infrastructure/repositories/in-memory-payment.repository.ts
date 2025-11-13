@@ -18,13 +18,13 @@ export class InMemoryPaymentRepository
    */
   private initializeData(): void {
     // 초기 데이터는 비워둠 (주문 후 결제가 생성되므로)
-    (this as any).currentId = 1;
+    // currentId는 BaseInMemoryRepository에서 자동 초기화됨
   }
 
   /**
    * Plain object를 Payment 엔티티로 변환
    */
-  private toEntity(data: any): Payment {
+  private toEntity(data: Payment): Payment {
     return Payment.create({
       id: data.id,
       orderId: data.orderId,

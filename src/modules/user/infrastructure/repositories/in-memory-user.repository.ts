@@ -69,13 +69,13 @@ export class InMemoryUserRepository
     this.entities.set(3, user3);
 
     // currentId를 마지막 ID 다음으로 설정
-    (this as any).currentId = 4;
+    this.currentId = 4;
   }
 
   /**
    * Plain object를 User 엔티티로 변환
    */
-  private toEntity(data: any): User {
+  private toEntity(data: User): User {
     return User.create({
       id: data.id,
       loginId: data.loginId,

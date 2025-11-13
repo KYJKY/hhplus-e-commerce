@@ -28,7 +28,6 @@ export class ChargePointUseCase {
     const previousBalance = currentPointVO.getValue();
 
     // 3. Point VO를 활용한 충전 시도 (검증 포함)
-    // VO가 도메인 예외를 직접 던지므로 별도 처리 불필요
     currentPointVO.charge(amount);
 
     // 4. User 도메인: 포인트 충전 (Entity의 chargePoint가 VO 사용)

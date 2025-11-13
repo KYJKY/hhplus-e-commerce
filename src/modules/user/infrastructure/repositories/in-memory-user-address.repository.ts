@@ -108,12 +108,12 @@ export class InMemoryUserAddressRepository
     this.entities.set(6, address6);
 
     // currentId를 마지막 ID 다음으로 설정
-    (this as any).currentId = 7;
+    this.currentId = 7;
   }
   /**
    * Plain object를 UserAddress 엔티티로 변환
    */
-  private toEntity(data: any): UserAddress {
+  private toEntity(data: UserAddress): UserAddress {
     return UserAddress.create({
       id: data.id,
       userId: data.userId,
@@ -262,12 +262,12 @@ export class InMemoryUserAddressRepository
   override async create(
     entityData: Omit<UserAddress, 'id'>,
   ): Promise<UserAddress> {
-    const userId = (entityData as any).userId;
+    const userId = entityData.userId;
     const addressCount = await this.countByUserId(userId);
 
     // 첫 번째 배송지인 경우 자동으로 기본 배송지로 설정
     const isFirstAddress = addressCount === 0;
-    const shouldBeDefault = isFirstAddress || (entityData as any).isDefault;
+    const shouldBeDefault = isFirstAddress || entityData.isDefault;
 
     if (shouldBeDefault) {
       // 기존 기본 배송지 해제
@@ -282,7 +282,7 @@ export class InMemoryUserAddressRepository
     } as UserAddress;
     this.entities.set(id, entity);
 
-    const result = JSON.parse(JSON.stringify(entity));
+    const result = JSON.parse(JSON.stringify(entity)) as UserAddress;
     return await this.delay(result);
   }
 

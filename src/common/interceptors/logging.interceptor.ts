@@ -32,7 +32,7 @@ export class LoggingInterceptor implements NestInterceptor {
             `Outgoing Response: ${method} ${url} - ${responseTime}ms`,
           );
         },
-        error: (error) => {
+        error: (error: Error) => {
           const responseTime = Date.now() - now;
           this.logger.error(
             `Error Response: ${method} ${url} - ${responseTime}ms - ${error.message}`,
