@@ -199,7 +199,7 @@ describe('UserAddress Entity', () => {
   });
 
   describe('update', () => {
-    let addressDefaultText: UserAddress;
+    let address: UserAddress;
 
     beforeEach(() => {
       address = UserAddress.create(validAddressProps);

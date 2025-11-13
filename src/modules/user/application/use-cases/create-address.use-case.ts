@@ -19,10 +19,10 @@ export class CreateAddressUseCase {
   ): Promise<UserAddressDto> {
     const address = await this.userDomainService.createAddress(userId, {
       recipientName: createData.recipientName,
-      phoneNumber: createData.phoneNumber,
-      zipCode: createData.zipCode,
-      address: createData.address,
-      detailAddress: createData.detailAddress,
+      recipientPhone: createData.recipientPhone,
+      postalCode: createData.postalCode,
+      addressDefaultText: createData.addressDefaultText,
+      addressDetailText: createData.addressDetailText,
       isDefault: createData.isDefault,
     });
 

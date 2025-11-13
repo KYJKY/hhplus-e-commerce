@@ -112,10 +112,10 @@
 - addresses: 배송지 목록
   - addressId: 배송지 ID
   - recipientName: 수령인 이름
-  - phoneNumber: 수령인 전화번호
-  - zipCode: 우편번호
-  - address: 주소
-  - detailAddress: 상세 주소
+  - recipientPhone: 수령인 전화번호
+  - postalCode: 우편번호
+  - addressDefaultText: 기본 주소
+  - addressDetailText: 상세 주소
   - isDefault: 기본 배송지 여부
   - createdAt: 등록일시
 
@@ -139,10 +139,10 @@
 - addressId: 배송지 ID
 - userId: 사용자 ID
 - recipientName: 수령인 이름
-- phoneNumber: 수령인 전화번호
-- zipCode: 우편번호
-- address: 주소
-- detailAddress: 상세 주소
+- recipientPhone: 수령인 전화번호
+- postalCode: 우편번호
+- addressDefaultText: 기본 주소
+- addressDetailText: 상세 주소
 - isDefault: 기본 배송지 여부
 - createdAt: 등록일시
 - updatedAt: 수정일시
@@ -163,20 +163,20 @@
 **입력**:
 - userId (number, 필수): 사용자 ID
 - recipientName (string, 필수): 수령인 이름
-- phoneNumber (string, 필수): 수령인 전화번호
-- zipCode (string, 필수): 우편번호
-- address (string, 필수): 주소
-- detailAddress (string, 선택): 상세 주소
+- recipientPhone (string, 필수): 수령인 전화번호
+- postalCode (string, 필수): 우편번호
+- addressDefaultText (string, 필수): 기본 주소
+- addressDetailText (string, 선택): 상세 주소
 - isDefault (boolean, 선택): 기본 배송지 설정 여부 (기본값: false)
 
 **출력**:
 - addressId: 생성된 배송지 ID
 - userId: 사용자 ID
 - recipientName: 수령인 이름
-- phoneNumber: 수령인 전화번호
-- zipCode: 우편번호
-- address: 주소
-- detailAddress: 상세 주소
+- recipientPhone: 수령인 전화번호
+- postalCode: 우편번호
+- addressDefaultText: 기본 주소
+- addressDetailText: 상세 주소
 - isDefault: 기본 배송지 여부
 - createdAt: 등록일시
 
@@ -192,7 +192,7 @@
 - `MAX_ADDRESS_LIMIT_EXCEEDED`: 최대 배송지 개수(10개) 초과
 - `INVALID_RECIPIENT_NAME`: 수령인 이름이 유효하지 않음
 - `INVALID_PHONE_NUMBER_FORMAT`: 전화번호 형식이 유효하지 않음
-- `INVALID_ZIP_CODE_FORMAT`: 우편번호 형식이 유효하지 않음 (5자리 숫자)
+- `INVALID_POSTAL_CODE_FORMAT`: 우편번호 형식이 유효하지 않음 (5자리 숫자)
 - `INVALID_ADDRESS`: 주소가 유효하지 않음
 
 ---
@@ -204,19 +204,19 @@
 - userId (number, 필수): 사용자 ID
 - addressId (number, 필수): 배송지 ID
 - recipientName (string, 선택): 수령인 이름
-- phoneNumber (string, 선택): 수령인 전화번호
-- zipCode (string, 선택): 우편번호
-- address (string, 선택): 주소
-- detailAddress (string, 선택): 상세 주소
+- recipientPhone (string, 선택): 수령인 전화번호
+- postalCode (string, 선택): 우편번호
+- addressDefaultText (string, 선택): 기본 주소
+- addressDetailText (string, 선택): 상세 주소
 
 **출력**:
 - addressId: 배송지 ID
 - userId: 사용자 ID
 - recipientName: 수정된 수령인 이름
-- phoneNumber: 수정된 수령인 전화번호
-- zipCode: 수정된 우편번호
-- address: 수정된 주소
-- detailAddress: 수정된 상세 주소
+- recipientPhone: 수정된 수령인 전화번호
+- postalCode: 수정된 우편번호
+- addressDefaultText: 수정된 기본 주소
+- addressDetailText: 수정된 상세 주소
 - isDefault: 기본 배송지 여부
 - updatedAt: 수정일시
 
@@ -231,7 +231,7 @@
 - `ADDRESS_ACCESS_DENIED`: 해당 배송지에 접근 권한이 없음
 - `INVALID_RECIPIENT_NAME`: 수령인 이름이 유효하지 않음
 - `INVALID_PHONE_NUMBER_FORMAT`: 전화번호 형식이 유효하지 않음
-- `INVALID_ZIP_CODE_FORMAT`: 우편번호 형식이 유효하지 않음
+- `INVALID_POSTAL_CODE_FORMAT`: 우편번호 형식이 유효하지 않음
 - `INVALID_ADDRESS`: 주소가 유효하지 않음
 
 ---
@@ -292,10 +292,10 @@
 - addressId: 배송지 ID
 - userId: 사용자 ID
 - recipientName: 수령인 이름
-- phoneNumber: 수령인 전화번호
-- zipCode: 우편번호
-- address: 주소
-- detailAddress: 상세 주소
+- recipientPhone: 수령인 전화번호
+- postalCode: 우편번호
+- addressDefaultText: 기본 주소
+- addressDetailText: 상세 주소
 - isDefault: 기본 배송지 여부 (항상 true)
 
 **비즈니스 규칙**:
@@ -338,5 +338,5 @@
 | U007 | ADDRESS_ACCESS_DENIED | 해당 배송지에 접근 권한이 없음 |
 | U008 | MAX_ADDRESS_LIMIT_EXCEEDED | 최대 배송지 개수(10개) 초과 |
 | U009 | INVALID_RECIPIENT_NAME | 수령인 이름이 유효하지 않음 |
-| U010 | INVALID_ZIP_CODE_FORMAT | 우편번호 형식이 유효하지 않음 (5자리 숫자) |
+| U010 | INVALID_POSTAL_CODE_FORMAT | 우편번호 형식이 유효하지 않음 (5자리 숫자) |
 | U011 | INVALID_ADDRESS | 주소가 유효하지 않음 |

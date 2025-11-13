@@ -55,10 +55,10 @@
   - subtotal: 소계
 - shippingAddress: 배송지 정보
   - recipientName: 수령인 이름
-  - phoneNumber: 수령인 전화번호
-  - zipCode: 우편번호
-  - address: 주소
-  - detailAddress: 상세 주소
+  - recipientPhone: 수령인 전화번호
+  - postalCode: 우편번호
+  - addressDefaultText: 기본 주소
+  - addressDetailText: 상세 주소
 - subtotalAmount: 상품 금액 합계
 - discountAmount: 할인 금액
 - totalAmount: 최종 결제 금액
@@ -151,10 +151,10 @@
   - subtotal: 소계
 - shippingAddress: 배송지 정보
   - recipientName: 수령인 이름
-  - phoneNumber: 수령인 전화번호
-  - zipCode: 우편번호
-  - address: 주소
-  - detailAddress: 상세 주소
+  - recipientPhone: 수령인 전화번호
+  - postalCode: 우편번호
+  - addressDefaultText: 기본 주소
+  - addressDetailText: 상세 주소
 - subtotalAmount: 상품 금액 합계
 - discountAmount: 할인 금액
 - totalAmount: 최종 결제 금액

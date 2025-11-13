@@ -184,12 +184,12 @@ export class UserController {
     return {
       userId: id,
       addresses: addresses.map((addr) => ({
-        addressId: addr.addressId,
+        addressId: addr.addressDefaultTextId,
         recipientName: addr.recipientName,
-        phoneNumber: addr.phoneNumber,
-        zipCode: addr.zipCode,
-        address: addr.address,
-        detailAddress: addr.detailAddress,
+        recipientPhone: addr.recipientPhone,
+        postalCode: addr.postalCode,
+        addressDefaultText: addr.addressDefaultText,
+        addressDetailText: addr.addressDetailText,
         isDefault: addr.isDefault,
         createdAt: addr.createdAt,
       })),
@@ -220,13 +220,13 @@ export class UserController {
   ): Promise<GetAddressDetailResponseDto> {
     const address = await this.getAddressDetailUseCase.execute(id, addressId);
     return {
-      addressId: address.addressId,
+      addressId: address.addressDefaultTextId,
       userId: address.userId,
       recipientName: address.recipientName,
-      phoneNumber: address.phoneNumber,
-      zipCode: address.zipCode,
-      address: address.address,
-      detailAddress: address.detailAddress,
+      recipientPhone: address.recipientPhone,
+      postalCode: address.postalCode,
+      addressDefaultText: address.addressDefaultText,
+      addressDetailText: address.addressDetailText,
       isDefault: address.isDefault,
       createdAt: address.createdAt,
       updatedAt: address.updatedAt,
@@ -262,21 +262,21 @@ export class UserController {
       id,
       new CreateAddressDto(
         createData.recipientName,
-        createData.phoneNumber,
-        createData.zipCode,
-        createData.address,
-        createData.detailAddress,
+        createData.recipientPhone,
+        createData.postalCode,
+        createData.addressDefaultText,
+        createData.addressDetailText,
         createData.isDefault,
       ),
     );
     return {
-      addressId: address.addressId,
+      addressId: address.addressDefaultTextId,
       userId: address.userId,
       recipientName: address.recipientName,
-      phoneNumber: address.phoneNumber,
-      zipCode: address.zipCode,
-      address: address.address,
-      detailAddress: address.detailAddress,
+      recipientPhone: address.recipientPhone,
+      postalCode: address.postalCode,
+      addressDefaultText: address.addressDefaultText,
+      addressDetailText: address.addressDetailText,
       isDefault: address.isDefault,
       createdAt: address.createdAt,
     };
@@ -311,20 +311,20 @@ export class UserController {
       addressId,
       new UpdateAddressDto(
         updateData.recipientName,
-        updateData.phoneNumber,
-        updateData.zipCode,
-        updateData.address,
-        updateData.detailAddress,
+        updateData.recipientPhone,
+        updateData.postalCode,
+        updateData.addressDefaultText,
+        updateData.addressDetailText,
       ),
     );
     return {
-      addressId: address.addressId,
+      addressId: address.addressDefaultTextId,
       userId: address.userId,
       recipientName: address.recipientName,
-      phoneNumber: address.phoneNumber,
-      zipCode: address.zipCode,
-      address: address.address,
-      detailAddress: address.detailAddress,
+      recipientPhone: address.recipientPhone,
+      postalCode: address.postalCode,
+      addressDefaultText: address.addressDefaultText,
+      addressDetailText: address.addressDetailText,
       isDefault: address.isDefault,
       updatedAt: address.updatedAt!,
     };
@@ -409,13 +409,13 @@ export class UserController {
       return null;
     }
     return {
-      addressId: address.addressId,
+      addressId: address.addressDefaultTextId,
       userId: address.userId,
       recipientName: address.recipientName,
-      phoneNumber: address.phoneNumber,
-      zipCode: address.zipCode,
-      address: address.address,
-      detailAddress: address.detailAddress,
+      recipientPhone: address.recipientPhone,
+      postalCode: address.postalCode,
+      addressDefaultText: address.addressDefaultText,
+      addressDetailText: address.addressDetailText,
       isDefault: address.isDefault,
     };
   }

@@ -19,16 +19,16 @@ export class AddressDto {
   recipientName: string;
 
   @ApiProperty({ description: '수령인 전화번호', example: '010-1234-5678' })
-  phoneNumber: string;
+  recipientPhone: string;
 
   @ApiProperty({ description: '우편번호', example: '12345' })
-  zipCode: string;
+  postalCode: string;
 
-  @ApiProperty({ description: '주소', example: '서울시 강남구 테헤란로 123' })
-  address: string;
+  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
-  detailAddress: string | null;
+  addressDetailText: string | null;
 
   @ApiProperty({ description: '기본 배송지 여부', example: true })
   isDefault: boolean;
@@ -62,16 +62,16 @@ export class GetAddressDetailResponseDto {
   recipientName: string;
 
   @ApiProperty({ description: '수령인 전화번호', example: '010-1234-5678' })
-  phoneNumber: string;
+  recipientPhone: string;
 
   @ApiProperty({ description: '우편번호', example: '12345' })
-  zipCode: string;
+  postalCode: string;
 
-  @ApiProperty({ description: '주소', example: '서울시 강남구 테헤란로 123' })
-  address: string;
+  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
-  detailAddress: string | null;
+  addressDetailText: string | null;
 
   @ApiProperty({ description: '기본 배송지 여부', example: true })
   isDefault: boolean;
@@ -111,7 +111,7 @@ export class CreateAddressRequestDto {
   @Matches(/^(\d{2,3}-?\d{3,4}-?\d{4})$/, {
     message: 'Invalid phone number format',
   })
-  phoneNumber: string;
+  recipientPhone: string;
 
   @ApiProperty({
     description: '우편번호 (5자리 숫자)',
@@ -122,7 +122,7 @@ export class CreateAddressRequestDto {
   @Matches(/^\d{5}$/, {
     message: 'Zip code must be 5 digits',
   })
-  zipCode: string;
+  postalCode: string;
 
   @ApiProperty({
     description: '주소',
@@ -131,7 +131,7 @@ export class CreateAddressRequestDto {
   })
   @IsString()
   @MaxLength(200)
-  address: string;
+  addressDefaultText: string;
 
   @ApiPropertyOptional({
     description: '상세 주소',
@@ -141,7 +141,7 @@ export class CreateAddressRequestDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  detailAddress?: string;
+  addressDetailText?: string;
 
   @ApiPropertyOptional({
     description: '기본 배송지 설정 여부',
@@ -167,16 +167,16 @@ export class CreateAddressResponseDto {
   recipientName: string;
 
   @ApiProperty({ description: '수령인 전화번호', example: '010-1234-5678' })
-  phoneNumber: string;
+  recipientPhone: string;
 
   @ApiProperty({ description: '우편번호', example: '12345' })
-  zipCode: string;
+  postalCode: string;
 
-  @ApiProperty({ description: '주소', example: '서울시 강남구 테헤란로 123' })
-  address: string;
+  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
-  detailAddress: string | null;
+  addressDetailText: string | null;
 
   @ApiProperty({ description: '기본 배송지 여부', example: false })
   isDefault: boolean;
@@ -211,7 +211,7 @@ export class UpdateAddressRequestDto {
   @Matches(/^(\d{2,3}-?\d{3,4}-?\d{4})$/, {
     message: 'Invalid phone number format',
   })
-  phoneNumber?: string;
+  recipientPhone?: string;
 
   @ApiPropertyOptional({
     description: '우편번호 (5자리 숫자)',
@@ -223,17 +223,17 @@ export class UpdateAddressRequestDto {
   @Matches(/^\d{5}$/, {
     message: 'Zip code must be 5 digits',
   })
-  zipCode?: string;
+  postalCode?: string;
 
   @ApiPropertyOptional({
-    description: '주소',
+    description: '기본 주소',
     example: '서울시 강남구 테헤란로 123',
     maxLength: 200,
   })
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  address?: string;
+  addressDefaultText?: string;
 
   @ApiPropertyOptional({
     description: '상세 주소',
@@ -243,7 +243,7 @@ export class UpdateAddressRequestDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  detailAddress?: string;
+  addressDetailText?: string;
 }
 
 /**
@@ -263,23 +263,23 @@ export class UpdateAddressResponseDto {
     description: '수정된 수령인 전화번호',
     example: '010-1234-5678',
   })
-  phoneNumber: string;
+  recipientPhone: string;
 
   @ApiProperty({ description: '수정된 우편번호', example: '12345' })
-  zipCode: string;
+  postalCode: string;
 
   @ApiProperty({
-    description: '수정된 주소',
+    description: '수정된 기본 주소',
     example: '서울시 강남구 테헤란로 123',
   })
-  address: string;
+  addressDefaultText: string;
 
   @ApiProperty({
     description: '수정된 상세 주소',
     example: '456호',
     nullable: true,
   })
-  detailAddress: string | null;
+  addressDetailText: string | null;
 
   @ApiProperty({ description: '기본 배송지 여부', example: false })
   isDefault: boolean;
@@ -324,16 +324,16 @@ export class GetDefaultAddressResponseDto {
   recipientName: string;
 
   @ApiProperty({ description: '수령인 전화번호', example: '010-1234-5678' })
-  phoneNumber: string;
+  recipientPhone: string;
 
   @ApiProperty({ description: '우편번호', example: '12345' })
-  zipCode: string;
+  postalCode: string;
 
-  @ApiProperty({ description: '주소', example: '서울시 강남구 테헤란로 123' })
-  address: string;
+  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
-  detailAddress: string | null;
+  addressDetailText: string | null;
 
   @ApiProperty({ description: '기본 배송지 여부 (항상 true)', example: true })
   isDefault: boolean;

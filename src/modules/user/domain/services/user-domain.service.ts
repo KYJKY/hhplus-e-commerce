@@ -105,10 +105,10 @@ export class UserDomainService {
     userId: number,
     addressData: {
       recipientName: string;
-      phoneNumber: string;
-      zipCode: string;
-      address: string;
-      detailAddress?: string;
+      recipientPhone: string;
+      postalCode: string;
+      addressDefaultText: string;
+      addressDetailText?: string;
       isDefault?: boolean;
     },
   ): Promise<UserAddress> {
@@ -126,10 +126,10 @@ export class UserDomainService {
       id: 0, // Repository에서 자동 생성
       userId,
       recipientName: addressData.recipientName,
-      phoneNumber: addressData.phoneNumber,
-      zipCode: addressData.zipCode,
-      address: addressData.address,
-      detailAddress: addressData.detailAddress ?? null,
+      recipientPhone: addressData.recipientPhone,
+      postalCode: addressData.postalCode,
+      addressDefaultText: addressData.addressDefaultText,
+      addressDetailText: addressData.addressDetailText ?? null,
       isDefault: addressData.isDefault ?? false,
       createdAt: new Date().toISOString(),
     });
@@ -146,10 +146,10 @@ export class UserDomainService {
     addressId: number,
     updateData: {
       recipientName?: string;
-      phoneNumber?: string;
-      zipCode?: string;
-      address?: string;
-      detailAddress?: string;
+      recipientPhone?: string;
+      postalCode?: string;
+      addressDefaultText?: string;
+      addressDetailText?: string;
     },
   ): Promise<UserAddress> {
     // 배송지 조회 및 권한 확인

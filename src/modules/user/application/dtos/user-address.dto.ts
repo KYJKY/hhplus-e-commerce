@@ -8,13 +8,13 @@
  */
 export class UserAddressDto {
   constructor(
-    public readonly addressId: number,
+    public readonly addressDefaultTextId: number,
     public readonly userId: number,
     public readonly recipientName: string,
-    public readonly phoneNumber: string,
-    public readonly zipCode: string,
-    public readonly address: string,
-    public readonly detailAddress: string | null,
+    public readonly recipientPhone: string,
+    public readonly postalCode: string,
+    public readonly addressDefaultText: string,
+    public readonly addressDetailText: string | null,
     public readonly isDefault: boolean,
     public readonly createdAt: string,
     public readonly updatedAt: string | null,
@@ -27,10 +27,10 @@ export class UserAddressDto {
 export class CreateAddressDto {
   constructor(
     public readonly recipientName: string,
-    public readonly phoneNumber: string,
-    public readonly zipCode: string,
-    public readonly address: string,
-    public readonly detailAddress?: string,
+    public readonly recipientPhone: string,
+    public readonly postalCode: string,
+    public readonly addressDefaultText: string,
+    public readonly addressDetailText?: string,
     public readonly isDefault?: boolean,
   ) {}
 }
@@ -41,9 +41,9 @@ export class CreateAddressDto {
 export class UpdateAddressDto {
   constructor(
     public readonly recipientName?: string,
-    public readonly phoneNumber?: string,
-    public readonly zipCode?: string,
-    public readonly address?: string,
-    public readonly detailAddress?: string,
+    public readonly recipientPhone?: string,
+    public readonly postalCode?: string,
+    public readonly addressDefaultText?: string,
+    public readonly addressDetailText?: string,
   ) {}
 }

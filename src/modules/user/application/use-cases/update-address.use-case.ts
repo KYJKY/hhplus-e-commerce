@@ -23,10 +23,10 @@ export class UpdateAddressUseCase {
       addressId,
       {
         recipientName: updateData.recipientName,
-        phoneNumber: updateData.phoneNumber,
-        zipCode: updateData.zipCode,
-        address: updateData.address,
-        detailAddress: updateData.detailAddress,
+        recipientPhone: updateData.recipientPhone,
+        postalCode: updateData.postalCode,
+        addressDefaultText: updateData.addressDefaultText,
+        addressDetailText: updateData.addressDetailText,
       },
     );
 
