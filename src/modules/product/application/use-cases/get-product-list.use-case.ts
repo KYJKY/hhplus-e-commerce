@@ -10,9 +10,7 @@ import {
  */
 @Injectable()
 export class GetProductListUseCase {
-  constructor(
-    private readonly productDomainService: ProductDomainService,
-  ) {}
+  constructor(private readonly productDomainService: ProductDomainService) {}
 
   async execute(
     query: GetProductListRequestDto,

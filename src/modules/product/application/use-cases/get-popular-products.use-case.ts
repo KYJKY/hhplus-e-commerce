@@ -7,9 +7,7 @@ import { GetPopularProductsResponseDto } from '../../presentation/dto';
  */
 @Injectable()
 export class GetPopularProductsUseCase {
-  constructor(
-    private readonly productDomainService: ProductDomainService,
-  ) {}
+  constructor(private readonly productDomainService: ProductDomainService) {}
 
   async execute(): Promise<GetPopularProductsResponseDto> {
     return await this.productDomainService.getPopularProducts();

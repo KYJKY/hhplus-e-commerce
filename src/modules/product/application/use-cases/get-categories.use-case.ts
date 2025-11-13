@@ -7,9 +7,7 @@ import { GetCategoriesResponseDto } from '../../presentation/dto';
  */
 @Injectable()
 export class GetCategoriesUseCase {
-  constructor(
-    private readonly productDomainService: ProductDomainService,
-  ) {}
+  constructor(private readonly productDomainService: ProductDomainService) {}
 
   async execute(): Promise<GetCategoriesResponseDto> {
     const categories = await this.productDomainService.getCategories();

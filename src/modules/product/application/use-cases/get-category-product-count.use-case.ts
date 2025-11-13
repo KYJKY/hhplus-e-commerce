@@ -7,9 +7,7 @@ import { GetCategoryProductCountResponseDto } from '../../presentation/dto';
  */
 @Injectable()
 export class GetCategoryProductCountUseCase {
-  constructor(
-    private readonly productDomainService: ProductDomainService,
-  ) {}
+  constructor(private readonly productDomainService: ProductDomainService) {}
 
   async execute(
     categoryId: number,

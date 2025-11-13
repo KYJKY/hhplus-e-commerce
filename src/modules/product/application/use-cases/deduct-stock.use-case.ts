@@ -7,9 +7,7 @@ import { DeductStockResponseDto } from '../../presentation/dto';
  */
 @Injectable()
 export class DeductStockUseCase {
-  constructor(
-    private readonly productDomainService: ProductDomainService,
-  ) {}
+  constructor(private readonly productDomainService: ProductDomainService) {}
 
   async execute(
     optionId: number,

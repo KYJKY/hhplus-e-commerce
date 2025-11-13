@@ -24,7 +24,10 @@ export class AddressDto {
   @ApiProperty({ description: '우편번호', example: '12345' })
   postalCode: string;
 
-  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  @ApiProperty({
+    description: '기본 주소',
+    example: '서울시 강남구 테헤란로 123',
+  })
   addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
@@ -67,7 +70,10 @@ export class GetAddressDetailResponseDto {
   @ApiProperty({ description: '우편번호', example: '12345' })
   postalCode: string;
 
-  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  @ApiProperty({
+    description: '기본 주소',
+    example: '서울시 강남구 테헤란로 123',
+  })
   addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
@@ -172,7 +178,10 @@ export class CreateAddressResponseDto {
   @ApiProperty({ description: '우편번호', example: '12345' })
   postalCode: string;
 
-  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  @ApiProperty({
+    description: '기본 주소',
+    example: '서울시 강남구 테헤란로 123',
+  })
   addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
@@ -329,7 +338,10 @@ export class GetDefaultAddressResponseDto {
   @ApiProperty({ description: '우편번호', example: '12345' })
   postalCode: string;
 
-  @ApiProperty({ description: '기본 주소', example: '서울시 강남구 테헤란로 123' })
+  @ApiProperty({
+    description: '기본 주소',
+    example: '서울시 강남구 테헤란로 123',
+  })
   addressDefaultText: string;
 
   @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })

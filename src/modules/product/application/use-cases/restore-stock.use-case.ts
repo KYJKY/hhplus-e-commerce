@@ -7,9 +7,7 @@ import { RestoreStockResponseDto } from '../../presentation/dto';
  */
 @Injectable()
 export class RestoreStockUseCase {
-  constructor(
-    private readonly productDomainService: ProductDomainService,
-  ) {}
+  constructor(private readonly productDomainService: ProductDomainService) {}
 
   async execute(
     optionId: number,

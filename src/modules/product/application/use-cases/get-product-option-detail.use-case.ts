@@ -7,9 +7,7 @@ import { GetProductOptionDetailResponseDto } from '../../presentation/dto';
  */
 @Injectable()
 export class GetProductOptionDetailUseCase {
-  constructor(
-    private readonly productDomainService: ProductDomainService,
-  ) {}
+  constructor(private readonly productDomainService: ProductDomainService) {}
 
   async execute(
     productId: number,
