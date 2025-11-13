@@ -1,8 +1,8 @@
-import {
-  InvalidNameLengthException,
-  InvalidDisplayNameLengthException,
-  InvalidPhoneNumberFormatException,
-} from '../exceptions';
+import { Email } from '../value-objects/email.vo';
+import { Name } from '../value-objects/name.vo';
+import { DisplayName } from '../value-objects/display-name.vo';
+import { PhoneNumber } from '../../../../common/domain/value-objects/phone-number.vo';
+import { Point } from '../../../payment/domain/value-objects/point.vo';
 
 /**
  * User 생성 속성
@@ -32,48 +32,123 @@ export interface UpdateUserProfileProps {
 }
 
 /**
- * User 도메인 엔티티
+ * User 도메인 엔티티 (VO 적용)
+ *
+ * Value Object 사용:
+ * - Email: 이메일 검증 및 불변성 보장
+ * - Name: 이름 검증 (2~50자)
+ * - DisplayName: 닉네임 검증 (2~20자)
+ * - PhoneNumber: 전화번호 검증
+ * - Point: 포인트 비즈니스 규칙 적용
  */
 export class User {
   private constructor(
     public readonly id: number,
     public readonly loginId: string,
     private loginPassword: string,
-    public readonly email: string,
-    public readonly name: string,
-    public displayName: string | null,
-    public phoneNumber: string | null,
-    private point: number,
+    private readonly _email: Email,
+    private _name: Name,
+    private _displayName: DisplayName | null,
+    private _phoneNumber: PhoneNumber | null,
+    private _point: Point,
     public lastLoginAt: string | null,
     public deletedAt: string | null,
     public readonly createdAt: string,
     public updatedAt: string | null,
   ) {}
 
+  // ===== Getter 메서드 (기존 코드 호환성 유지) =====
+
+  /**
+   * 이메일 문자열 반환 (기존 코드 호환)
+   */
+  get email(): string {
+    return this._email.getValue();
+  }
+
+  /**
+   * 이름 문자열 반환 (기존 코드 호환)
+   */
+  get name(): string {
+    return this._name.getValue();
+  }
+
+  /**
+   * 닉네임 문자열 반환 (기존 코드 호환)
+   */
+  get displayName(): string | null {
+    return this._displayName?.getValue() ?? null;
+  }
+
+  /**
+   * 전화번호 문자열 반환 (기존 코드 호환)
+   */
+  get phoneNumber(): string | null {
+    return this._phoneNumber?.getValue() ?? null;
+  }
+
+  // ===== VO Getter 메서드 (새로운 코드에서 사용) =====
+
+  /**
+   * Email VO 반환
+   */
+  getEmailVO(): Email {
+    return this._email;
+  }
+
+  /**
+   * Name VO 반환
+   */
+  getNameVO(): Name {
+    return this._name;
+  }
+
+  /**
+   * DisplayName VO 반환
+   */
+  getDisplayNameVO(): DisplayName | null {
+    return this._displayName;
+  }
+
+  /**
+   * PhoneNumber VO 반환
+   */
+  getPhoneNumberVO(): PhoneNumber | null {
+    return this._phoneNumber;
+  }
+
+  /**
+   * Point VO 반환
+   */
+  getPointVO(): Point {
+    return this._point;
+  }
+
   /**
    * User 엔티티 생성 팩토리 메서드
+   * VO를 생성하여 검증을 VO에 위임
    */
   static create(props: CreateUserProps): User {
-    // 검증
-    this.validateEmail(props.email);
-    this.validateName(props.name);
-    if (props.displayName) {
-      this.validateDisplayName(props.displayName);
-    }
-    if (props.phoneNumber) {
-      this.validatePhoneNumber(props.phoneNumber);
-    }
-    this.validatePoint(props.point ?? 0);
+    // VO 생성 (검증은 VO 내부에서 수행)
+    const email = Email.create(props.email);
+    const name = Name.create(props.name);
+    const displayName = props.displayName
+      ? DisplayName.create(props.displayName)
+      : null;
+    const phoneNumber = props.phoneNumber
+      ? PhoneNumber.create(props.phoneNumber)
+      : null;
+    const point = Point.create(props.point ?? 0);
 
     return new User(
       props.id,
       props.loginId,
       props.loginPassword,
-      props.email,
-      props.name,
-      props.displayName ?? null,
-      props.phoneNumber ?? null,
-      props.point ?? 0,
+      email,
+      name,
+      displayName,
+      phoneNumber,
+      point,
       props.lastLoginAt ?? null,
       props.deletedAt ?? null,
       props.createdAt,
@@ -83,93 +158,33 @@ export class User {
 
   /**
    * 프로필 수정
+   * VO를 사용하여 검증
    */
   updateProfile(props: UpdateUserProfileProps): void {
     if (props.name !== undefined) {
-      User.validateName(props.name);
-      // name은 readonly이므로 직접 수정 불가, 새로운 방식 필요
-      // 하지만 엔티티 내부에서는 수정 가능하도록 처리
-      (this as any).name = props.name;
+      this._name = Name.create(props.name);
     }
 
     if (props.displayName !== undefined) {
-      if (props.displayName) {
-        User.validateDisplayName(props.displayName);
-      }
-      this.displayName = props.displayName;
+      this._displayName = props.displayName
+        ? DisplayName.create(props.displayName)
+        : null;
     }
 
     if (props.phoneNumber !== undefined) {
-      if (props.phoneNumber) {
-        User.validatePhoneNumber(props.phoneNumber);
-      }
-      this.phoneNumber = props.phoneNumber;
+      this._phoneNumber = props.phoneNumber
+        ? PhoneNumber.create(props.phoneNumber)
+        : null;
     }
 
     this.updatedAt = new Date().toISOString();
   }
 
   /**
-   * 이메일 형식 검증
-   */
-  private static validateEmail(email: string): void {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw new Error('Invalid email format');
-    }
-  }
-
-  /**
-   * 이름 검증 (2~50자)
-   */
-  private static validateName(name: string): void {
-    if (!name || name.trim().length < 2 || name.trim().length > 50) {
-      throw new InvalidNameLengthException();
-    }
-  }
-
-  /**
-   * 닉네임 검증 (2~20자)
-   */
-  private static validateDisplayName(displayName: string): void {
-    if (
-      !displayName ||
-      displayName.trim().length < 2 ||
-      displayName.trim().length > 20
-    ) {
-      throw new InvalidDisplayNameLengthException();
-    }
-  }
-
-  /**
-   * 전화번호 형식 검증
-   * 하이픈 포함 또는 제외 형식 모두 허용
-   * 예: 010-1234-5678, 01012345678
-   */
-  private static validatePhoneNumber(phoneNumber: string): void {
-    const phoneRegex = /^(\d{2,3}-?\d{3,4}-?\d{4})$/;
-    if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
-      throw new InvalidPhoneNumberFormatException();
-    }
-  }
-
-  /**
-   * 포인트 검증
-   */
-  private static validatePoint(point: number): void {
-    if (point < 0) {
-      throw new Error('Point cannot be negative');
-    }
-    if (point > 10_000_000) {
-      throw new Error('Point cannot exceed 10,000,000');
-    }
-  }
-
-  /**
    * 포인트 조회
    */
   getPoint(): number {
-    return this.point;
+    return this._point.getValue();
   }
 
   /**
@@ -177,16 +192,7 @@ export class User {
    * @param amount - 충전할 포인트
    */
   chargePoint(amount: number): void {
-    if (amount < 1000 || amount > 1_000_000) {
-      throw new Error('Charge amount must be between 1,000 and 1,000,000');
-    }
-    if (amount % 1000 !== 0) {
-      throw new Error('Charge amount must be in units of 1,000');
-    }
-    if (this.point + amount > 10_000_000) {
-      throw new Error('Maximum balance of 10,000,000 would be exceeded');
-    }
-    this.point += amount;
+    this._point = this._point.charge(amount);
   }
 
   /**
@@ -194,9 +200,6 @@ export class User {
    * @param amount - 차감할 포인트
    */
   deductPoint(amount: number): void {
-    if (this.point < amount) {
-      throw new Error('Insufficient point balance');
-    }
-    this.point -= amount;
+    this._point = this._point.use(amount);
   }
 }

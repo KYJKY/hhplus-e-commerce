@@ -1,3 +1,5 @@
+import { Point } from '../value-objects/point.vo';
+
 /**
  * PointTransaction 생성 속성
  */
@@ -13,57 +15,73 @@ export interface CreatePointTransactionProps {
 }
 
 /**
- * PointTransaction 도메인 엔티티
+ * PointTransaction 도메인 엔티티 (VO 적용)
+ *
+ * Value Object 사용:
+ * - Point: 거래 금액 및 잔액 검증
  */
 export class PointTransaction {
   private constructor(
     public readonly id: number,
     public readonly userId: number,
     public readonly transactionType: 'CHARGE' | 'USE' | 'REFUND',
-    public readonly amount: number,
-    public readonly balanceAfter: number,
+    private readonly _amount: Point,
+    private readonly _balanceAfter: Point,
     public readonly relatedOrderId: number | null,
     public readonly description: string | null,
     public readonly createdAt: string,
   ) {}
 
   /**
+   * 거래 금액 반환 (기존 코드 호환)
+   */
+  get amount(): number {
+    return this._amount.getValue();
+  }
+
+  /**
+   * 거래 후 잔액 반환 (기존 코드 호환)
+   */
+  get balanceAfter(): number {
+    return this._balanceAfter.getValue();
+  }
+
+  /**
+   * Amount Point VO 반환
+   */
+  getAmountVO(): Point {
+    return this._amount;
+  }
+
+  /**
+   * BalanceAfter Point VO 반환
+   */
+  getBalanceAfterVO(): Point {
+    return this._balanceAfter;
+  }
+
+  /**
    * PointTransaction 엔티티 생성 팩토리 메서드
+   * VO를 생성하여 검증을 VO에 위임
    */
   static create(props: CreatePointTransactionProps): PointTransaction {
     // 검증
-    this.validateAmount(props.amount);
-    this.validateBalanceAfter(props.balanceAfter);
-    this.validateTransactionType(props.transactionType);
+    PointTransaction.validateTransactionType(props.transactionType);
+
+    // VO 생성 (검증은 VO 내부에서 수행)
+    const amount = Point.create(props.amount);
+    const balanceAfter = Point.create(props.balanceAfter);
 
     return new PointTransaction(
       props.id,
       props.userId,
       props.transactionType,
-      props.amount,
-      props.balanceAfter,
+      amount,
+      balanceAfter,
       props.relatedOrderId ?? null,
       props.description ?? null,
       props.createdAt,
     );
-  }
-
-  /**
-   * 거래 금액 검증 (양수)
-   */
-  private static validateAmount(amount: number): void {
-    if (amount <= 0) {
-      throw new Error('Transaction amount must be greater than 0');
-    }
-  }
-
-  /**
-   * 거래 후 잔액 검증 (0 이상)
-   */
-  private static validateBalanceAfter(balanceAfter: number): void {
-    if (balanceAfter < 0) {
-      throw new Error('Balance after transaction cannot be negative');
-    }
   }
 
   /**

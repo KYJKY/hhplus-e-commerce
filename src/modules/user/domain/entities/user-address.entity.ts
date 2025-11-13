@@ -1,7 +1,7 @@
+import { PhoneNumber } from '../../../../common/domain/value-objects/phone-number.vo';
+import { PostalCode } from '../value-objects/postal-code.vo';
 import {
   InvalidRecipientNameException,
-  InvalidPhoneNumberFormatException,
-  InvalidZipCodeFormatException,
   InvalidAddressException,
 } from '../exceptions';
 
@@ -33,40 +33,118 @@ export interface UpdateUserAddressProps {
 }
 
 /**
- * UserAddress 도메인 엔티티
+ * UserAddress 도메인 엔티티 (VO 적용)
+ *
+ * Value Object 사용:
+ * - PhoneNumber: 수령인 전화번호 검증
+ * - PostalCode: 우편번호 검증 (5자리)
+ * - recipientName, addressDefaultText, addressDetailText: 문자열 검증
  */
 export class UserAddress {
+  private static readonly MIN_RECIPIENT_NAME_LENGTH = 2;
+  private static readonly MAX_RECIPIENT_NAME_LENGTH = 50;
+  private static readonly MAX_ADDRESS_LENGTH = 200;
+
   private constructor(
     public readonly id: number,
     public readonly userId: number,
-    public recipientName: string,
-    public recipientPhone: string,
-    public postalCode: string,
-    public addressDefaultText: string,
-    public addressDetailText: string | null,
+    private _recipientName: string,
+    private _recipientPhone: PhoneNumber,
+    private _postalCode: PostalCode,
+    private _addressDefaultText: string,
+    private _addressDetailText: string | null,
     public isDefault: boolean,
     public readonly createdAt: string,
     public updatedAt: string | null,
   ) {}
 
+  // ===== Getter 메서드 (기존 코드 호환성 유지) =====
+
+  /**
+   * 수령인 이름 반환 (기존 코드 호환)
+   */
+  get recipientName(): string {
+    return this._recipientName;
+  }
+
+  /**
+   * 수령인 전화번호 문자열 반환 (기존 코드 호환)
+   */
+  get recipientPhone(): string {
+    return this._recipientPhone.getValue();
+  }
+
+  /**
+   * 우편번호 문자열 반환 (기존 코드 호환)
+   */
+  get postalCode(): string {
+    return this._postalCode.getValue();
+  }
+
+  /**
+   * 기본 주소 반환 (기존 코드 호환)
+   */
+  get addressDefaultText(): string {
+    return this._addressDefaultText;
+  }
+
+  /**
+   * 상세 주소 반환 (기존 코드 호환)
+   */
+  get addressDetailText(): string | null {
+    return this._addressDetailText;
+  }
+
+  // ===== VO Getter 메서드 (새로운 코드에서 사용) =====
+
+  /**
+   * PhoneNumber VO 반환
+   */
+  getRecipientPhoneVO(): PhoneNumber {
+    return this._recipientPhone;
+  }
+
+  /**
+   * PostalCode VO 반환
+   */
+  getPostalCodeVO(): PostalCode {
+    return this._postalCode;
+  }
+
+  /**
+   * 전체 주소 반환 (기본 + 상세)
+   */
+  getFullAddress(): string {
+    if (this._addressDetailText) {
+      return `${this._addressDefaultText} ${this._addressDetailText}`;
+    }
+    return this._addressDefaultText;
+  }
+
   /**
    * UserAddress 엔티티 생성 팩토리 메서드
+   * VO를 생성하여 검증을 VO에 위임
    */
   static create(props: CreateUserAddressProps): UserAddress {
     // 검증
-    this.validateRecipientName(props.recipientName);
-    this.validateRecipientPhone(props.recipientPhone);
-    this.validatePostalCode(props.postalCode);
-    this.validateAddressDefaultText(props.addressDefaultText);
+    UserAddress.validateRecipientName(props.recipientName);
+    UserAddress.validateAddressDefaultText(props.addressDefaultText);
+    if (props.addressDetailText) {
+      UserAddress.validateAddressDetailText(props.addressDetailText);
+    }
+
+    // VO 생성 (검증은 VO 내부에서 수행)
+    const recipientPhone = PhoneNumber.create(props.recipientPhone);
+    const postalCode = PostalCode.create(props.postalCode);
 
     return new UserAddress(
       props.id,
       props.userId,
-      props.recipientName,
-      props.recipientPhone,
-      props.postalCode,
-      props.addressDefaultText,
-      props.addressDetailText ?? null,
+      props.recipientName.trim(),
+      recipientPhone,
+      postalCode,
+      props.addressDefaultText.trim(),
+      props.addressDetailText?.trim() ?? null,
       props.isDefault,
       props.createdAt,
       props.updatedAt ?? null,
@@ -75,30 +153,32 @@ export class UserAddress {
 
   /**
    * 배송지 정보 수정
+   * VO를 사용하여 검증
    */
   update(props: UpdateUserAddressProps): void {
     if (props.recipientName !== undefined) {
       UserAddress.validateRecipientName(props.recipientName);
-      this.recipientName = props.recipientName;
+      this._recipientName = props.recipientName.trim();
     }
 
     if (props.recipientPhone !== undefined) {
-      UserAddress.validateRecipientPhone(props.recipientPhone);
-      this.recipientPhone = props.recipientPhone;
+      this._recipientPhone = PhoneNumber.create(props.recipientPhone);
     }
 
     if (props.postalCode !== undefined) {
-      UserAddress.validatePostalCode(props.postalCode);
-      this.postalCode = props.postalCode;
+      this._postalCode = PostalCode.create(props.postalCode);
     }
 
     if (props.addressDefaultText !== undefined) {
       UserAddress.validateAddressDefaultText(props.addressDefaultText);
-      this.addressDefaultText = props.addressDefaultText;
+      this._addressDefaultText = props.addressDefaultText.trim();
     }
 
     if (props.addressDetailText !== undefined) {
-      this.addressDetailText = props.addressDetailText ?? null;
+      if (props.addressDetailText) {
+        UserAddress.validateAddressDetailText(props.addressDetailText);
+      }
+      this._addressDetailText = props.addressDetailText?.trim() ?? null;
     }
 
     this.updatedAt = new Date().toISOString();
@@ -124,30 +204,16 @@ export class UserAddress {
    * 수령인 이름 검증 (2~50자)
    */
   private static validateRecipientName(name: string): void {
-    if (!name || name.trim().length < 2 || name.trim().length > 50) {
+    if (!name || name.trim().length === 0) {
       throw new InvalidRecipientNameException();
     }
-  }
 
-  /**
-   * 수령인 전화번호 형식 검증
-   * 하이픈 포함 또는 제외 형식 모두 허용
-   * 예: 010-1234-5678, 01012345678
-   */
-  private static validateRecipientPhone(recipientPhone: string): void {
-    const phoneRegex = /^(\d{2,3}-?\d{3,4}-?\d{4})$/;
-    if (!recipientPhone || !phoneRegex.test(recipientPhone)) {
-      throw new InvalidPhoneNumberFormatException();
-    }
-  }
-
-  /**
-   * 우편번호 검증 (5자리 숫자)
-   */
-  private static validatePostalCode(postalCode: string): void {
-    const postalCodeRegex = /^\d{5}$/;
-    if (!postalCode || !postalCodeRegex.test(postalCode)) {
-      throw new InvalidZipCodeFormatException();
+    const trimmedName = name.trim();
+    if (
+      trimmedName.length < UserAddress.MIN_RECIPIENT_NAME_LENGTH ||
+      trimmedName.length > UserAddress.MAX_RECIPIENT_NAME_LENGTH
+    ) {
+      throw new InvalidRecipientNameException();
     }
   }
 
@@ -158,9 +224,20 @@ export class UserAddress {
     if (!addressDefaultText || addressDefaultText.trim().length === 0) {
       throw new InvalidAddressException('Address is required');
     }
-    if (addressDefaultText.trim().length > 200) {
+    if (addressDefaultText.trim().length > UserAddress.MAX_ADDRESS_LENGTH) {
       throw new InvalidAddressException(
-        'Address is too long (max 200 characters)',
+        `Address is too long (max ${UserAddress.MAX_ADDRESS_LENGTH} characters)`,
+      );
+    }
+  }
+
+  /**
+   * 상세 주소 검증
+   */
+  private static validateAddressDetailText(addressDetailText: string): void {
+    if (addressDetailText.trim().length > UserAddress.MAX_ADDRESS_LENGTH) {
+      throw new InvalidAddressException(
+        `Address detail is too long (max ${UserAddress.MAX_ADDRESS_LENGTH} characters)`,
       );
     }
   }

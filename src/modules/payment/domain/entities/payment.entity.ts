@@ -1,3 +1,5 @@
+import { Money } from '../../../../common/domain/value-objects/money.vo';
+
 /**
  * Payment 생성 속성
  */
@@ -23,7 +25,10 @@ export interface UpdatePaymentProps {
 }
 
 /**
- * Payment 도메인 엔티티
+ * Payment 도메인 엔티티 (VO 적용)
+ *
+ * Value Object 사용:
+ * - Money: 결제 금액 검증 및 불변성 보장
  */
 export class Payment {
   private constructor(
@@ -32,7 +37,7 @@ export class Payment {
     public readonly userId: number,
     public readonly paymentMethod: string,
     public paymentStatus: 'SUCCESS' | 'FAILED' | 'CANCELLED',
-    public readonly paidAmount: number,
+    private readonly _paidAmount: Money,
     public failureReason: string | null,
     public readonly paidAt: string,
     public readonly createdAt: string,
@@ -40,12 +45,29 @@ export class Payment {
   ) {}
 
   /**
+   * 결제 금액 반환 (기존 코드 호환)
+   */
+  get paidAmount(): number {
+    return this._paidAmount.getValue();
+  }
+
+  /**
+   * Money VO 반환
+   */
+  getPaidAmountVO(): Money {
+    return this._paidAmount;
+  }
+
+  /**
    * Payment 엔티티 생성 팩토리 메서드
+   * VO를 생성하여 검증을 VO에 위임
    */
   static create(props: CreatePaymentProps): Payment {
     // 검증
-    this.validatePaidAmount(props.paidAmount);
-    this.validatePaymentStatus(props.paymentStatus ?? 'SUCCESS');
+    Payment.validatePaymentStatus(props.paymentStatus ?? 'SUCCESS');
+
+    // VO 생성 (검증은 VO 내부에서 수행)
+    const paidAmount = Money.create(props.paidAmount);
 
     return new Payment(
       props.id,
@@ -53,7 +75,7 @@ export class Payment {
       props.userId,
       props.paymentMethod ?? 'POINT',
       props.paymentStatus ?? 'SUCCESS',
-      props.paidAmount,
+      paidAmount,
       props.failureReason ?? null,
       props.paidAt,
       props.createdAt,
@@ -117,15 +139,6 @@ export class Payment {
    */
   isCancelled(): boolean {
     return this.paymentStatus === 'CANCELLED';
-  }
-
-  /**
-   * 결제 금액 검증 (1원 이상)
-   */
-  private static validatePaidAmount(paidAmount: number): void {
-    if (paidAmount < 1) {
-      throw new Error('Payment amount must be at least 1');
-    }
   }
 
   /**
