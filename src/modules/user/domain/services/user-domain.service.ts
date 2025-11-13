@@ -209,8 +209,8 @@ export class UserDomainService {
   }
 
   /**
-   * 포인트 충전 (내부 API)
-   * PaymentModule에서 사용하기 위한 메서드
+   * 포인트 충전 (Public API)
+   * 다른 도메인에서 사용 가능한 공개 인터페이스
    * @param userId - 사용자 ID
    * @param amount - 충전할 포인트
    */
@@ -236,8 +236,8 @@ export class UserDomainService {
   }
 
   /**
-   * 포인트 차감 (내부 API)
-   * PaymentModule에서 사용하기 위한 메서드
+   * 포인트 차감 (Public API)
+   * 다른 도메인에서 사용 가능한 공개 인터페이스
    * @param userId - 사용자 ID
    * @param amount - 차감할 포인트
    */

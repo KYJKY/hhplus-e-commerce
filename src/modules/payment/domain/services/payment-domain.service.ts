@@ -1,17 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { IPointTransactionRepository } from '../repositories/point-transaction.repository.interface';
 import type { IPaymentRepository } from '../repositories/payment.repository.interface';
-import { UserDomainService } from '../../../user/domain/services/user-domain.service';
 import {
   PaymentNotFoundException,
   PaymentAccessDeniedException,
-  InsufficientBalanceException,
-  InvalidPaymentAmountException,
-  InvalidChargeAmountException,
-  ChargeAmountUnitErrorException,
-  MaxBalanceExceededException,
   DuplicatePaymentException,
-  InvalidAmountException,
   InvalidDateRangeException,
 } from '../exceptions';
 import { PointTransaction } from '../entities/point-transaction.entity';
@@ -32,40 +25,43 @@ export class PaymentDomainService {
     private readonly pointTransactionRepository: IPointTransactionRepository,
     @Inject('IPaymentRepository')
     private readonly paymentRepository: IPaymentRepository,
-    private readonly userDomainService: UserDomainService,
   ) {}
 
   /**
    * FR-PAY-001: 포인트 잔액 조회
    */
-  async getBalance(userId: number): Promise<{
+  async getBalance(
+    userId: number,
+    balance: number,
+    userCreatedAt: string,
+  ): Promise<{
     userId: number;
     balance: number;
     lastUpdatedAt: string | null;
   }> {
-    const user = await this.userDomainService.findUserById(userId);
-
     // 최근 거래 조회
     const latestTransactions =
       await this.pointTransactionRepository.findLatestByUserId(userId, 1);
     const lastUpdatedAt =
       latestTransactions.length > 0
         ? latestTransactions[0].createdAt
-        : user.createdAt;
+        : userCreatedAt;
 
     return {
-      userId: user.id,
-      balance: user.getPoint(),
+      userId,
+      balance,
       lastUpdatedAt,
     };
   }
 
   /**
-   * FR-PAY-002: 포인트 충전
+   * FR-PAY-002: 포인트 충전 - 거래 내역 생성
    */
   async chargePoint(
     userId: number,
     amount: number,
+    previousBalance: number,
+    currentBalance: number,
   ): Promise<{
     pointTransactionId: number;
     userId: number;
@@ -75,31 +71,6 @@ export class PaymentDomainService {
     transactionType: 'CHARGE';
     createdAt: string;
   }> {
-    // 사용자 확인
-    const user = await this.userDomainService.findUserById(userId);
-
-    // 충전 금액 검증
-    if (amount < 1000 || amount > 1000000) {
-      throw new InvalidChargeAmountException(amount);
-    }
-
-    if (amount % 1000 !== 0) {
-      throw new ChargeAmountUnitErrorException(amount);
-    }
-
-    const previousBalance = user.getPoint();
-
-    // 최대 보유 가능 포인트 확인
-    if (previousBalance + amount > 10000000) {
-      throw new MaxBalanceExceededException(previousBalance, amount);
-    }
-
-    // 포인트 충전
-    const { currentBalance } = await this.userDomainService.chargeUserPoint(
-      userId,
-      amount,
-    );
-
     // 포인트 거래 내역 생성
     const now = new Date().toISOString();
     const transaction = PointTransaction.create({
@@ -151,9 +122,6 @@ export class PaymentDomainService {
     currentPage: number;
     totalPages: number;
   }> {
-    // 사용자 확인
-    await this.userDomainService.findUserById(params.userId);
-
     // 날짜 범위 검증
     if (params.startDate && params.endDate) {
       if (new Date(params.startDate) > new Date(params.endDate)) {
@@ -190,12 +158,14 @@ export class PaymentDomainService {
   }
 
   /**
-   * FR-PAY-004: 결제 처리 (내부 API)
+   * FR-PAY-004: 결제 처리 (내부 API) - Payment 및 거래 내역 생성
    */
   async processPayment(
     userId: number,
     orderId: number,
     amount: number,
+    previousBalance: number,
+    currentBalance: number,
   ): Promise<{
     paymentId: number;
     orderId: number;
@@ -207,32 +177,11 @@ export class PaymentDomainService {
     status: 'SUCCESS';
     paidAt: string;
   }> {
-    // 결제 금액 검증
-    if (amount < 1) {
-      throw new InvalidPaymentAmountException(amount);
-    }
-
-    // 사용자 확인
-    const user = await this.userDomainService.findUserById(userId);
-
     // 중복 결제 확인
     const existingPayment = await this.paymentRepository.findByOrderId(orderId);
     if (existingPayment) {
       throw new DuplicatePaymentException(orderId);
     }
-
-    const previousBalance = user.getPoint();
-
-    // 잔액 확인
-    if (previousBalance < amount) {
-      throw new InsufficientBalanceException(previousBalance, amount);
-    }
-
-    // 포인트 차감
-    const { currentBalance } = await this.userDomainService.deductUserPoint(
-      userId,
-      amount,
-    );
 
     const now = new Date().toISOString();
 
@@ -301,9 +250,6 @@ export class PaymentDomainService {
     currentPage: number;
     totalPages: number;
   }> {
-    // 사용자 확인
-    await this.userDomainService.findUserById(params.userId);
-
     const page = params.page ?? 1;
     const size = params.size ?? 20;
 
@@ -348,9 +294,6 @@ export class PaymentDomainService {
     pointTransactionId: number | null;
     failureReason: string | null;
   }> {
-    // 사용자 확인
-    await this.userDomainService.findUserById(userId);
-
     // 결제 조회
     const payment = await this.paymentRepository.findByIdAndUserId(
       paymentId,
@@ -402,9 +345,6 @@ export class PaymentDomainService {
     failureReason: string;
     failedAt: string;
   }> {
-    // 사용자 확인
-    await this.userDomainService.findUserById(userId);
-
     const now = new Date().toISOString();
 
     // 실패한 결제 정보 생성
@@ -439,6 +379,7 @@ export class PaymentDomainService {
    */
   async validatePointDeduction(
     userId: number,
+    currentBalance: number,
     amount: number,
   ): Promise<{
     userId: number;
@@ -447,20 +388,11 @@ export class PaymentDomainService {
     isAvailable: boolean;
     shortage: number;
   }> {
-    // 금액 검증
-    if (amount < 1) {
-      throw new InvalidAmountException(amount);
-    }
-
-    // 사용자 확인
-    const user = await this.userDomainService.findUserById(userId);
-
-    const currentBalance = user.getPoint();
     const isAvailable = currentBalance >= amount;
     const shortage = isAvailable ? 0 : amount - currentBalance;
 
     return {
-      userId: user.id,
+      userId,
       currentBalance,
       requestedAmount: amount,
       isAvailable,
@@ -480,25 +412,25 @@ export class PaymentDomainService {
     averagePaymentAmount: number;
     lastPaymentAt: string | null;
   }> {
-    // 사용자 확인
-    const user = await this.userDomainService.findUserById(userId);
-
     const statistics =
       await this.paymentRepository.getPaymentStatistics(userId);
 
     return {
-      userId: user.id,
+      userId,
       ...statistics,
     };
   }
 
   /**
    * 포인트 복원 (내부 API) - 주문 취소 또는 재고 복원 시 사용
+   * 거래 내역만 생성 (포인트 복원은 Use Case에서 처리)
    */
   async restorePoint(
     userId: number,
     orderId: number,
     amount: number,
+    previousBalance: number,
+    currentBalance: number,
     description: string = '포인트 복원',
   ): Promise<{
     pointTransactionId: number;
@@ -508,17 +440,6 @@ export class PaymentDomainService {
     currentBalance: number;
     transactionType: 'REFUND';
   }> {
-    // 사용자 확인
-    const user = await this.userDomainService.findUserById(userId);
-
-    const previousBalance = user.getPoint();
-
-    // 포인트 복원
-    const { currentBalance } = await this.userDomainService.chargeUserPoint(
-      userId,
-      amount,
-    );
-
     // 포인트 거래 내역 생성 (REFUND)
     const now = new Date().toISOString();
     const transaction = PointTransaction.create({
