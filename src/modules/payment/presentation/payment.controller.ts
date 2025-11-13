@@ -20,21 +20,21 @@ import {
   GetPaymentStatisticsUseCase,
 } from '../application/use-cases';
 import {
-  GetBalanceResponseDto,
-  ChargePointRequestDto,
-  ChargePointResponseDto,
-  GetPointTransactionsRequestDto,
-  GetPointTransactionsResponseDto,
-  ProcessPaymentRequestDto,
-  ProcessPaymentResponseDto,
-  GetPaymentsRequestDto,
-  GetPaymentsResponseDto,
-  GetPaymentDetailResponseDto,
-  ProcessPaymentFailureRequestDto,
-  ProcessPaymentFailureResponseDto,
-  ValidatePointDeductionRequestDto,
-  ValidatePointDeductionResponseDto,
-  GetPaymentStatisticsResponseDto,
+  GetBalanceResponse,
+  ChargePointRequest,
+  ChargePointResponse,
+  GetPointTransactionsRequest,
+  GetPointTransactionsResponse,
+  ProcessPaymentRequest,
+  ProcessPaymentResponse,
+  GetPaymentsRequest,
+  GetPaymentsResponse,
+  GetPaymentDetailResponse,
+  ProcessPaymentFailureRequest,
+  ProcessPaymentFailureResponse,
+  ValidatePointDeductionRequest,
+  ValidatePointDeductionResponse,
+  GetPaymentStatisticsResponse,
 } from './dto';
 
 @ApiTags('Payment')
@@ -61,12 +61,12 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '포인트 잔액 조회 성공',
-    type: GetBalanceResponseDto,
+    type: GetBalanceResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   async getBalance(
     @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<GetBalanceResponseDto> {
+  ): Promise<GetBalanceResponse> {
     return await this.getBalanceUseCase.execute(userId);
   }
 
@@ -79,7 +79,7 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '포인트 충전 성공',
-    type: ChargePointResponseDto,
+    type: ChargePointResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   @ApiResponse({
@@ -96,8 +96,8 @@ export class PaymentController {
   })
   async chargePoint(
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() body: ChargePointRequestDto,
-  ): Promise<ChargePointResponseDto> {
+    @Body() body: ChargePointRequest,
+  ): Promise<ChargePointResponse> {
     return await this.chargePointUseCase.execute(userId, body.amount);
   }
 
@@ -110,7 +110,7 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '포인트 사용 내역 조회 성공',
-    type: GetPointTransactionsResponseDto,
+    type: GetPointTransactionsResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   @ApiResponse({
@@ -119,8 +119,8 @@ export class PaymentController {
   })
   async getPointTransactions(
     @Param('userId', ParseIntPipe) userId: number,
-    @Query() query: GetPointTransactionsRequestDto,
-  ): Promise<GetPointTransactionsResponseDto> {
+    @Query() query: GetPointTransactionsRequest,
+  ): Promise<GetPointTransactionsResponse> {
     return await this.getPointTransactionsUseCase.execute(userId, query);
   }
 
@@ -133,7 +133,7 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '결제 처리 성공',
-    type: ProcessPaymentResponseDto,
+    type: ProcessPaymentResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   @ApiResponse({ status: 400, description: '포인트 잔액 부족 (PAY005)' })
@@ -144,8 +144,8 @@ export class PaymentController {
   @ApiResponse({ status: 409, description: '이미 결제된 주문 (PAY010)' })
   async processPayment(
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() body: ProcessPaymentRequestDto,
-  ): Promise<ProcessPaymentResponseDto> {
+    @Body() body: ProcessPaymentRequest,
+  ): Promise<ProcessPaymentResponse> {
     return await this.processPaymentUseCase.execute(
       userId,
       body.orderId,
@@ -162,13 +162,13 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '결제 내역 조회 성공',
-    type: GetPaymentsResponseDto,
+    type: GetPaymentsResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   async getPayments(
     @Param('userId', ParseIntPipe) userId: number,
-    @Query() query: GetPaymentsRequestDto,
-  ): Promise<GetPaymentsResponseDto> {
+    @Query() query: GetPaymentsRequest,
+  ): Promise<GetPaymentsResponse> {
     return await this.getPaymentsUseCase.execute(userId, query);
   }
 
@@ -182,7 +182,7 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '결제 상세 조회 성공',
-    type: GetPaymentDetailResponseDto,
+    type: GetPaymentDetailResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   @ApiResponse({ status: 404, description: '결제를 찾을 수 없음 (PAY003)' })
@@ -193,7 +193,7 @@ export class PaymentController {
   async getPaymentDetail(
     @Param('userId', ParseIntPipe) userId: number,
     @Param('paymentId', ParseIntPipe) paymentId: number,
-  ): Promise<GetPaymentDetailResponseDto> {
+  ): Promise<GetPaymentDetailResponse> {
     return await this.getPaymentDetailUseCase.execute(userId, paymentId);
   }
 
@@ -206,13 +206,13 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '결제 실패 처리 성공',
-    type: ProcessPaymentFailureResponseDto,
+    type: ProcessPaymentFailureResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   async processPaymentFailure(
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() body: ProcessPaymentFailureRequestDto,
-  ): Promise<ProcessPaymentFailureResponseDto> {
+    @Body() body: ProcessPaymentFailureRequest,
+  ): Promise<ProcessPaymentFailureResponse> {
     return await this.processPaymentFailureUseCase.execute(
       userId,
       body.orderId,
@@ -230,14 +230,14 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '포인트 차감 검증 성공',
-    type: ValidatePointDeductionResponseDto,
+    type: ValidatePointDeductionResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   @ApiResponse({ status: 400, description: '유효하지 않은 금액 (PAY014)' })
   async validatePointDeduction(
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() body: ValidatePointDeductionRequestDto,
-  ): Promise<ValidatePointDeductionResponseDto> {
+    @Body() body: ValidatePointDeductionRequest,
+  ): Promise<ValidatePointDeductionResponse> {
     return await this.validatePointDeductionUseCase.execute(
       userId,
       body.amount,
@@ -253,12 +253,12 @@ export class PaymentController {
   @ApiResponse({
     status: 200,
     description: '결제 통계 조회 성공',
-    type: GetPaymentStatisticsResponseDto,
+    type: GetPaymentStatisticsResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음 (U001)' })
   async getPaymentStatistics(
     @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<GetPaymentStatisticsResponseDto> {
+  ): Promise<GetPaymentStatisticsResponse> {
     return await this.getPaymentStatisticsUseCase.execute(userId);
   }
 }

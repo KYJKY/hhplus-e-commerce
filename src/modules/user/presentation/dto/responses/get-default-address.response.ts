@@ -1,0 +1,33 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+/**
+ * FR-U-010: 기본 배송지 조회 응답 DTO
+ */
+export class GetDefaultAddressResponse {
+  @ApiProperty({ description: '배송지 ID', example: 1 })
+  addressId: number;
+
+  @ApiProperty({ description: '사용자 ID', example: 1 })
+  userId: number;
+
+  @ApiProperty({ description: '수령인 이름', example: '홍길동' })
+  recipientName: string;
+
+  @ApiProperty({ description: '수령인 전화번호', example: '010-1234-5678' })
+  recipientPhone: string;
+
+  @ApiProperty({ description: '우편번호', example: '12345' })
+  postalCode: string;
+
+  @ApiProperty({
+    description: '기본 주소',
+    example: '서울시 강남구 테헤란로 123',
+  })
+  addressDefaultText: string;
+
+  @ApiProperty({ description: '상세 주소', example: '456호', nullable: true })
+  addressDetailText: string | null;
+
+  @ApiProperty({ description: '기본 배송지 여부 (항상 true)', example: true })
+  isDefault: boolean;
+}
