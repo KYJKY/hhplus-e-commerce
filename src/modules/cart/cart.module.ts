@@ -19,6 +19,9 @@ import {
   ConvertCartToOrderUseCase,
 } from './application/use-cases';
 
+// Mappers
+import { CartMapper } from './application/mappers/cart.mapper';
+
 // External module dependencies
 import { UserModule } from '../user/user.module';
 import { ProductModule } from '../product/product.module';
@@ -38,6 +41,9 @@ import { ProductModule } from '../product/product.module';
 
     // Domain Services
     CartDomainService,
+
+    // Mappers
+    CartMapper,
 
     // Use Cases
     GetCartUseCase,

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CartDomainService } from '../../domain/services/cart-domain.service';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { ClearedCartDto } from '../dtos';
 
 /**
  * FR-C-006: 장바구니 전체 삭제 Use Case
@@ -18,9 +20,10 @@ export class ClearCartUseCase {
   constructor(
     private readonly cartDomainService: CartDomainService,
     private readonly userDomainService: UserDomainService,
+    private readonly cartMapper: CartMapper,
   ) {}
 
-  async execute(userId: number): Promise<ClearCartResponseDto> {
+  async execute(userId: number): Promise<ClearedCartDto> {
     // 1. 사용자 존재 확인
     await this.userDomainService.findUserById(userId);
 
@@ -28,17 +31,6 @@ export class ClearCartUseCase {
     const deletedCount =
       await this.cartDomainService.deleteAllCartItems(userId);
 
-    return {
-      success: true,
-      deletedCount,
-    };
+    return this.cartMapper.toClearedCartDto(deletedCount);
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface ClearCartResponseDto {
-  success: boolean;
-  deletedCount: number;
 }

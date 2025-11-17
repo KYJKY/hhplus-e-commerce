@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CartDomainService } from '../../domain/services/cart-domain.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { DeletedSelectedCartItemsDto } from '../dtos';
 
 /**
  * FR-C-005: 장바구니 선택 항목 삭제 Use Case
@@ -15,31 +17,24 @@ import { CartDomainService } from '../../domain/services/cart-domain.service';
  */
 @Injectable()
 export class DeleteSelectedCartItemsUseCase {
-  constructor(private readonly cartDomainService: CartDomainService) {}
+  constructor(
+    private readonly cartDomainService: CartDomainService,
+    private readonly cartMapper: CartMapper,
+  ) {}
 
   async execute(
     userId: number,
     cartItemIds: number[],
-  ): Promise<DeleteSelectedCartItemsResponseDto> {
+  ): Promise<DeletedSelectedCartItemsDto> {
     // 여러 장바구니 항목 삭제 (권한 확인 포함)
     const deletedCount = await this.cartDomainService.deleteCartItemsByIds(
       userId,
       cartItemIds,
     );
 
-    return {
-      success: true,
+    return this.cartMapper.toDeletedSelectedCartItemsDto(
       deletedCount,
-      deletedCartItemIds: cartItemIds.slice(0, deletedCount),
-    };
+      cartItemIds,
+    );
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface DeleteSelectedCartItemsResponseDto {
-  success: boolean;
-  deletedCount: number;
-  deletedCartItemIds: number[];
 }

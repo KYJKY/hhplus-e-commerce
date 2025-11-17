@@ -22,6 +22,18 @@ import {
   CheckCartStockUseCase,
 } from '../application/use-cases';
 import {
+  CartDto,
+  CartItemDto as AppCartItemDto,
+  AddedCartItemDto,
+  UpdatedCartItemQuantityDto,
+  DeletedCartItemDto,
+  DeletedSelectedCartItemsDto,
+  ClearedCartDto,
+  CartItemCountDto,
+  CartStockCheckDto,
+  CartStockItemDto as AppCartStockItemDto,
+} from '../application/dtos';
+import {
   GetCartResponseDto,
   AddCartItemRequestDto,
   AddCartItemResponseDto,
@@ -33,6 +45,8 @@ import {
   ClearCartResponseDto,
   GetCartItemCountResponseDto,
   CheckCartStockResponseDto,
+  CartItemDto,
+  CartStockItemDto,
 } from './dto';
 
 @ApiTags('Cart')
@@ -69,7 +83,8 @@ export class CartController {
   async getCart(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<GetCartResponseDto> {
-    return await this.getCartUseCase.execute(userId);
+    const cartDto = await this.getCartUseCase.execute(userId);
+    return this.mapToGetCartResponse(cartDto);
   }
 
   /**
@@ -101,11 +116,12 @@ export class CartController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() requestDto: AddCartItemRequestDto,
   ): Promise<AddCartItemResponseDto> {
-    return await this.addCartItemUseCase.execute(
+    const addedItem = await this.addCartItemUseCase.execute(
       userId,
       requestDto.productOptionId,
       requestDto.quantity,
     );
+    return this.mapToAddCartItemResponse(addedItem);
   }
 
   /**
@@ -136,11 +152,12 @@ export class CartController {
     @Param('cartItemId', ParseIntPipe) cartItemId: number,
     @Body() requestDto: UpdateCartItemQuantityRequestDto,
   ): Promise<UpdateCartItemQuantityResponseDto> {
-    return await this.updateCartItemQuantityUseCase.execute(
+    const updatedItem = await this.updateCartItemQuantityUseCase.execute(
       userId,
       cartItemId,
       requestDto.quantity,
     );
+    return this.mapToUpdateCartItemQuantityResponse(updatedItem);
   }
 
   /**
@@ -169,7 +186,8 @@ export class CartController {
     @Param('userId', ParseIntPipe) userId: number,
     @Param('cartItemId', ParseIntPipe) cartItemId: number,
   ): Promise<RemoveCartItemResponseDto> {
-    return await this.deleteCartItemUseCase.execute(userId, cartItemId);
+    const result = await this.deleteCartItemUseCase.execute(userId, cartItemId);
+    return this.mapToRemoveCartItemResponse(result);
   }
 
   /**
@@ -197,10 +215,11 @@ export class CartController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() requestDto: RemoveMultipleCartItemsRequestDto,
   ): Promise<RemoveMultipleCartItemsResponseDto> {
-    return await this.deleteSelectedCartItemsUseCase.execute(
+    const result = await this.deleteSelectedCartItemsUseCase.execute(
       userId,
       requestDto.cartItemIds,
     );
+    return this.mapToRemoveMultipleCartItemsResponse(result);
   }
 
   /**
@@ -222,7 +241,8 @@ export class CartController {
   async clearCart(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<ClearCartResponseDto> {
-    return await this.clearCartUseCase.execute(userId);
+    const result = await this.clearCartUseCase.execute(userId);
+    return this.mapToClearCartResponse(result);
   }
 
   /**
@@ -244,7 +264,8 @@ export class CartController {
   async getCartItemCount(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<GetCartItemCountResponseDto> {
-    return await this.getCartItemCountUseCase.execute(userId);
+    const countDto = await this.getCartItemCountUseCase.execute(userId);
+    return this.mapToGetCartItemCountResponse(countDto);
   }
 
   /**
@@ -267,6 +288,128 @@ export class CartController {
   async checkCartAvailability(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<CheckCartStockResponseDto> {
-    return await this.checkCartStockUseCase.execute(userId);
+    const stockCheckDto = await this.checkCartStockUseCase.execute(userId);
+    return this.mapToCheckCartStockResponse(stockCheckDto);
+  }
+
+  /**
+   * Private mapping methods: Application DTO → Presentation DTO
+   */
+
+  private mapToGetCartResponse(cartDto: CartDto): GetCartResponseDto {
+    return {
+      userId: cartDto.userId,
+      items: cartDto.items.map((item) => this.mapToCartItemDto(item)),
+      totalItems: cartDto.totalItems,
+      totalAmount: cartDto.totalAmount,
+    };
+  }
+
+  private mapToCartItemDto(appDto: AppCartItemDto): CartItemDto {
+    return {
+      cartItemId: appDto.cartItemId,
+      productId: appDto.productId,
+      productName: appDto.productName,
+      thumbnailUrl: appDto.thumbnailUrl,
+      optionId: appDto.optionId,
+      optionName: appDto.optionName,
+      price: appDto.price,
+      quantity: appDto.quantity,
+      subtotal: appDto.subtotal,
+      stockQuantity: appDto.stockQuantity,
+      isAvailable: appDto.isAvailable,
+      addedAt: appDto.addedAt,
+    };
+  }
+
+  private mapToAddCartItemResponse(
+    addedItem: AddedCartItemDto,
+  ): AddCartItemResponseDto {
+    return {
+      cartItemId: addedItem.cartItemId,
+      productId: addedItem.productId,
+      productName: addedItem.productName,
+      optionId: addedItem.optionId,
+      optionName: addedItem.optionName,
+      price: addedItem.price,
+      quantity: addedItem.quantity,
+      addedAt: addedItem.addedAt,
+    };
+  }
+
+  private mapToUpdateCartItemQuantityResponse(
+    updatedItem: UpdatedCartItemQuantityDto,
+  ): UpdateCartItemQuantityResponseDto {
+    return {
+      cartItemId: updatedItem.cartItemId,
+      optionId: updatedItem.optionId,
+      previousQuantity: updatedItem.previousQuantity,
+      quantity: updatedItem.quantity,
+      price: updatedItem.price,
+      subtotal: updatedItem.subtotal,
+      updatedAt: updatedItem.updatedAt,
+    };
+  }
+
+  private mapToRemoveCartItemResponse(
+    result: DeletedCartItemDto,
+  ): RemoveCartItemResponseDto {
+    return {
+      success: result.success,
+      deletedCartItemId: result.deletedCartItemId,
+    };
+  }
+
+  private mapToRemoveMultipleCartItemsResponse(
+    result: DeletedSelectedCartItemsDto,
+  ): RemoveMultipleCartItemsResponseDto {
+    return {
+      success: result.success,
+      deletedCount: result.deletedCount,
+      deletedCartItemIds: result.deletedCartItemIds,
+    };
+  }
+
+  private mapToClearCartResponse(result: ClearedCartDto): ClearCartResponseDto {
+    return {
+      success: result.success,
+      deletedCount: result.deletedCount,
+    };
+  }
+
+  private mapToGetCartItemCountResponse(
+    countDto: CartItemCountDto,
+  ): GetCartItemCountResponseDto {
+    return {
+      userId: countDto.userId,
+      totalItems: countDto.totalItems,
+      availableItems: countDto.availableItems,
+      unavailableItems: countDto.unavailableItems,
+    };
+  }
+
+  private mapToCheckCartStockResponse(
+    stockCheckDto: CartStockCheckDto,
+  ): CheckCartStockResponseDto {
+    return {
+      items: stockCheckDto.items.map((item) =>
+        this.mapToCartStockItemDto(item),
+      ),
+      availableCount: stockCheckDto.availableCount,
+      unavailableCount: stockCheckDto.unavailableCount,
+    };
+  }
+
+  private mapToCartStockItemDto(appDto: AppCartStockItemDto): CartStockItemDto {
+    return {
+      cartItemId: appDto.cartItemId,
+      optionId: appDto.optionId,
+      productName: appDto.productName,
+      optionName: appDto.optionName,
+      requestedQuantity: appDto.requestedQuantity,
+      stockQuantity: appDto.stockQuantity,
+      isAvailable: appDto.isAvailable,
+      reason: appDto.reason,
+    };
   }
 }

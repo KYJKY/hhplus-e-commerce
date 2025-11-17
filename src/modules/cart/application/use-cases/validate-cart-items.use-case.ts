@@ -3,6 +3,8 @@ import { CartDomainService } from '../../domain/services/cart-domain.service';
 import { ProductQueryService } from '../../../product/domain/services/product-query.service';
 import { InventoryDomainService } from '../../../product/domain/services/inventory-domain.service';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { ValidatedCartItemsDto } from '../dtos';
 
 /**
  * FR-C-009: 장바구니 항목 유효성 검증 Use Case
@@ -26,12 +28,13 @@ export class ValidateCartItemsUseCase {
     private readonly productQueryService: ProductQueryService,
     private readonly inventoryDomainService: InventoryDomainService,
     private readonly userDomainService: UserDomainService,
+    private readonly cartMapper: CartMapper,
   ) {}
 
   async execute(
     userId: number,
     cartItemIds: number[],
-  ): Promise<ValidateCartItemsResponseDto> {
+  ): Promise<ValidatedCartItemsDto> {
     // 1. 사용자 존재 확인
     await this.userDomainService.findUserById(userId);
 
@@ -78,58 +81,36 @@ export class ValidateCartItemsUseCase {
             isValid = false;
           }
 
-          return {
-            cartItemId: cartItem.id,
-            optionId: cartItem.productOptionId,
-            productName: optionDetail.productName,
-            optionName: optionDetail.optionName,
-            quantity: cartItem.quantity,
+          return this.cartMapper.toValidatedCartItemDto(
+            cartItem.id,
+            cartItem.productOptionId,
+            optionDetail.productName,
+            optionDetail.optionName,
+            cartItem.quantity,
             price,
             isValid,
             errors,
-          };
-        } catch (error) {
+          );
+        } catch {
           // 상품이나 옵션을 찾을 수 없는 경우
           errors.push('상품 또는 옵션이 존재하지 않음');
           isValid = false;
 
-          return {
-            cartItemId: cartItem.id,
-            optionId: cartItem.productOptionId,
-            productName: '알 수 없음',
-            optionName: '알 수 없음',
-            quantity: cartItem.quantity,
-            price: 0,
+          return this.cartMapper.toValidatedCartItemDto(
+            cartItem.id,
+            cartItem.productOptionId,
+            '알 수 없음',
+            '알 수 없음',
+            cartItem.quantity,
+            0,
             isValid,
             errors,
-          };
+          );
         }
       }),
     );
 
     // 4. 전체 유효성 여부 결정 (모든 항목이 유효해야 함)
-    const isValid = validationResults.every((result) => result.isValid);
-
-    return {
-      isValid,
-      items: validationResults,
-    };
+    return this.cartMapper.toValidatedCartItemsDto(validationResults);
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface ValidateCartItemsResponseDto {
-  isValid: boolean;
-  items: Array<{
-    cartItemId: number;
-    optionId: number;
-    productName: string;
-    optionName: string;
-    quantity: number;
-    price: number;
-    isValid: boolean;
-    errors: string[];
-  }>;
 }

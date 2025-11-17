@@ -19,9 +19,7 @@ export {
   ProductOption,
 } from './responses/get-product-detail.response';
 
-export {
-  GetProductOptionsResponse,
-} from './responses/get-product-options.response';
+export { GetProductOptionsResponse } from './responses/get-product-options.response';
 
 export { GetProductOptionDetailResponse } from './responses/get-product-option-detail.response';
 

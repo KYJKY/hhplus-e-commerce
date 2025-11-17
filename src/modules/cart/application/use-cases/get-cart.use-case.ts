@@ -3,6 +3,8 @@ import { CartDomainService } from '../../domain/services/cart-domain.service';
 import { ProductQueryService } from '../../../product/domain/services/product-query.service';
 import { InventoryDomainService } from '../../../product/domain/services/inventory-domain.service';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { CartDto } from '../dtos';
 
 /**
  * FR-C-001: 장바구니 조회 Use Case
@@ -21,9 +23,10 @@ export class GetCartUseCase {
     private readonly productQueryService: ProductQueryService,
     private readonly inventoryDomainService: InventoryDomainService,
     private readonly userDomainService: UserDomainService,
+    private readonly cartMapper: CartMapper,
   ) {}
 
-  async execute(userId: number): Promise<GetCartResponseDto> {
+  async execute(userId: number): Promise<CartDto> {
     // 1. 사용자 존재 확인
     await this.userDomainService.findUserById(userId);
 
@@ -48,21 +51,15 @@ export class GetCartUseCase {
             cartItem.quantity,
           );
 
-          return {
-            cartItemId: cartItem.id,
-            productId: cartItem.productId,
+          return this.cartMapper.toCartItemDto(cartItem, {
             productName: optionDetail.productName,
             thumbnailUrl: null, // 상세 조회에서는 썸네일 정보가 없으므로 null
-            optionId: cartItem.productOptionId,
             optionName: optionDetail.optionName,
             price: optionDetail.price,
-            quantity: cartItem.quantity,
-            subtotal: optionDetail.price * cartItem.quantity,
             stockQuantity: stockCheck.currentStock,
             isAvailable: stockCheck.isAvailable && optionDetail.isAvailable,
-            addedAt: cartItem.createdAt,
-          };
-        } catch (error) {
+          });
+        } catch {
           // 삭제되었거나 조회할 수 없는 항목은 null 반환
           // 이후 필터링될 것
           return null;
@@ -75,40 +72,7 @@ export class GetCartUseCase {
       (item): item is NonNullable<typeof item> => item !== null,
     );
 
-    // 4. 총 금액 계산
-    const totalAmount = validItems.reduce(
-      (sum, item) => sum + item.subtotal,
-      0,
-    );
-
-    return {
-      userId,
-      items: validItems,
-      totalItems: validItems.length,
-      totalAmount,
-    };
+    // 4. 총 금액 계산 및 CartDto 생성
+    return this.cartMapper.toCartDto(userId, validItems);
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface GetCartResponseDto {
-  userId: number;
-  items: Array<{
-    cartItemId: number;
-    productId: number;
-    productName: string;
-    thumbnailUrl: string | null;
-    optionId: number;
-    optionName: string;
-    price: number;
-    quantity: number;
-    subtotal: number;
-    stockQuantity: number;
-    isAvailable: boolean;
-    addedAt: string;
-  }>;
-  totalItems: number;
-  totalAmount: number;
 }

@@ -3,6 +3,8 @@ import { CartDomainService } from '../../domain/services/cart-domain.service';
 import { InventoryDomainService } from '../../../product/domain/services/inventory-domain.service';
 import { ProductQueryService } from '../../../product/domain/services/product-query.service';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { CartItemCountDto } from '../dtos';
 
 /**
  * FR-C-008: 장바구니 항목 개수 조회 Use Case
@@ -24,9 +26,10 @@ export class GetCartItemCountUseCase {
     private readonly inventoryDomainService: InventoryDomainService,
     private readonly productQueryService: ProductQueryService,
     private readonly userDomainService: UserDomainService,
+    private readonly cartMapper: CartMapper,
   ) {}
 
-  async execute(userId: number): Promise<GetCartItemCountResponseDto> {
+  async execute(userId: number): Promise<CartItemCountDto> {
     // 1. 사용자 존재 확인
     await this.userDomainService.findUserById(userId);
 
@@ -54,7 +57,7 @@ export class GetCartItemCountUseCase {
             );
 
           return stockCheck.isAvailable && optionDetail.isAvailable;
-        } catch (error) {
+        } catch {
           // 조회 실패 시 구매 불가능
           return false;
         }
@@ -67,21 +70,11 @@ export class GetCartItemCountUseCase {
     ).length;
     const unavailableItems = totalItems - availableItems;
 
-    return {
+    return this.cartMapper.toCartItemCountDto(
       userId,
       totalItems,
       availableItems,
       unavailableItems,
-    };
+    );
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface GetCartItemCountResponseDto {
-  userId: number;
-  totalItems: number;
-  availableItems: number;
-  unavailableItems: number;
 }

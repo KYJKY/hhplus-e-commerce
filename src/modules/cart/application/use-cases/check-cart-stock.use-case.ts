@@ -3,6 +3,8 @@ import { CartDomainService } from '../../domain/services/cart-domain.service';
 import { ProductQueryService } from '../../../product/domain/services/product-query.service';
 import { InventoryDomainService } from '../../../product/domain/services/inventory-domain.service';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { CartStockCheckDto } from '../dtos';
 
 /**
  * FR-C-007: 장바구니 재고 확인 Use Case
@@ -25,9 +27,10 @@ export class CheckCartStockUseCase {
     private readonly productQueryService: ProductQueryService,
     private readonly inventoryDomainService: InventoryDomainService,
     private readonly userDomainService: UserDomainService,
+    private readonly cartMapper: CartMapper,
   ) {}
 
-  async execute(userId: number): Promise<CheckCartStockResponseDto> {
+  async execute(userId: number): Promise<CartStockCheckDto> {
     // 1. 사용자 존재 확인
     await this.userDomainService.findUserById(userId);
 
@@ -66,62 +69,33 @@ export class CheckCartStockUseCase {
             }
           }
 
-          return {
-            cartItemId: cartItem.id,
-            optionId: cartItem.productOptionId,
-            productName: stockCheck.productName,
-            optionName: stockCheck.optionName,
-            requestedQuantity: cartItem.quantity,
-            stockQuantity: stockCheck.currentStock,
+          return this.cartMapper.toCartStockItemDto(
+            cartItem.id,
+            cartItem.productOptionId,
+            stockCheck.productName,
+            stockCheck.optionName,
+            cartItem.quantity,
+            stockCheck.currentStock,
             isAvailable,
             reason,
-          };
-        } catch (error) {
+          );
+        } catch {
           // 삭제되었거나 조회할 수 없는 항목
-          return {
-            cartItemId: cartItem.id,
-            optionId: cartItem.productOptionId,
-            productName: '알 수 없음',
-            optionName: '알 수 없음',
-            requestedQuantity: cartItem.quantity,
-            stockQuantity: 0,
-            isAvailable: false,
-            reason: '상품 삭제됨',
-          };
+          return this.cartMapper.toCartStockItemDto(
+            cartItem.id,
+            cartItem.productOptionId,
+            '알 수 없음',
+            '알 수 없음',
+            cartItem.quantity,
+            0,
+            false,
+            '상품 삭제됨',
+          );
         }
       }),
     );
 
     // 4. 구매 가능/불가능 항목 개수 집계
-    const availableCount = itemsWithStockStatus.filter(
-      (item) => item.isAvailable,
-    ).length;
-    const unavailableCount = itemsWithStockStatus.filter(
-      (item) => !item.isAvailable,
-    ).length;
-
-    return {
-      items: itemsWithStockStatus,
-      availableCount,
-      unavailableCount,
-    };
+    return this.cartMapper.toCartStockCheckDto(itemsWithStockStatus);
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface CheckCartStockResponseDto {
-  items: Array<{
-    cartItemId: number;
-    optionId: number;
-    productName: string;
-    optionName: string;
-    requestedQuantity: number;
-    stockQuantity: number;
-    isAvailable: boolean;
-    reason: string | null;
-  }>;
-  availableCount: number;
-  unavailableCount: number;
 }

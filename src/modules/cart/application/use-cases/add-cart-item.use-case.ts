@@ -8,6 +8,8 @@ import {
   ProductDeletedException,
   OptionNotFoundException,
 } from '../../../product/domain/exceptions';
+import { CartMapper } from '../mappers/cart.mapper';
+import { AddedCartItemDto } from '../dtos';
 
 /**
  * FR-C-002: 장바구니 항목 추가 Use Case
@@ -32,13 +34,14 @@ export class AddCartItemUseCase {
     private readonly productQueryService: ProductQueryService,
     private readonly inventoryDomainService: InventoryDomainService,
     private readonly userDomainService: UserDomainService,
+    private readonly cartMapper: CartMapper,
   ) {}
 
   async execute(
     userId: number,
     optionId: number,
     quantity: number,
-  ): Promise<AddCartItemResponseDto> {
+  ): Promise<AddedCartItemDto> {
     // 1. 사용자 존재 확인
     await this.userDomainService.findUserById(userId);
 
@@ -133,29 +136,11 @@ export class AddCartItemUseCase {
       });
     }
 
-    return {
-      cartItemId: cartItem.id,
+    return this.cartMapper.toAddedCartItemDto(cartItem, {
       productId: optionDetail.productId,
       productName: optionDetail.productName,
-      optionId: optionId,
       optionName: optionDetail.optionName,
       price: optionDetail.price,
-      quantity: cartItem.quantity,
-      addedAt: cartItem.createdAt,
-    };
+    });
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface AddCartItemResponseDto {
-  cartItemId: number;
-  productId: number;
-  productName: string;
-  optionId: number;
-  optionName: string;
-  price: number;
-  quantity: number;
-  addedAt: string;
 }

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CartDomainService } from '../../domain/services/cart-domain.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { ConvertedCartToOrderDto } from '../dtos';
 
 /**
  * FR-C-010: 장바구니 → 주문 전환 (내부 API) Use Case
@@ -16,32 +18,22 @@ import { CartDomainService } from '../../domain/services/cart-domain.service';
  */
 @Injectable()
 export class ConvertCartToOrderUseCase {
-  constructor(private readonly cartDomainService: CartDomainService) {}
+  constructor(
+    private readonly cartDomainService: CartDomainService,
+    private readonly cartMapper: CartMapper,
+  ) {}
 
   async execute(
     userId: number,
     cartItemIds: number[],
     orderId: number,
-  ): Promise<ConvertCartToOrderResponseDto> {
+  ): Promise<ConvertedCartToOrderDto> {
     // 장바구니 항목 삭제 (권한 확인 포함)
     const deletedCount = await this.cartDomainService.deleteCartItemsByIds(
       userId,
       cartItemIds,
     );
 
-    return {
-      success: true,
-      deletedCount,
-      orderId,
-    };
+    return this.cartMapper.toConvertedCartToOrderDto(deletedCount, orderId);
   }
-}
-
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface ConvertCartToOrderResponseDto {
-  success: boolean;
-  deletedCount: number;
-  orderId: number;
 }

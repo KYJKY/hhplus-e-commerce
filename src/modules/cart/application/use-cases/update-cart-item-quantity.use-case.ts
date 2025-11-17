@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CartDomainService } from '../../domain/services/cart-domain.service';
 import { InventoryDomainService } from '../../../product/domain/services/inventory-domain.service';
+import { ProductQueryService } from '../../../product/domain/services/product-query.service';
+import { CartMapper } from '../mappers/cart.mapper';
+import { UpdatedCartItemQuantityDto } from '../dtos';
 
 /**
  * FR-C-003: 장바구니 항목 수량 수정 Use Case
@@ -20,13 +23,15 @@ export class UpdateCartItemQuantityUseCase {
   constructor(
     private readonly cartDomainService: CartDomainService,
     private readonly inventoryDomainService: InventoryDomainService,
+    private readonly productQueryService: ProductQueryService,
+    private readonly cartMapper: CartMapper,
   ) {}
 
   async execute(
     userId: number,
     cartItemId: number,
     quantity: number,
-  ): Promise<UpdateCartItemQuantityResponseDto> {
+  ): Promise<UpdatedCartItemQuantityDto> {
     // 1. 장바구니 항목 조회 및 권한 확인 (Domain Service에서 처리)
     const cartItem = await this.cartDomainService.findCartItemWithAuthorization(
       userId,
@@ -52,27 +57,16 @@ export class UpdateCartItemQuantityUseCase {
       quantity,
     );
 
-    return {
-      cartItemId: updatedCartItem.id,
-      optionId: updatedCartItem.productOptionId,
-      previousQuantity,
-      quantity: updatedCartItem.quantity,
-      price: stockCheck.currentStock > 0 ? 0 : 0, // price는 재고 확인에 없으므로 별도 조회 필요
-      subtotal: 0, // 별도 조회 필요
-      updatedAt: updatedCartItem.updatedAt || new Date().toISOString(),
-    };
-  }
-}
+    // 4. 가격 정보 조회
+    const optionDetail = await this.productQueryService.getProductOptionDetail(
+      updatedCartItem.productId,
+      updatedCartItem.productOptionId,
+    );
 
-/**
- * Response DTO (임시 타입 - Presentation Layer에서 정의될 예정)
- */
-interface UpdateCartItemQuantityResponseDto {
-  cartItemId: number;
-  optionId: number;
-  previousQuantity: number;
-  quantity: number;
-  price: number;
-  subtotal: number;
-  updatedAt: string;
+    return this.cartMapper.toUpdatedCartItemQuantityDto(
+      updatedCartItem,
+      previousQuantity,
+      optionDetail.price,
+    );
+  }
 }
