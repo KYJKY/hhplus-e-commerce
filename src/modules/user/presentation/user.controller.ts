@@ -29,22 +29,20 @@ import {
   UpdateAddressDto,
 } from '../application/dtos/user-address.dto';
 import {
-  GetUserResponseDto,
-  GetProfileResponseDto,
-  UpdateProfileRequestDto,
-  UpdateProfileResponseDto,
-} from './dto/user.dto';
-import {
-  GetAddressListResponseDto,
-  GetAddressDetailResponseDto,
-  CreateAddressRequestDto,
-  CreateAddressResponseDto,
-  UpdateAddressRequestDto,
-  UpdateAddressResponseDto,
-  DeleteAddressResponseDto,
-  SetDefaultAddressResponseDto,
-  GetDefaultAddressResponseDto,
-} from './dto/user-address.dto';
+  GetUserResponse,
+  GetProfileResponse,
+  UpdateProfileRequest,
+  UpdateProfileResponse,
+  GetAddressListResponse,
+  GetAddressDetailResponse,
+  CreateAddressRequest,
+  CreateAddressResponse,
+  UpdateAddressRequest,
+  UpdateAddressResponse,
+  DeleteAddressResponse,
+  SetDefaultAddressResponse,
+  GetDefaultAddressResponse,
+} from './dto';
 
 @ApiTags('User')
 @Controller('/user')
@@ -75,12 +73,12 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '조회 성공',
-    type: GetUserResponseDto,
+    type: GetUserResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음' })
   async getUserById(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<GetUserResponseDto> {
+  ): Promise<GetUserResponse> {
     const userInfo = await this.getUserInfoUseCase.execute(id);
     return {
       userId: userInfo.userId,
@@ -107,12 +105,12 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '조회 성공',
-    type: GetProfileResponseDto,
+    type: GetProfileResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음' })
   async getProfile(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<GetProfileResponseDto> {
+  ): Promise<GetProfileResponse> {
     const profile = await this.getUserProfileUseCase.execute(id);
     return {
       userId: profile.userId,
@@ -136,14 +134,14 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '수정 성공',
-    type: UpdateProfileResponseDto,
+    type: UpdateProfileResponse,
   })
   @ApiResponse({ status: 400, description: '잘못된 요청' })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음' })
   async updateProfile(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: UpdateProfileRequestDto,
-  ): Promise<UpdateProfileResponseDto> {
+    @Body() updateData: UpdateProfileRequest,
+  ): Promise<UpdateProfileResponse> {
     const profile = await this.updateUserProfileUseCase.execute(
       id,
       new UpdateUserProfileDto(
@@ -174,12 +172,12 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '조회 성공',
-    type: GetAddressListResponseDto,
+    type: GetAddressListResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음' })
   async getAddressList(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<GetAddressListResponseDto> {
+  ): Promise<GetAddressListResponse> {
     const addresses = await this.getAddressListUseCase.execute(id);
     return {
       userId: id,
@@ -210,14 +208,14 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '조회 성공',
-    type: GetAddressDetailResponseDto,
+    type: GetAddressDetailResponse,
   })
   @ApiResponse({ status: 403, description: '접근 권한이 없음' })
   @ApiResponse({ status: 404, description: '배송지를 찾을 수 없음' })
   async getAddressDetail(
     @Param('id', ParseIntPipe) id: number,
     @Param('addressId', ParseIntPipe) addressId: number,
-  ): Promise<GetAddressDetailResponseDto> {
+  ): Promise<GetAddressDetailResponse> {
     const address = await this.getAddressDetailUseCase.execute(id, addressId);
     return {
       addressId: address.addressDefaultTextId,
@@ -246,7 +244,7 @@ export class UserController {
   @ApiResponse({
     status: 201,
     description: '생성 성공',
-    type: CreateAddressResponseDto,
+    type: CreateAddressResponse,
   })
   @ApiResponse({
     status: 400,
@@ -256,8 +254,8 @@ export class UserController {
   @HttpCode(HttpStatus.CREATED)
   async createAddress(
     @Param('id', ParseIntPipe) id: number,
-    @Body() createData: CreateAddressRequestDto,
-  ): Promise<CreateAddressResponseDto> {
+    @Body() createData: CreateAddressRequest,
+  ): Promise<CreateAddressResponse> {
     const address = await this.createAddressUseCase.execute(
       id,
       new CreateAddressDto(
@@ -296,7 +294,7 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '수정 성공',
-    type: UpdateAddressResponseDto,
+    type: UpdateAddressResponse,
   })
   @ApiResponse({ status: 400, description: '잘못된 요청' })
   @ApiResponse({ status: 403, description: '접근 권한이 없음' })
@@ -304,8 +302,8 @@ export class UserController {
   async updateAddress(
     @Param('id', ParseIntPipe) id: number,
     @Param('addressId', ParseIntPipe) addressId: number,
-    @Body() updateData: UpdateAddressRequestDto,
-  ): Promise<UpdateAddressResponseDto> {
+    @Body() updateData: UpdateAddressRequest,
+  ): Promise<UpdateAddressResponse> {
     const address = await this.updateAddressUseCase.execute(
       id,
       addressId,
@@ -341,14 +339,14 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '삭제 성공',
-    type: DeleteAddressResponseDto,
+    type: DeleteAddressResponse,
   })
   @ApiResponse({ status: 403, description: '접근 권한이 없음' })
   @ApiResponse({ status: 404, description: '배송지를 찾을 수 없음' })
   async deleteAddress(
     @Param('id', ParseIntPipe) id: number,
     @Param('addressId', ParseIntPipe) addressId: number,
-  ): Promise<DeleteAddressResponseDto> {
+  ): Promise<DeleteAddressResponse> {
     await this.deleteAddressUseCase.execute(id, addressId);
     return {
       success: true,
@@ -370,14 +368,14 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '설정 성공',
-    type: SetDefaultAddressResponseDto,
+    type: SetDefaultAddressResponse,
   })
   @ApiResponse({ status: 403, description: '접근 권한이 없음' })
   @ApiResponse({ status: 404, description: '배송지를 찾을 수 없음' })
   async setDefaultAddress(
     @Param('id', ParseIntPipe) id: number,
     @Param('addressId', ParseIntPipe) addressId: number,
-  ): Promise<SetDefaultAddressResponseDto> {
+  ): Promise<SetDefaultAddressResponse> {
     await this.setDefaultAddressUseCase.execute(id, addressId);
     return {
       addressId: addressId,
@@ -398,12 +396,12 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: '조회 성공',
-    type: GetDefaultAddressResponseDto,
+    type: GetDefaultAddressResponse,
   })
   @ApiResponse({ status: 404, description: '사용자를 찾을 수 없음' })
   async getDefaultAddress(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<GetDefaultAddressResponseDto | null> {
+  ): Promise<GetDefaultAddressResponse | null> {
     const address = await this.getDefaultAddressUseCase.execute(id);
     if (!address) {
       return null;

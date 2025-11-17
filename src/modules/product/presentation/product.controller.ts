@@ -21,20 +21,20 @@ import {
   GetCategoryProductCountUseCase,
 } from '../application/use-cases';
 import {
-  GetProductListRequestDto,
-  GetProductListResponseDto,
-  GetProductDetailResponseDto,
-  GetProductOptionsResponseDto,
-  GetProductOptionDetailResponseDto,
-  CheckStockRequestDto,
-  CheckStockResponseDto,
-  DeductStockRequestDto,
-  DeductStockResponseDto,
-  RestoreStockRequestDto,
-  RestoreStockResponseDto,
-  GetPopularProductsResponseDto,
-  GetCategoriesResponseDto,
-  GetCategoryProductCountResponseDto,
+  GetProductListRequest,
+  GetProductListResponse,
+  GetProductDetailResponse,
+  GetProductOptionsResponse,
+  GetProductOptionDetailResponse,
+  CheckStockRequest,
+  CheckStockResponse,
+  DeductStockRequest,
+  DeductStockResponse,
+  RestoreStockRequest,
+  RestoreStockResponse,
+  GetPopularProductsResponse,
+  GetCategoriesResponse,
+  GetCategoryProductCountResponse,
 } from './dto';
 
 @ApiTags('Product')
@@ -61,11 +61,11 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '상품 목록 조회 성공',
-    type: GetProductListResponseDto,
+    type: GetProductListResponse,
   })
   async getProductList(
-    @Query() query: GetProductListRequestDto,
-  ): Promise<GetProductListResponseDto> {
+    @Query() query: GetProductListRequest,
+  ): Promise<GetProductListResponse> {
     return await this.getProductListUseCase.execute(query);
   }
 
@@ -78,13 +78,13 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '상품 상세 조회 성공',
-    type: GetProductDetailResponseDto,
+    type: GetProductDetailResponse,
   })
   @ApiResponse({ status: 404, description: '상품을 찾을 수 없음 (P001)' })
   @ApiResponse({ status: 410, description: '삭제된 상품 (P002)' })
   async getProductDetail(
     @Param('productId', ParseIntPipe) productId: number,
-  ): Promise<GetProductDetailResponseDto> {
+  ): Promise<GetProductDetailResponse> {
     return await this.getProductDetailUseCase.execute(productId);
   }
 
@@ -97,12 +97,12 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '상품 옵션 조회 성공',
-    type: GetProductOptionsResponseDto,
+    type: GetProductOptionsResponse,
   })
   @ApiResponse({ status: 404, description: '상품을 찾을 수 없음 (P001)' })
   async getProductOptions(
     @Param('productId', ParseIntPipe) productId: number,
-  ): Promise<GetProductOptionsResponseDto> {
+  ): Promise<GetProductOptionsResponse> {
     return await this.getProductOptionsUseCase.execute(productId);
   }
 
@@ -116,7 +116,7 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '상품 옵션 상세 조회 성공',
-    type: GetProductOptionDetailResponseDto,
+    type: GetProductOptionDetailResponse,
   })
   @ApiResponse({ status: 404, description: '상품을 찾을 수 없음 (P001)' })
   @ApiResponse({ status: 404, description: '옵션을 찾을 수 없음 (P003)' })
@@ -127,7 +127,7 @@ export class ProductController {
   async getProductOptionDetail(
     @Param('productId', ParseIntPipe) productId: number,
     @Param('optionId', ParseIntPipe) optionId: number,
-  ): Promise<GetProductOptionDetailResponseDto> {
+  ): Promise<GetProductOptionDetailResponse> {
     return await this.getProductOptionDetailUseCase.execute(
       productId,
       optionId,
@@ -143,13 +143,13 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '재고 확인 성공',
-    type: CheckStockResponseDto,
+    type: CheckStockResponse,
   })
   @ApiResponse({ status: 404, description: '옵션을 찾을 수 없음 (P003)' })
   async checkStock(
     @Param('optionId', ParseIntPipe) optionId: number,
-    @Body() body: CheckStockRequestDto,
-  ): Promise<CheckStockResponseDto> {
+    @Body() body: CheckStockRequest,
+  ): Promise<CheckStockResponse> {
     return await this.checkStockUseCase.execute(optionId, body.quantity);
   }
 
@@ -162,15 +162,15 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '재고 차감 성공',
-    type: DeductStockResponseDto,
+    type: DeductStockResponse,
   })
   @ApiResponse({ status: 404, description: '옵션을 찾을 수 없음 (P003)' })
   @ApiResponse({ status: 400, description: '재고 부족 (P005)' })
   @ApiResponse({ status: 400, description: '유효하지 않은 수량 (P006)' })
   async deductStock(
     @Param('optionId', ParseIntPipe) optionId: number,
-    @Body() body: DeductStockRequestDto,
-  ): Promise<DeductStockResponseDto> {
+    @Body() body: DeductStockRequest,
+  ): Promise<DeductStockResponse> {
     return await this.deductStockUseCase.execute(
       optionId,
       body.quantity,
@@ -187,14 +187,14 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '재고 복원 성공',
-    type: RestoreStockResponseDto,
+    type: RestoreStockResponse,
   })
   @ApiResponse({ status: 404, description: '옵션을 찾을 수 없음 (P003)' })
   @ApiResponse({ status: 400, description: '유효하지 않은 수량 (P006)' })
   async restoreStock(
     @Param('optionId', ParseIntPipe) optionId: number,
-    @Body() body: RestoreStockRequestDto,
-  ): Promise<RestoreStockResponseDto> {
+    @Body() body: RestoreStockRequest,
+  ): Promise<RestoreStockResponse> {
     return await this.restoreStockUseCase.execute(
       optionId,
       body.quantity,
@@ -210,9 +210,9 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '인기 상품 조회 성공',
-    type: GetPopularProductsResponseDto,
+    type: GetPopularProductsResponse,
   })
-  async getPopularProducts(): Promise<GetPopularProductsResponseDto> {
+  async getPopularProducts(): Promise<GetPopularProductsResponse> {
     return await this.getPopularProductsUseCase.execute();
   }
 
@@ -224,9 +224,9 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '카테고리 목록 조회 성공',
-    type: GetCategoriesResponseDto,
+    type: GetCategoriesResponse,
   })
-  async getCategories(): Promise<GetCategoriesResponseDto> {
+  async getCategories(): Promise<GetCategoriesResponse> {
     return await this.getCategoriesUseCase.execute();
   }
 
@@ -239,12 +239,12 @@ export class ProductController {
   @ApiResponse({
     status: 200,
     description: '카테고리별 상품 수 조회 성공',
-    type: GetCategoryProductCountResponseDto,
+    type: GetCategoryProductCountResponse,
   })
   @ApiResponse({ status: 404, description: '카테고리를 찾을 수 없음 (P007)' })
   async getCategoryProductCount(
     @Param('categoryId', ParseIntPipe) categoryId: number,
-  ): Promise<GetCategoryProductCountResponseDto> {
+  ): Promise<GetCategoryProductCountResponse> {
     return await this.getCategoryProductCountUseCase.execute(categoryId);
   }
 }
