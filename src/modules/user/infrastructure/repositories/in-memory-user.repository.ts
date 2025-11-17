@@ -73,22 +73,11 @@ export class InMemoryUserRepository
   }
 
   /**
-   * Plain object를 User 엔티티로 변환
+   * User 엔티티를 반환 (이미 엔티티이므로 그대로 반환)
    */
   private toEntity(data: User): User {
-    return User.create({
-      id: data.id,
-      loginId: data.loginId,
-      loginPassword: data.loginPassword,
-      email: data.email,
-      name: data.name,
-      displayName: data.displayName,
-      phoneNumber: data.phoneNumber,
-      lastLoginAt: data.lastLoginAt,
-      deletedAt: data.deletedAt,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-    });
+    // 데이터가 이미 User 엔티티이므로 그대로 반환
+    return data;
   }
 
   /**

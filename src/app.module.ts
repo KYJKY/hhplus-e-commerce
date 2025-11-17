@@ -4,6 +4,7 @@ import { configuration, validate } from './config';
 import { UserModule } from './modules/user/user.module';
 import { ProductModule } from './modules/product/product.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     UserModule,
     ProductModule,
     PaymentModule,
+    CartModule,
   ],
   controllers: [],
   providers: [],
