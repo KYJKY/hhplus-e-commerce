@@ -15,3 +15,6 @@ export * from './utils';
 
 // Repositories
 export * from './repositories';
+
+// Prisma
+export * from './prisma';

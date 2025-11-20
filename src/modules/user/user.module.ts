@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './presentation/user.controller';
-import { InMemoryUserRepository } from './infrastructure/repositories/in-memory-user.repository';
-import { InMemoryUserAddressRepository } from './infrastructure/repositories/in-memory-user-address.repository';
+import {
+  InMemoryUserRepository,
+  InMemoryUserAddressRepository,
+  PrismaUserRepository,
+  PrismaUserAddressRepository,
+} from './infrastructure/repositories';
 
 // Domain Services
 import { UserDomainService } from './domain/services/user-domain.service';
@@ -30,11 +34,17 @@ import {
     // Repositories
     {
       provide: 'IUserRepository',
-      useClass: InMemoryUserRepository,
+      useClass:
+        process.env.USE_IN_MEMORY_DB === 'true'
+          ? InMemoryUserRepository
+          : PrismaUserRepository,
     },
     {
       provide: 'IUserAddressRepository',
-      useClass: InMemoryUserAddressRepository,
+      useClass:
+        process.env.USE_IN_MEMORY_DB === 'true'
+          ? InMemoryUserAddressRepository
+          : PrismaUserAddressRepository,
     },
 
     // Domain Services

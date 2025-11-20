@@ -1,9 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ProductController } from './presentation/product.controller';
-import { InMemoryProductRepository } from './infrastructure/repositories/in-memory-product.repository';
-import { InMemoryProductOptionRepository } from './infrastructure/repositories/in-memory-product-option.repository';
-import { InMemoryCategoryRepository } from './infrastructure/repositories/in-memory-category.repository';
-import { InMemoryProductCategoryRepository } from './infrastructure/repositories/in-memory-product-category.repository';
+import {
+  InMemoryProductRepository,
+  InMemoryProductOptionRepository,
+  InMemoryCategoryRepository,
+  InMemoryProductCategoryRepository,
+  PrismaProductRepository,
+  PrismaProductOptionRepository,
+  PrismaCategoryRepository,
+  PrismaProductCategoryRepository,
+} from './infrastructure/repositories';
 
 // Domain Services (리팩토링: 3개의 서비스로 분할)
 import { ProductQueryService } from './domain/services/product-query.service';
@@ -30,19 +36,31 @@ import {
     // Repositories
     {
       provide: 'IProductRepository',
-      useClass: InMemoryProductRepository,
+      useClass:
+        process.env.USE_IN_MEMORY_DB === 'true'
+          ? InMemoryProductRepository
+          : PrismaProductRepository,
     },
     {
       provide: 'IProductOptionRepository',
-      useClass: InMemoryProductOptionRepository,
+      useClass:
+        process.env.USE_IN_MEMORY_DB === 'true'
+          ? InMemoryProductOptionRepository
+          : PrismaProductOptionRepository,
     },
     {
       provide: 'ICategoryRepository',
-      useClass: InMemoryCategoryRepository,
+      useClass:
+        process.env.USE_IN_MEMORY_DB === 'true'
+          ? InMemoryCategoryRepository
+          : PrismaCategoryRepository,
     },
     {
       provide: 'IProductCategoryRepository',
-      useClass: InMemoryProductCategoryRepository,
+      useClass:
+        process.env.USE_IN_MEMORY_DB === 'true'
+          ? InMemoryProductCategoryRepository
+          : PrismaProductCategoryRepository,
     },
 
     // Domain Services (리팩토링: 책임별로 분리)
