@@ -10,6 +10,12 @@ import {
 } from '../../domain/exceptions/order.exception';
 import { ProcessPaymentResultDto } from '../dtos/order.dto';
 import { ExternalDataTransmissionService } from '../services/external-data-transmission.service';
+import { UserDomainService } from '../../../user/domain/services/user-domain.service';
+import { PaymentDomainService } from '../../../payment/domain/services/payment-domain.service';
+import { InventoryDomainService } from '../../../product/domain/services/inventory-domain.service';
+import { CouponDomainService } from '../../../coupon/domain/services/coupon-domain.service';
+import { CartDomainService } from '../../../cart/domain/services/cart-domain.service';
+import { PrismaService } from '../../../../common/prisma/prisma.service';
 
 /**
  * FR-O-005: 주문 결제 처리
@@ -32,12 +38,12 @@ export class ProcessOrderPaymentUseCase {
     @Inject('IOrderRepository')
     private readonly orderRepository: IOrderRepository,
     private readonly externalDataTransmissionService: ExternalDataTransmissionService,
-    // TODO: 다음 모듈들의 서비스를 inject해야 합니다:
-    // - IPaymentRepository (포인트 차감)
-    // - IProductRepository (재고 차감)
-    // - CouponDomainService (쿠폰 사용)
-    // - ICartRepository (장바구니 삭제)
-    // - PrismaService (트랜잭션 관리)
+    private readonly userDomainService: UserDomainService,
+    private readonly paymentDomainService: PaymentDomainService,
+    private readonly inventoryDomainService: InventoryDomainService,
+    private readonly couponDomainService: CouponDomainService,
+    private readonly cartDomainService: CartDomainService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async execute(
@@ -64,12 +70,17 @@ export class ProcessOrderPaymentUseCase {
       );
     }
 
-    // 4. 사용자 잔액 조회 및 검증
-    // TODO: Payment 모듈에서 사용자 포인트 잔액 조회
-    // const balance = await this.paymentRepository.getBalance(userId);
-    // if (balance < order.totalAmount) {
-    //   throw new InsufficientBalanceException(userId, order.totalAmount, balance);
-    // }
+    // 4. 사용자 조회 및 잔액 검증
+    const user = await this.userDomainService.findUserById(userId);
+    const currentBalance = user.getPoint();
+
+    if (currentBalance < order.totalAmount) {
+      throw new InsufficientBalanceException(
+        userId,
+        order.totalAmount,
+        currentBalance,
+      );
+    }
 
     let paymentId = 0;
     let remainingBalance = 0;
@@ -77,55 +88,71 @@ export class ProcessOrderPaymentUseCase {
 
     try {
       // 5. 트랜잭션 시작
-      // TODO: Prisma transaction 사용
-      // await this.prismaService.$transaction(async (tx) => {
-      //
-      //   5-1. 포인트 차감
-      //   const payment = await this.paymentRepository.deductPoints(
-      //     userId,
-      //     order.totalAmount,
-      //     orderId,
-      //     tx,
-      //   );
-      //   paymentId = payment.id;
-      //   remainingBalance = payment.remainingBalance;
-      //
-      //   5-2. 재고 차감
-      //   for (const item of order.items) {
-      //     await this.productRepository.deductStock(
-      //       item.optionId,
-      //       item.quantity,
-      //       tx,
-      //     );
-      //   }
-      //
-      //   5-3. 쿠폰 사용 처리 (적용된 경우)
-      //   if (order.hasCouponApplied()) {
-      //     await this.couponDomainService.useCoupon(
-      //       userId,
-      //       order.appliedUserCouponId!,
-      //       orderId,
-      //       tx,
-      //     );
-      //   }
-      //
-      //   5-4. 주문 상태 변경 (PAID)
-      //   await this.orderRepository.updateStatus(
-      //     orderId,
-      //     OrderStatus.PAID,
-      //     new Date().toISOString(),
-      //     null,
-      //     tx,
-      //   );
-      //
-      //   5-5. 장바구니 항목 삭제
-      //   TODO: 주문 생성 시 사용한 장바구니 항목 ID 목록이 필요
-      //   await this.cartRepository.deleteByOrderId(orderId, tx);
-      // });
+      // 트랜잭션 내에서 포인트 차감, 재고 차감, 쿠폰 사용, 주문 상태 변경, 장바구니 삭제를 원자적으로 처리
+      const result = await this.prismaService.$transaction(async () => {
+        // 5-1. 포인트 차감
+        const pointResult = await this.userDomainService.deductUserPoint(
+          userId,
+          order.totalAmount,
+        );
 
-      // TODO: 임시 데이터 (트랜잭션 구현 후 제거)
-      paymentId = 1;
-      remainingBalance = 100000;
+        // 5-2. 결제 정보 생성
+        const payment = await this.paymentDomainService.processPayment(
+          userId,
+          orderId,
+          order.totalAmount,
+          pointResult.previousBalance,
+          pointResult.currentBalance,
+        );
+
+        // 5-3. 재고 차감
+        for (const item of order.items) {
+          await this.inventoryDomainService.deductStock(
+            item.optionId,
+            item.quantity,
+            orderId,
+          );
+        }
+
+        // 5-4. 쿠폰 사용 처리 (적용된 경우)
+        if (order.hasCouponApplied()) {
+          await this.couponDomainService.useCoupon(
+            userId,
+            order.appliedUserCouponId!,
+            orderId,
+          );
+        }
+
+        // 5-5. 주문 상태 변경 (PAID)
+        order.changeStatus(OrderStatus.PAID);
+        await this.orderRepository.save(order);
+
+        // 5-6. 장바구니 항목 삭제
+        // 주문 항목과 일치하는 장바구니 항목 삭제
+        const cartItems =
+          await this.cartDomainService.findCartItemsByUserId(userId);
+
+        for (const item of order.items) {
+          const cartItem = cartItems.find(
+            (ci) =>
+              ci.productOptionId === item.optionId &&
+              ci.quantity === item.quantity,
+          );
+          if (cartItem) {
+            await this.cartDomainService.deleteCartItem(userId, cartItem.id);
+          }
+        }
+
+        return {
+          paymentId: payment.paymentId,
+          remainingBalance: payment.currentBalance,
+          paidAt: payment.paidAt,
+        };
+      });
+
+      paymentId = result.paymentId;
+      remainingBalance = result.remainingBalance;
+      const paidAt = result.paidAt;
 
       // 6. 외부 데이터 전송 (비동기, 실패해도 주문은 완료)
       try {
@@ -144,7 +171,7 @@ export class ProcessOrderPaymentUseCase {
         paidAmount: order.totalAmount,
         remainingBalance,
         status: OrderStatus.PAID,
-        paidAt: new Date().toISOString(),
+        paidAt,
         dataTransmissionStatus,
       };
     } catch (error) {

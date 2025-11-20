@@ -17,8 +17,23 @@ import {
   GetOrderStatisticsUseCase,
 } from './application/use-cases';
 
+// External module dependencies
+import { CartModule } from '../cart/cart.module';
+import { UserModule } from '../user/user.module';
+import { ProductModule } from '../product/product.module';
+import { CouponModule } from '../coupon/coupon.module';
+import { PaymentModule } from '../payment/payment.module';
+import { PrismaModule } from '../../common/prisma/prisma.module';
+
 @Module({
-  imports: [],
+  imports: [
+    CartModule,
+    UserModule,
+    ProductModule,
+    CouponModule,
+    PaymentModule,
+    PrismaModule,
+  ],
   controllers: [OrderController],
   providers: [
     // Repository
