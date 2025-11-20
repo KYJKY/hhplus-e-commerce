@@ -33,7 +33,8 @@ CREATE TABLE user_address
   is_default           BOOLEAN      NOT NULL DEFAULT FALSE COMMENT '기본 배송지 여부',
   created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
   updated_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  INDEX idx_user_id (user_id)
 ) COMMENT '유저 배송지';
 
 CREATE TABLE categories
@@ -72,14 +73,16 @@ CREATE TABLE product_options
   is_available       BOOLEAN       NOT NULL DEFAULT TRUE COMMENT '판매 가능 여부',
   created_at         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
   updated_at         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  INDEX idx_product_id (product_id)
 ) COMMENT '상품 옵션';
 
 CREATE TABLE product_categories
 (
   product_id    BIGINT NOT NULL COMMENT '상품 ID',
   categories_id BIGINT NOT NULL COMMENT '카테고리 ID',
-  PRIMARY KEY (product_id, categories_id)
+  PRIMARY KEY (product_id, categories_id),
+  INDEX idx_categories_id (categories_id)
 ) COMMENT '상품-카테고리 조인 테이블';
 
 CREATE TABLE cart_items
@@ -92,11 +95,11 @@ CREATE TABLE cart_items
   deleted_at        DATETIME NULL     COMMENT '삭제일 (논리적 삭제)',
   created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
   updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE INDEX UQ_user_product_option (user_id, product_option_id),
+  INDEX idx_user_id (user_id),
+  INDEX idx_product_option_id (product_option_id)
 ) COMMENT '장바구니';
-
-ALTER TABLE cart_items
-  ADD CONSTRAINT UQ_user_product_option UNIQUE (user_id, product_option_id);
 
 CREATE TABLE coupons
 (
@@ -123,17 +126,18 @@ ALTER TABLE coupons
 CREATE TABLE user_coupons
 (
   id            BIGINT      NOT NULL AUTO_INCREMENT COMMENT '사용자 쿠폰 ID',
-  user_id       BIGINT      NOT NULL COMMENT '유저 ID',
+  user_id       BIGINT      NOT NULL COMMENT '유터 ID',
   coupon_id     BIGINT      NOT NULL COMMENT '쿠폰 ID',
   status        VARCHAR(20) NOT NULL DEFAULT 'UNUSED' COMMENT '쿠폰 상태 (UNUSED, USED, EXPIRED)',
   issued_at     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '발급 일시',
   used_at       DATETIME    NULL     COMMENT '사용 일시',
   used_order_id BIGINT      NULL     COMMENT '사용된 주문 ID',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE INDEX UQ_user_coupon (user_id, coupon_id),
+  INDEX idx_user_id (user_id),
+  INDEX idx_coupon_id (coupon_id),
+  INDEX idx_status (status)
 ) COMMENT '사용자 쿠폰 발급 내역';
-
-ALTER TABLE user_coupons
-  ADD CONSTRAINT UQ_user_coupon UNIQUE (user_id, coupon_id);
 
 CREATE TABLE orders
 (
@@ -154,11 +158,12 @@ CREATE TABLE orders
   paid_at                 DATETIME      NULL     COMMENT '결제 완료 일시',
   completed_at            DATETIME      NULL     COMMENT '주문 완료 일시',
   updated_at              DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE INDEX UQ_order_number (order_number),
+  INDEX idx_user_id (user_id),
+  INDEX idx_order_status (order_status),
+  INDEX idx_created_at (created_at)
 ) COMMENT '주문';
-
-ALTER TABLE orders
-  ADD CONSTRAINT UQ_order_number UNIQUE (order_number);
 
 CREATE TABLE order_items
 (
@@ -171,7 +176,9 @@ CREATE TABLE order_items
   quantity          INT           NOT NULL COMMENT '상품 수량',
   unit_price        DECIMAL(15,2) NOT NULL COMMENT '단가 (주문 시점 가격)',
   subtotal          DECIMAL(15,2) NOT NULL COMMENT '소계',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  INDEX idx_order_id (order_id),
+  INDEX idx_product_option_id (product_option_id)
 ) COMMENT '주문 상품';
 
 CREATE TABLE payments
@@ -186,11 +193,11 @@ CREATE TABLE payments
   paid_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '결제 일시',
   created_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
   updated_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE INDEX UQ_order_id (order_id),
+  INDEX idx_user_id (user_id),
+  INDEX idx_payment_status (payment_status)
 ) COMMENT '결제';
-
-ALTER TABLE payments
-  ADD CONSTRAINT UQ_order_id UNIQUE (order_id);
 
 CREATE TABLE point_transactions
 (
@@ -202,7 +209,9 @@ CREATE TABLE point_transactions
   related_order_id BIGINT        NULL     COMMENT '관련 주문 ID',
   description      VARCHAR(500)  NULL     COMMENT '거래 설명',
   created_at       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '거래 일시',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  INDEX idx_user_id (user_id),
+  INDEX idx_created_at (created_at)
 ) COMMENT '포인트 거래 내역';
 
 CREATE TABLE data_transmissions
@@ -215,105 +224,7 @@ CREATE TABLE data_transmissions
   failure_reason      VARCHAR(500) NULL     COMMENT '실패 사유',
   created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
   updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  INDEX idx_order_id (order_id),
+  INDEX idx_transmission_status (transmission_status)
 ) COMMENT '외부 데이터 전송 내역';
-
-ALTER TABLE user_address
-  ADD CONSTRAINT FK_users_TO_user_address
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
-
-ALTER TABLE product_options
-  ADD CONSTRAINT FK_products_TO_product_options
-    FOREIGN KEY (product_id)
-    REFERENCES products (id);
-
-ALTER TABLE product_categories
-  ADD CONSTRAINT FK_products_TO_product_categories
-    FOREIGN KEY (product_id)
-    REFERENCES products (id);
-
-ALTER TABLE product_categories
-  ADD CONSTRAINT FK_categories_TO_product_categories
-    FOREIGN KEY (categories_id)
-    REFERENCES categories (id);
-
-ALTER TABLE cart_items
-  ADD CONSTRAINT FK_users_TO_cart_items
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
-
-ALTER TABLE cart_items
-  ADD CONSTRAINT FK_products_TO_cart_items
-    FOREIGN KEY (product_id)
-    REFERENCES products (id);
-
-ALTER TABLE cart_items
-  ADD CONSTRAINT FK_product_options_TO_cart_items
-    FOREIGN KEY (product_option_id)
-    REFERENCES product_options (id);
-
-ALTER TABLE user_coupons
-  ADD CONSTRAINT FK_users_TO_user_coupons
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
-
-ALTER TABLE user_coupons
-  ADD CONSTRAINT FK_coupons_TO_user_coupons
-    FOREIGN KEY (coupon_id)
-    REFERENCES coupons (id);
-
-ALTER TABLE user_coupons
-  ADD CONSTRAINT FK_orders_TO_user_coupons
-    FOREIGN KEY (used_order_id)
-    REFERENCES orders (id);
-
-ALTER TABLE orders
-  ADD CONSTRAINT FK_users_TO_orders
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
-
-ALTER TABLE orders
-  ADD CONSTRAINT FK_coupons_TO_orders
-    FOREIGN KEY (applied_coupon_id)
-    REFERENCES coupons (id);
-
-ALTER TABLE order_items
-  ADD CONSTRAINT FK_orders_TO_order_items
-    FOREIGN KEY (order_id)
-    REFERENCES orders (id);
-
-ALTER TABLE order_items
-  ADD CONSTRAINT FK_products_TO_order_items
-    FOREIGN KEY (product_id)
-    REFERENCES products (id);
-
-ALTER TABLE order_items
-  ADD CONSTRAINT FK_product_options_TO_order_items
-    FOREIGN KEY (product_option_id)
-    REFERENCES product_options (id);
-
-ALTER TABLE point_transactions
-  ADD CONSTRAINT FK_users_TO_point_transactions
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
-
-ALTER TABLE point_transactions
-  ADD CONSTRAINT FK_orders_TO_point_transactions
-    FOREIGN KEY (related_order_id)
-    REFERENCES orders (id);
-
-ALTER TABLE payments
-  ADD CONSTRAINT FK_orders_TO_payments
-    FOREIGN KEY (order_id)
-    REFERENCES orders (id);
-
-ALTER TABLE payments
-  ADD CONSTRAINT FK_users_TO_payments
-    FOREIGN KEY (user_id)
-    REFERENCES users (id);
-
-ALTER TABLE data_transmissions
-  ADD CONSTRAINT FK_orders_TO_data_transmissions
-    FOREIGN KEY (order_id)
-    REFERENCES orders (id);
