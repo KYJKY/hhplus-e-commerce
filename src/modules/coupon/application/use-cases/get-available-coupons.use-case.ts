@@ -26,15 +26,11 @@ export class GetAvailableCouponsUseCase {
     if (userId) {
       const userCoupons =
         await this.couponDomainService.findUserCouponsByUserId(userId);
-      const issuedCouponIds = new Set(
-        userCoupons.map((uc) => uc.couponId),
-      );
+      const issuedCouponIds = new Set(userCoupons.map((uc) => uc.couponId));
 
       return coupons.map((coupon) => {
         const isIssuable = !issuedCouponIds.has(coupon.id);
-        const reason = isIssuable
-          ? undefined
-          : 'Already issued to this user';
+        const reason = isIssuable ? undefined : 'Already issued to this user';
         return this.couponMapper.toAvailableCouponDto(
           coupon,
           isIssuable,

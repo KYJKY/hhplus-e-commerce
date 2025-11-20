@@ -3,10 +3,15 @@ import { IProductCategoryRepository } from '../../domain/repositories/product-ca
 import { PrismaService } from 'src/common/prisma';
 
 @Injectable()
-export class PrismaProductCategoryRepository implements IProductCategoryRepository {
+export class PrismaProductCategoryRepository
+  implements IProductCategoryRepository
+{
   constructor(private readonly prisma: PrismaService) {}
 
-  async addCategoryToProduct(productId: number, categoryId: number): Promise<void> {
+  async addCategoryToProduct(
+    productId: number,
+    categoryId: number,
+  ): Promise<void> {
     await this.prisma.product_categories.create({
       data: {
         product_id: BigInt(productId),
@@ -15,7 +20,10 @@ export class PrismaProductCategoryRepository implements IProductCategoryReposito
     });
   }
 
-  async removeCategoryFromProduct(productId: number, categoryId: number): Promise<void> {
+  async removeCategoryFromProduct(
+    productId: number,
+    categoryId: number,
+  ): Promise<void> {
     await this.prisma.product_categories.delete({
       where: {
         product_id_categories_id: {

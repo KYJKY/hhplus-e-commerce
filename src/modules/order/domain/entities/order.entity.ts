@@ -1,7 +1,4 @@
-import {
-  OrderStatus,
-  OrderStatusTransition,
-} from '../enums/order-status.enum';
+import { OrderStatus, OrderStatusTransition } from '../enums/order-status.enum';
 import { ShippingAddress } from '../value-objects/shipping-address.vo';
 import { OrderItem } from './order-item.entity';
 import { InvalidStatusTransitionException } from '../exceptions/order.exception';

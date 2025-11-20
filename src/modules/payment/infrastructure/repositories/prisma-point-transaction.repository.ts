@@ -4,7 +4,9 @@ import { PointTransaction } from '../../domain/entities/point-transaction.entity
 import { PrismaService } from 'src/common/prisma';
 
 @Injectable()
-export class PrismaPointTransactionRepository implements IPointTransactionRepository {
+export class PrismaPointTransactionRepository
+  implements IPointTransactionRepository
+{
   constructor(private readonly prisma: PrismaService) {}
 
   private toDomain(data: {
@@ -23,7 +25,9 @@ export class PrismaPointTransactionRepository implements IPointTransactionReposi
       transactionType: data.transaction_type as 'CHARGE' | 'USE' | 'REFUND',
       amount: Number(data.amount),
       balanceAfter: Number(data.balance_after),
-      relatedOrderId: data.related_order_id ? Number(data.related_order_id) : null,
+      relatedOrderId: data.related_order_id
+        ? Number(data.related_order_id)
+        : null,
       description: data.description,
       createdAt: data.created_at.toISOString(),
     });
@@ -129,7 +133,10 @@ export class PrismaPointTransactionRepository implements IPointTransactionReposi
     };
   }
 
-  async findLatestByUserId(userId: number, limit: number): Promise<PointTransaction[]> {
+  async findLatestByUserId(
+    userId: number,
+    limit: number,
+  ): Promise<PointTransaction[]> {
     const transactions = await this.prisma.point_transactions.findMany({
       where: { user_id: BigInt(userId) },
       orderBy: { created_at: 'desc' },
@@ -138,7 +145,9 @@ export class PrismaPointTransactionRepository implements IPointTransactionReposi
     return transactions.map((t) => this.toDomain(t));
   }
 
-  async findOne(predicate: (entity: PointTransaction) => boolean): Promise<PointTransaction | null> {
+  async findOne(
+    predicate: (entity: PointTransaction) => boolean,
+  ): Promise<PointTransaction | null> {
     const transactions = await this.prisma.point_transactions.findMany();
     const transaction = transactions.find((t) => predicate(this.toDomain(t)));
     return transaction ? this.toDomain(transaction) : null;
@@ -149,9 +158,13 @@ export class PrismaPointTransactionRepository implements IPointTransactionReposi
     return transactions.map((t) => this.toDomain(t));
   }
 
-  async findMany(predicate: (entity: PointTransaction) => boolean): Promise<PointTransaction[]> {
+  async findMany(
+    predicate: (entity: PointTransaction) => boolean,
+  ): Promise<PointTransaction[]> {
     const transactions = await this.prisma.point_transactions.findMany();
-    return transactions.filter((t) => predicate(this.toDomain(t))).map((t) => this.toDomain(t));
+    return transactions
+      .filter((t) => predicate(this.toDomain(t)))
+      .map((t) => this.toDomain(t));
   }
 
   async exists(id: number): Promise<boolean> {
@@ -161,26 +174,36 @@ export class PrismaPointTransactionRepository implements IPointTransactionReposi
     return count > 0;
   }
 
-  async create(transaction: Omit<PointTransaction, 'id'>): Promise<PointTransaction> {
+  async create(
+    transaction: Omit<PointTransaction, 'id'>,
+  ): Promise<PointTransaction> {
     const created = await this.prisma.point_transactions.create({
       data: {
         user_id: BigInt(transaction.userId),
         transaction_type: transaction.transactionType,
         amount: transaction.amount,
         balance_after: transaction.balanceAfter,
-        related_order_id: transaction.relatedOrderId ? BigInt(transaction.relatedOrderId) : null,
+        related_order_id: transaction.relatedOrderId
+          ? BigInt(transaction.relatedOrderId)
+          : null,
         description: transaction.description,
-        created_at: transaction.createdAt ? new Date(transaction.createdAt) : new Date(),
+        created_at: transaction.createdAt
+          ? new Date(transaction.createdAt)
+          : new Date(),
       },
     });
     return this.toDomain(created);
   }
 
-  async update(id: number, updates: Partial<PointTransaction>): Promise<PointTransaction | null> {
+  async update(
+    id: number,
+    updates: Partial<PointTransaction>,
+  ): Promise<PointTransaction | null> {
     // PointTransaction은 보통 수정하지 않지만 인터페이스 구현을 위해 포함
     const updateData: any = {};
 
-    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.description !== undefined)
+      updateData.description = updates.description;
 
     const updated = await this.prisma.point_transactions.update({
       where: { id: BigInt(id) },
@@ -209,7 +232,9 @@ export class PrismaPointTransactionRepository implements IPointTransactionReposi
     }
   }
 
-  async count(predicate?: (entity: PointTransaction) => boolean): Promise<number> {
+  async count(
+    predicate?: (entity: PointTransaction) => boolean,
+  ): Promise<number> {
     if (predicate) {
       const transactions = await this.prisma.point_transactions.findMany();
       return transactions.filter((t) => predicate(this.toDomain(t))).length;

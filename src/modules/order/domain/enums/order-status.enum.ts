@@ -22,7 +22,10 @@ export enum OrderStatus {
 export class OrderStatusTransition {
   private static readonly VALID_TRANSITIONS: Map<OrderStatus, OrderStatus[]> =
     new Map([
-      [OrderStatus.PENDING, [OrderStatus.PAID, OrderStatus.FAILED, OrderStatus.CANCELLED]],
+      [
+        OrderStatus.PENDING,
+        [OrderStatus.PAID, OrderStatus.FAILED, OrderStatus.CANCELLED],
+      ],
       [OrderStatus.PAID, [OrderStatus.COMPLETED]],
       [OrderStatus.COMPLETED, []],
       [OrderStatus.FAILED, []],

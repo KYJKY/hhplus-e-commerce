@@ -46,7 +46,9 @@ export class PrismaProductOptionRepository implements IProductOptionRepository {
     return options.map((o) => this.toDomain(o));
   }
 
-  async findOne(predicate: (entity: ProductOption) => boolean): Promise<ProductOption | null> {
+  async findOne(
+    predicate: (entity: ProductOption) => boolean,
+  ): Promise<ProductOption | null> {
     const options = await this.prisma.product_options.findMany();
     const option = options.find((o) => predicate(this.toDomain(o)));
     return option ? this.toDomain(option) : null;
@@ -57,9 +59,13 @@ export class PrismaProductOptionRepository implements IProductOptionRepository {
     return options.map((o) => this.toDomain(o));
   }
 
-  async findMany(predicate: (entity: ProductOption) => boolean): Promise<ProductOption[]> {
+  async findMany(
+    predicate: (entity: ProductOption) => boolean,
+  ): Promise<ProductOption[]> {
     const options = await this.prisma.product_options.findMany();
-    return options.filter((o) => predicate(this.toDomain(o))).map((o) => this.toDomain(o));
+    return options
+      .filter((o) => predicate(this.toDomain(o)))
+      .map((o) => this.toDomain(o));
   }
 
   async exists(id: number): Promise<boolean> {
@@ -85,14 +91,22 @@ export class PrismaProductOptionRepository implements IProductOptionRepository {
     return this.toDomain(created);
   }
 
-  async update(id: number, updates: Partial<ProductOption>): Promise<ProductOption | null> {
+  async update(
+    id: number,
+    updates: Partial<ProductOption>,
+  ): Promise<ProductOption | null> {
     const updateData: any = { updated_at: new Date() };
 
-    if (updates.optionName !== undefined) updateData.option_name = updates.optionName;
-    if (updates.optionDescription !== undefined) updateData.option_description = updates.optionDescription;
-    if (updates.priceAmount !== undefined) updateData.price_amount = updates.priceAmount;
-    if (updates.stockQuantity !== undefined) updateData.stock_quantity = updates.stockQuantity;
-    if (updates.isAvailable !== undefined) updateData.is_available = updates.isAvailable;
+    if (updates.optionName !== undefined)
+      updateData.option_name = updates.optionName;
+    if (updates.optionDescription !== undefined)
+      updateData.option_description = updates.optionDescription;
+    if (updates.priceAmount !== undefined)
+      updateData.price_amount = updates.priceAmount;
+    if (updates.stockQuantity !== undefined)
+      updateData.stock_quantity = updates.stockQuantity;
+    if (updates.isAvailable !== undefined)
+      updateData.is_available = updates.isAvailable;
 
     const updated = await this.prisma.product_options.update({
       where: { id: BigInt(id) },
@@ -150,7 +164,9 @@ export class PrismaProductOptionRepository implements IProductOptionRepository {
     const previousStock = option.stock_quantity;
 
     if (previousStock < quantity) {
-      throw new Error(`Insufficient stock for option ${optionId}. Available: ${previousStock}, Requested: ${quantity}`);
+      throw new Error(
+        `Insufficient stock for option ${optionId}. Available: ${previousStock}, Requested: ${quantity}`,
+      );
     }
 
     const updated = await this.prisma.product_options.update({

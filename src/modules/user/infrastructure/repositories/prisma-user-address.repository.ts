@@ -207,8 +207,12 @@ export class PrismaUserAddressRepository implements IUserAddressRepository {
         address_default_text: address.addressDefaultText,
         address_detail_text: address.addressDetailText,
         is_default: address.isDefault,
-        created_at: address.createdAt ? new Date(address.createdAt) : new Date(),
-        updated_at: address.updatedAt ? new Date(address.updatedAt) : new Date(),
+        created_at: address.createdAt
+          ? new Date(address.createdAt)
+          : new Date(),
+        updated_at: address.updatedAt
+          ? new Date(address.updatedAt)
+          : new Date(),
       },
     });
 

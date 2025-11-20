@@ -49,7 +49,9 @@ export class PrismaProductRepository implements IProductRepository {
     const products = await this.prisma.products.findMany({
       where: { deleted_at: null },
     });
-    return products.filter((p) => predicate(this.toDomain(p))).map((p) => this.toDomain(p));
+    return products
+      .filter((p) => predicate(this.toDomain(p)))
+      .map((p) => this.toDomain(p));
   }
 
   async create(product: Product): Promise<Product> {
@@ -61,8 +63,12 @@ export class PrismaProductRepository implements IProductRepository {
         is_active: product.isActive,
         view_count: BigInt(product.viewCount),
         deleted_at: product.deletedAt ? new Date(product.deletedAt) : null,
-        created_at: product.createdAt ? new Date(product.createdAt) : new Date(),
-        updated_at: product.updatedAt ? new Date(product.updatedAt) : new Date(),
+        created_at: product.createdAt
+          ? new Date(product.createdAt)
+          : new Date(),
+        updated_at: product.updatedAt
+          ? new Date(product.updatedAt)
+          : new Date(),
       },
     });
     return this.toDomain(created);
@@ -71,11 +77,15 @@ export class PrismaProductRepository implements IProductRepository {
   async update(id: number, updates: Partial<Product>): Promise<Product | null> {
     const updateData: any = { updated_at: new Date() };
 
-    if (updates.productName !== undefined) updateData.product_name = updates.productName;
-    if (updates.productDescription !== undefined) updateData.product_description = updates.productDescription;
-    if (updates.thumbnailUrl !== undefined) updateData.thumbnail_url = updates.thumbnailUrl;
+    if (updates.productName !== undefined)
+      updateData.product_name = updates.productName;
+    if (updates.productDescription !== undefined)
+      updateData.product_description = updates.productDescription;
+    if (updates.thumbnailUrl !== undefined)
+      updateData.thumbnail_url = updates.thumbnailUrl;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
-    if (updates.viewCount !== undefined) updateData.view_count = BigInt(updates.viewCount);
+    if (updates.viewCount !== undefined)
+      updateData.view_count = BigInt(updates.viewCount);
 
     const updated = await this.prisma.products.update({
       where: { id: BigInt(id) },

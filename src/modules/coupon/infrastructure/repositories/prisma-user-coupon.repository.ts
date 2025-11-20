@@ -118,10 +118,7 @@ export class PrismaUserCouponRepository implements IUserCouponRepository {
     return this.toDomain(created);
   }
 
-  async update(
-    id: number,
-    updates: Partial<UserCoupon>,
-  ): Promise<UserCoupon> {
+  async update(id: number, updates: Partial<UserCoupon>): Promise<UserCoupon> {
     const updateData: any = {};
 
     if (updates.status !== undefined) updateData.status = updates.status;

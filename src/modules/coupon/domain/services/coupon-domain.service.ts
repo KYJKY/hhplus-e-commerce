@@ -13,7 +13,6 @@ import {
   CouponNotStartedException,
   CouponExpiredException,
   CouponAlreadyUsedException,
-  MinOrderAmountNotMetException,
   InvalidCouponCodeException,
 } from '../exceptions';
 
@@ -150,9 +149,8 @@ export class CouponDomainService {
     }
 
     // 6. 쿠폰 발급 수량 증가 (원자적 연산)
-    const updatedCoupon = await this.couponRepository.incrementIssuedCount(
-      couponId,
-    );
+    const updatedCoupon =
+      await this.couponRepository.incrementIssuedCount(couponId);
     if (!updatedCoupon) {
       // 동시성 문제로 발급 실패
       throw new CouponIssueLimitExceededException(couponId);
@@ -306,9 +304,8 @@ export class CouponDomainService {
     const coupon = await this.findCouponById(couponId);
 
     // 2. 통계 조회
-    const stats = await this.userCouponRepository.getStatisticsByCoupon(
-      couponId,
-    );
+    const stats =
+      await this.userCouponRepository.getStatisticsByCoupon(couponId);
 
     // 3. 사용률 계산
     const usageRate =

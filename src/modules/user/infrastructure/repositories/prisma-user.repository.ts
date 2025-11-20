@@ -98,7 +98,9 @@ export class PrismaUserRepository implements IUserRepository {
    */
   async findMany(predicate: (entity: User) => boolean): Promise<User[]> {
     const users = await this.prisma.users.findMany();
-    return users.filter((u) => predicate(this.toDomain(u))).map((u) => this.toDomain(u));
+    return users
+      .filter((u) => predicate(this.toDomain(u)))
+      .map((u) => this.toDomain(u));
   }
 
   /**
@@ -141,13 +143,19 @@ export class PrismaUserRepository implements IUserRepository {
     const updateData: any = {};
 
     if (updates.name !== undefined) updateData.name = updates.name;
-    if (updates.displayName !== undefined) updateData.display_name = updates.displayName;
-    if (updates.phoneNumber !== undefined) updateData.phone_number = updates.phoneNumber;
+    if (updates.displayName !== undefined)
+      updateData.display_name = updates.displayName;
+    if (updates.phoneNumber !== undefined)
+      updateData.phone_number = updates.phoneNumber;
     if (updates.lastLoginAt !== undefined) {
-      updateData.last_login_at = updates.lastLoginAt ? new Date(updates.lastLoginAt) : null;
+      updateData.last_login_at = updates.lastLoginAt
+        ? new Date(updates.lastLoginAt)
+        : null;
     }
     if (updates.deletedAt !== undefined) {
-      updateData.deleted_at = updates.deletedAt ? new Date(updates.deletedAt) : null;
+      updateData.deleted_at = updates.deletedAt
+        ? new Date(updates.deletedAt)
+        : null;
     }
 
     updateData.updated_at = new Date();

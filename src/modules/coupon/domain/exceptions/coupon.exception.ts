@@ -20,9 +20,7 @@ export class CouponNotFoundException extends CouponDomainException {
   constructor(couponId?: number) {
     super(
       'CP002',
-      couponId
-        ? `Coupon with ID ${couponId} not found`
-        : 'Coupon not found',
+      couponId ? `Coupon with ID ${couponId} not found` : 'Coupon not found',
       HttpStatus.NOT_FOUND,
     );
   }
@@ -170,9 +168,7 @@ export class InvalidCouponCodeException extends CouponDomainException {
   constructor(couponCode?: string) {
     super(
       'CP012',
-      couponCode
-        ? `Invalid coupon code: ${couponCode}`
-        : 'Invalid coupon code',
+      couponCode ? `Invalid coupon code: ${couponCode}` : 'Invalid coupon code',
       HttpStatus.NOT_FOUND,
     );
   }

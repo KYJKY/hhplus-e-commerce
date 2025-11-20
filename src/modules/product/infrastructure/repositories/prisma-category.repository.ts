@@ -40,7 +40,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
     return categories.map((c) => this.toDomain(c));
   }
 
-  async findOne(predicate: (entity: Category) => boolean): Promise<Category | null> {
+  async findOne(
+    predicate: (entity: Category) => boolean,
+  ): Promise<Category | null> {
     const categories = await this.prisma.categories.findMany();
     const category = categories.find((c) => predicate(this.toDomain(c)));
     return category ? this.toDomain(category) : null;
@@ -51,9 +53,13 @@ export class PrismaCategoryRepository implements ICategoryRepository {
     return categories.map((c) => this.toDomain(c));
   }
 
-  async findMany(predicate: (entity: Category) => boolean): Promise<Category[]> {
+  async findMany(
+    predicate: (entity: Category) => boolean,
+  ): Promise<Category[]> {
     const categories = await this.prisma.categories.findMany();
-    return categories.filter((c) => predicate(this.toDomain(c))).map((c) => this.toDomain(c));
+    return categories
+      .filter((c) => predicate(this.toDomain(c)))
+      .map((c) => this.toDomain(c));
   }
 
   async exists(id: number): Promise<boolean> {
@@ -69,18 +75,27 @@ export class PrismaCategoryRepository implements ICategoryRepository {
         category_name: category.categoryName,
         display_order: category.displayOrder,
         is_active: category.isActive,
-        created_at: category.createdAt ? new Date(category.createdAt) : new Date(),
-        updated_at: category.updatedAt ? new Date(category.updatedAt) : new Date(),
+        created_at: category.createdAt
+          ? new Date(category.createdAt)
+          : new Date(),
+        updated_at: category.updatedAt
+          ? new Date(category.updatedAt)
+          : new Date(),
       },
     });
     return this.toDomain(created);
   }
 
-  async update(id: number, updates: Partial<Category>): Promise<Category | null> {
+  async update(
+    id: number,
+    updates: Partial<Category>,
+  ): Promise<Category | null> {
     const updateData: any = { updated_at: new Date() };
 
-    if (updates.categoryName !== undefined) updateData.category_name = updates.categoryName;
-    if (updates.displayOrder !== undefined) updateData.display_order = updates.displayOrder;
+    if (updates.categoryName !== undefined)
+      updateData.category_name = updates.categoryName;
+    if (updates.displayOrder !== undefined)
+      updateData.display_order = updates.displayOrder;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
     const updated = await this.prisma.categories.update({

@@ -69,7 +69,10 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     return payments.map((p) => this.toDomain(p));
   }
 
-  async findByIdAndUserId(paymentId: number, userId: number): Promise<Payment | null> {
+  async findByIdAndUserId(
+    paymentId: number,
+    userId: number,
+  ): Promise<Payment | null> {
     const payment = await this.prisma.payments.findFirst({
       where: {
         id: BigInt(paymentId),
@@ -130,13 +133,19 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     });
 
     const totalPayments = payments.length;
-    const successfulPayments = payments.filter((p) => p.payment_status === 'SUCCESS').length;
-    const failedPayments = payments.filter((p) => p.payment_status === 'FAILED').length;
+    const successfulPayments = payments.filter(
+      (p) => p.payment_status === 'SUCCESS',
+    ).length;
+    const failedPayments = payments.filter(
+      (p) => p.payment_status === 'FAILED',
+    ).length;
     const totalAmount = payments
       .filter((p) => p.payment_status === 'SUCCESS')
       .reduce((sum, p) => sum + Number(p.paid_amount), 0);
-    const averagePaymentAmount = successfulPayments > 0 ? totalAmount / successfulPayments : 0;
-    const lastPaymentAt = payments.length > 0 ? payments[0].paid_at.toISOString() : null;
+    const averagePaymentAmount =
+      successfulPayments > 0 ? totalAmount / successfulPayments : 0;
+    const lastPaymentAt =
+      payments.length > 0 ? payments[0].paid_at.toISOString() : null;
 
     return {
       totalPayments,
@@ -148,7 +157,9 @@ export class PrismaPaymentRepository implements IPaymentRepository {
     };
   }
 
-  async findOne(predicate: (entity: Payment) => boolean): Promise<Payment | null> {
+  async findOne(
+    predicate: (entity: Payment) => boolean,
+  ): Promise<Payment | null> {
     const payments = await this.prisma.payments.findMany();
     const payment = payments.find((p) => predicate(this.toDomain(p)));
     return payment ? this.toDomain(payment) : null;
@@ -161,7 +172,9 @@ export class PrismaPaymentRepository implements IPaymentRepository {
 
   async findMany(predicate: (entity: Payment) => boolean): Promise<Payment[]> {
     const payments = await this.prisma.payments.findMany();
-    return payments.filter((p) => predicate(this.toDomain(p))).map((p) => this.toDomain(p));
+    return payments
+      .filter((p) => predicate(this.toDomain(p)))
+      .map((p) => this.toDomain(p));
   }
 
   async exists(id: number): Promise<boolean> {
@@ -181,8 +194,12 @@ export class PrismaPaymentRepository implements IPaymentRepository {
         paid_amount: payment.paidAmount,
         failure_reason: payment.failureReason,
         paid_at: payment.paidAt ? new Date(payment.paidAt) : new Date(),
-        created_at: payment.createdAt ? new Date(payment.createdAt) : new Date(),
-        updated_at: payment.updatedAt ? new Date(payment.updatedAt) : new Date(),
+        created_at: payment.createdAt
+          ? new Date(payment.createdAt)
+          : new Date(),
+        updated_at: payment.updatedAt
+          ? new Date(payment.updatedAt)
+          : new Date(),
       },
     });
     return this.toDomain(created);
@@ -191,8 +208,10 @@ export class PrismaPaymentRepository implements IPaymentRepository {
   async update(id: number, updates: Partial<Payment>): Promise<Payment | null> {
     const updateData: any = { updated_at: new Date() };
 
-    if (updates.paymentStatus !== undefined) updateData.payment_status = updates.paymentStatus;
-    if (updates.failureReason !== undefined) updateData.failure_reason = updates.failureReason;
+    if (updates.paymentStatus !== undefined)
+      updateData.payment_status = updates.paymentStatus;
+    if (updates.failureReason !== undefined)
+      updateData.failure_reason = updates.failureReason;
 
     const updated = await this.prisma.payments.update({
       where: { id: BigInt(id) },

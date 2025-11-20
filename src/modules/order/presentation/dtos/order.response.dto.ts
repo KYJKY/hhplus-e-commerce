@@ -128,8 +128,10 @@ export class PaymentInfoResponseDto implements PaymentInfoDto {
 /**
  * 주문 상세 응답 DTO
  */
-export class OrderDetailResponseDto extends OrderResponseDto
-  implements OrderDetailDto {
+export class OrderDetailResponseDto
+  extends OrderResponseDto
+  implements OrderDetailDto
+{
   @ApiProperty({ type: PaymentInfoResponseDto, nullable: true })
   payment: PaymentInfoResponseDto | null;
 
@@ -164,7 +166,8 @@ export class ProcessPaymentResponseDto implements ProcessPaymentResultDto {
  * 주문 상태 변경 응답 DTO
  */
 export class ChangeOrderStatusResponseDto
-  implements ChangeOrderStatusResultDto {
+  implements ChangeOrderStatusResultDto
+{
   @ApiProperty() orderId: number;
   @ApiProperty({ enum: OrderStatus }) previousStatus: OrderStatus;
   @ApiProperty({ enum: OrderStatus }) currentStatus: OrderStatus;

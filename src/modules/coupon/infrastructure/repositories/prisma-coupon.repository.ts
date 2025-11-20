@@ -124,8 +124,7 @@ export class PrismaCouponRepository implements ICouponRepository {
       updateData.valid_from = new Date(updates.validFrom);
     if (updates.validUntil !== undefined)
       updateData.valid_until = new Date(updates.validUntil);
-    if (updates.isActive !== undefined)
-      updateData.is_active = updates.isActive;
+    if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
     const updated = await this.prisma.coupons.update({
       where: { id: BigInt(id) },
