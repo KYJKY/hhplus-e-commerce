@@ -33,10 +33,17 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
     couponRepository = new PrismaCouponRepository(prisma as any);
     userCouponRepository = new PrismaUserCouponRepository(prisma as any);
 
+    // PrismaService 모킹 (transaction 메서드 포함)
+    const prismaService = {
+      transaction: prisma.$transaction.bind(prisma),
+      client: prisma,
+    } as any;
+
     // Domain Service 직접 인스턴스화
     couponDomainService = new CouponDomainService(
       couponRepository,
       userCouponRepository,
+      prismaService,
     );
   }, 60000); // 타임아웃 60초
 

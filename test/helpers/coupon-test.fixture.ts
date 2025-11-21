@@ -28,7 +28,7 @@ export class CouponTestFixture {
         name: data?.name ?? '테스트유저',
         display_name: '테스터',
         phone_number: '010-1234-5678',
-        point: data?.point ?? 100000, // Decimal 타입이므로 number 그대로 전달
+        point: String(data?.point ?? 100000), // Decimal 타입은 문자열로 전달
         last_login_at: new Date(),
         created_at: new Date(),
         updated_at: new Date(),
