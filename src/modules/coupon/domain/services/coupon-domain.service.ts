@@ -3,6 +3,7 @@ import { Coupon } from '../entities/coupon.entity';
 import { UserCoupon, UserCouponStatus } from '../entities/user-coupon.entity';
 import type { ICouponRepository } from '../repositories/coupon.repository.interface';
 import type { IUserCouponRepository } from '../repositories/user-coupon.repository.interface';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 import {
   CouponNotFoundException,
   UserCouponNotFoundException,
@@ -40,6 +41,7 @@ export class CouponDomainService {
     private readonly couponRepository: ICouponRepository,
     @Inject('IUserCouponRepository')
     private readonly userCouponRepository: IUserCouponRepository,
+    private readonly prisma: PrismaService,
   ) {}
 
   /**
@@ -117,6 +119,7 @@ export class CouponDomainService {
 
   /**
    * 쿠폰 발급 (비즈니스 규칙 검증 포함)
+   * 트랜잭션을 통해 초과 발급 방지 및 데이터 정합성 보장
    */
   async issueCoupon(userId: number, couponId: number): Promise<UserCoupon> {
     // 1. 쿠폰 조회
@@ -148,24 +151,53 @@ export class CouponDomainService {
       throw new CouponIssueLimitExceededException(couponId);
     }
 
-    // 6. 쿠폰 발급 수량 증가 (원자적 연산)
-    const updatedCoupon =
-      await this.couponRepository.incrementIssuedCount(couponId);
-    if (!updatedCoupon) {
-      // 동시성 문제로 발급 실패
-      throw new CouponIssueLimitExceededException(couponId);
-    }
+    // 6-7. 트랜잭션 + 비관락: 발급 수량 증가 + 사용자 쿠폰 생성을 원자적으로 처리
+    return await this.prisma.transaction(async (tx) => {
+      // 1. SELECT ... FOR UPDATE: 비관락으로 쿠폰 행 잠금
+      const [couponRow] = await tx.$queryRaw<
+        Array<{ id: bigint; issued_count: number; issue_limit: number }>
+      >`
+        SELECT id, issued_count, issue_limit
+        FROM coupons
+        WHERE id = ${BigInt(couponId)}
+        FOR UPDATE
+      `;
 
-    // 7. 사용자 쿠폰 생성
-    const userCoupon = UserCoupon.create({
-      id: 0, // Repository에서 자동 생성
-      userId,
-      couponId,
-      status: UserCouponStatus.UNUSED,
-      issuedAt: new Date().toISOString(),
+      if (!couponRow) {
+        throw new CouponNotFoundException(couponId);
+      }
+
+      // 2. 발급 한도 체크
+      if (couponRow.issued_count >= couponRow.issue_limit) {
+        throw new CouponIssueLimitExceededException(couponId);
+      }
+
+      // 3. 발급 카운트 증가
+      await tx.$executeRaw`
+        UPDATE coupons
+        SET issued_count = issued_count + 1, updated_at = NOW()
+        WHERE id = ${BigInt(couponId)}
+      `;
+
+      // 4. 사용자 쿠폰 생성
+      const userCouponRecord = await tx.user_coupons.create({
+        data: {
+          user_id: BigInt(userId),
+          coupon_id: BigInt(couponId),
+          status: 'UNUSED',
+          issued_at: new Date(),
+        },
+      });
+
+      // 엔티티로 변환하여 반환
+      return UserCoupon.create({
+        id: Number(userCouponRecord.id),
+        userId,
+        couponId,
+        status: UserCouponStatus.UNUSED,
+        issuedAt: userCouponRecord.issued_at.toISOString(),
+      });
     });
-
-    return await this.userCouponRepository.save(userCoupon);
   }
 
   /**
