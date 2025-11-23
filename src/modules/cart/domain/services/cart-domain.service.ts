@@ -198,6 +198,39 @@ export class CartDomainService {
   }
 
   /**
+   * 주문 완료 후 주문 항목과 일치하는 장바구니 항목 삭제
+   *
+   * @param userId - 사용자 ID
+   * @param orderItems - 주문 항목 목록 (productOptionId, quantity)
+   * @returns 삭제된 항목 수
+   */
+  async deleteCartItemsByOrderItems(
+    userId: number,
+    orderItems: Array<{ productOptionId: number; quantity: number }>,
+  ): Promise<number> {
+    // 1. 사용자의 장바구니 조회
+    const cartItems = await this.findCartItemsByUserId(userId);
+
+    // 2. 주문 항목과 일치하는 장바구니 항목 찾기
+    const cartItemIds = orderItems
+      .map((orderItem) =>
+        cartItems.find(
+          (ci) =>
+            ci.productOptionId === orderItem.productOptionId &&
+            ci.quantity === orderItem.quantity,
+        )?.id,
+      )
+      .filter((id): id is number => id !== undefined);
+
+    // 3. 삭제 (빈 배열이면 0 반환)
+    if (cartItemIds.length === 0) {
+      return 0;
+    }
+
+    return await this.deleteCartItemsByIds(userId, cartItemIds);
+  }
+
+  /**
    * 사용자의 모든 장바구니 항목 삭제
    */
   async deleteAllCartItems(userId: number): Promise<number> {

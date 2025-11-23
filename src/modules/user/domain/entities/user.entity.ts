@@ -3,6 +3,7 @@ import { Name } from '../value-objects/name.vo';
 import { DisplayName } from '../value-objects/display-name.vo';
 import { PhoneNumber } from '../../../../common/domain/value-objects/phone-number.vo';
 import { Point } from '../../../payment/domain/value-objects/point.vo';
+import { InsufficientBalanceException } from '../exceptions/user.exception';
 
 /**
  * User 생성 속성
@@ -201,5 +202,20 @@ export class User {
    */
   deductPoint(amount: number): void {
     this._point = this._point.use(amount);
+  }
+
+  /**
+   * 결제 잔액 검증
+   * @param requiredAmount - 필요한 금액
+   * @throws InsufficientBalanceException 잔액 부족 시
+   */
+  validateBalance(requiredAmount: number): void {
+    if (this.getPoint() < requiredAmount) {
+      throw new InsufficientBalanceException(
+        this.id,
+        requiredAmount,
+        this.getPoint(),
+      );
+    }
   }
 }

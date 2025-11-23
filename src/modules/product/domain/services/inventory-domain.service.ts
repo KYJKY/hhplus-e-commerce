@@ -104,6 +104,31 @@ export class InventoryDomainService {
   }
 
   /**
+   * 여러 재고를 한 번에 차감 (주문 결제 시 사용)
+   * 병렬 처리로 성능 개선
+   */
+  async deductStocks(
+    items: Array<{ optionId: number; quantity: number }>,
+    orderId: number,
+  ): Promise<
+    Array<{
+      optionId: number;
+      previousStock: number;
+      deductedQuantity: number;
+      currentStock: number;
+    }>
+  > {
+    // Promise.all로 병렬 처리
+    // 각 optionId는 독립적이므로 병렬 처리 안전
+    // 한 건이라도 실패하면 전체 롤백 (트랜잭션 내에서 실행)
+    return await Promise.all(
+      items.map((item) =>
+        this.deductStock(item.optionId, item.quantity, orderId),
+      ),
+    );
+  }
+
+  /**
    * FR-P-007: 재고 복원 (내부 API)
    * StockQuantity VO를 활용한 재고 관리
    */

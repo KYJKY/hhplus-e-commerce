@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OrderStatus } from '../../domain/enums/order-status.enum';
-import {
-  InsufficientBalanceException,
-  PaymentFailedException,
-} from '../../domain/exceptions/order.exception';
+import { DataTransmissionStatus } from '../../domain/enums/data-transmission-status.enum';
+import { PaymentFailedException } from '../../domain/exceptions/order.exception';
 import { ProcessPaymentResultDto } from '../dtos/order.dto';
 import { ExternalDataTransmissionService } from '../services/external-data-transmission.service';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
@@ -57,24 +55,16 @@ export class ProcessOrderPaymentUseCase {
 
     // 4. 사용자 조회 및 잔액 검증
     const user = await this.userDomainService.findUserById(userId);
-    const currentBalance = user.getPoint();
-
-    if (currentBalance < order.totalAmount) {
-      throw new InsufficientBalanceException(
-        userId,
-        order.totalAmount,
-        currentBalance,
-      );
-    }
+    user.validateBalance(order.totalAmount);
 
     let paymentId = 0;
     let remainingBalance = 0;
-    let dataTransmissionStatus: 'SUCCESS' | 'FAILED' | 'PENDING' = 'PENDING';
+    let dataTransmissionStatus = DataTransmissionStatus.PENDING;
 
     try {
       // 5. 트랜잭션 시작
       // 트랜잭션 내에서 포인트 차감, 재고 차감, 쿠폰 사용, 주문 상태 변경, 장바구니 삭제를 원자적으로 처리
-      const result = await this.prismaService.$transaction(async () => {
+      const result = await this.prismaService.transaction(async (tx) => {
         // 5-1. 포인트 차감
         const pointResult = await this.userDomainService.deductUserPoint(
           userId,
@@ -90,14 +80,14 @@ export class ProcessOrderPaymentUseCase {
           pointResult.currentBalance,
         );
 
-        // 5-3. 재고 차감
-        for (const item of order.items) {
-          await this.inventoryDomainService.deductStock(
-            item.optionId,
-            item.quantity,
-            orderId,
-          );
-        }
+        // 5-3. 재고 차감 (병렬 처리)
+        await this.inventoryDomainService.deductStocks(
+          order.items.map((item) => ({
+            optionId: item.optionId,
+            quantity: item.quantity,
+          })),
+          orderId,
+        );
 
         // 5-4. 쿠폰 사용 처리 (적용된 경우)
         if (order.hasCouponApplied()) {
@@ -113,20 +103,13 @@ export class ProcessOrderPaymentUseCase {
         await this.orderDomainService.saveOrder(order);
 
         // 5-6. 장바구니 항목 삭제
-        // 주문 항목과 일치하는 장바구니 항목 삭제
-        const cartItems =
-          await this.cartDomainService.findCartItemsByUserId(userId);
-
-        for (const item of order.items) {
-          const cartItem = cartItems.find(
-            (ci) =>
-              ci.productOptionId === item.optionId &&
-              ci.quantity === item.quantity,
-          );
-          if (cartItem) {
-            await this.cartDomainService.deleteCartItem(userId, cartItem.id);
-          }
-        }
+        await this.cartDomainService.deleteCartItemsByOrderItems(
+          userId,
+          order.items.map((item) => ({
+            productOptionId: item.optionId,
+            quantity: item.quantity,
+          })),
+        );
 
         return {
           paymentId: payment.paymentId,
@@ -146,7 +129,7 @@ export class ProcessOrderPaymentUseCase {
         dataTransmissionStatus = transmissionResult.transmissionStatus;
       } catch (error) {
         // 외부 전송 실패는 무시
-        dataTransmissionStatus = 'FAILED';
+        dataTransmissionStatus = DataTransmissionStatus.FAILED;
       }
 
       // 7. 결제 완료 응답

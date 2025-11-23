@@ -1,4 +1,5 @@
 import { OrderStatus } from '../../domain/enums/order-status.enum';
+import { DataTransmissionStatus } from '../../domain/enums/data-transmission-status.enum';
 
 /**
  * 배송지 DTO
@@ -108,7 +109,7 @@ export interface ProcessPaymentResultDto {
   remainingBalance: number;
   status: OrderStatus;
   paidAt: string;
-  dataTransmissionStatus: 'SUCCESS' | 'FAILED' | 'PENDING';
+  dataTransmissionStatus: DataTransmissionStatus;
 }
 
 /**
@@ -135,7 +136,7 @@ export interface CompleteOrderResultDto {
  */
 export interface DataTransmissionResultDto {
   orderId: number;
-  transmissionStatus: 'SUCCESS' | 'FAILED';
+  transmissionStatus: DataTransmissionStatus;
   transmittedAt: string;
   failureReason?: string;
 }

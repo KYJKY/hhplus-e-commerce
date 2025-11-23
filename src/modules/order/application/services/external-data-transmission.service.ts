@@ -5,6 +5,7 @@ import {
   ExternalApiErrorException,
 } from '../../domain/exceptions/order.exception';
 import { DataTransmissionResultDto } from '../dtos/order.dto';
+import { DataTransmissionStatus } from '../../domain/enums/data-transmission-status.enum';
 
 /**
  * FR-O-008: 외부 데이터 전송 (내부 API)
@@ -49,7 +50,7 @@ export class ExternalDataTransmissionService {
 
         return {
           orderId,
-          transmissionStatus: 'SUCCESS',
+          transmissionStatus: DataTransmissionStatus.SUCCESS,
           transmittedAt: new Date().toISOString(),
         };
       } catch (error) {
@@ -71,7 +72,7 @@ export class ExternalDataTransmissionService {
 
     return {
       orderId,
-      transmissionStatus: 'FAILED',
+      transmissionStatus: DataTransmissionStatus.FAILED,
       transmittedAt: new Date().toISOString(),
       failureReason: lastError?.message ?? 'Unknown error',
     };

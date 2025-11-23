@@ -147,3 +147,16 @@ export class InvalidAddressException extends UserDomainException {
     super('U011', message || 'Invalid address', HttpStatus.BAD_REQUEST);
   }
 }
+
+/**
+ * U012: 잔액 부족
+ */
+export class InsufficientBalanceException extends UserDomainException {
+  constructor(userId: number, required: number, available: number) {
+    super(
+      'U012',
+      `Insufficient balance for user ${userId}. Required: ${required}, Available: ${available}`,
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+}
