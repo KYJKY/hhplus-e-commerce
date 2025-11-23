@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrderController } from './presentation/order.controller';
 import { PrismaOrderRepository } from './infrastructure/repositories/prisma-order.repository';
+import { OrderDomainService } from './domain/services/order-domain.service';
 
 // Application Layer
 import { OrderMapper } from './application/mappers/order.mapper';
@@ -42,7 +43,10 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
       useClass: PrismaOrderRepository,
     },
 
-    // Services
+    // Domain Services
+    OrderDomainService,
+
+    // Application Services
     ExternalDataTransmissionService,
 
     // Mappers

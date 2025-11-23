@@ -1,10 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common';
-import type { IOrderRepository } from '../../domain/repositories/order.repository.interface';
+import { Injectable } from '@nestjs/common';
 import { OrderStatus } from '../../domain/enums/order-status.enum';
 import {
-  OrderNotFoundException,
-  OrderAccessDeniedException,
-  InvalidOrderStatusException,
   InsufficientBalanceException,
   PaymentFailedException,
 } from '../../domain/exceptions/order.exception';
@@ -16,6 +12,7 @@ import { InventoryDomainService } from '../../../product/domain/services/invento
 import { CouponDomainService } from '../../../coupon/domain/services/coupon-domain.service';
 import { CartDomainService } from '../../../cart/domain/services/cart-domain.service';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
+import { OrderDomainService } from '../../domain/services/order-domain.service';
 
 /**
  * FR-O-005: 주문 결제 처리
@@ -35,8 +32,7 @@ import { PrismaService } from '../../../../common/prisma/prisma.service';
 @Injectable()
 export class ProcessOrderPaymentUseCase {
   constructor(
-    @Inject('IOrderRepository')
-    private readonly orderRepository: IOrderRepository,
+    private readonly orderDomainService: OrderDomainService,
     private readonly externalDataTransmissionService: ExternalDataTransmissionService,
     private readonly userDomainService: UserDomainService,
     private readonly paymentDomainService: PaymentDomainService,
@@ -51,24 +47,13 @@ export class ProcessOrderPaymentUseCase {
     orderId: number,
   ): Promise<ProcessPaymentResultDto> {
     // 1. 주문 조회
-    const order = await this.orderRepository.findById(orderId);
-    if (!order) {
-      throw new OrderNotFoundException(orderId);
-    }
+    const order = await this.orderDomainService.findOrderById(orderId);
 
     // 2. 소유권 검증
-    if (!order.isOwnedBy(userId)) {
-      throw new OrderAccessDeniedException(orderId, userId);
-    }
+    order.validateOwnership(userId);
 
     // 3. 주문 상태 검증 (PENDING만 결제 가능)
-    if (!order.canPay()) {
-      throw new InvalidOrderStatusException(
-        orderId,
-        order.status,
-        OrderStatus.PENDING,
-      );
-    }
+    order.validateCanPay();
 
     // 4. 사용자 조회 및 잔액 검증
     const user = await this.userDomainService.findUserById(userId);
@@ -125,7 +110,7 @@ export class ProcessOrderPaymentUseCase {
 
         // 5-5. 주문 상태 변경 (PAID)
         order.changeStatus(OrderStatus.PAID);
-        await this.orderRepository.save(order);
+        await this.orderDomainService.saveOrder(order);
 
         // 5-6. 장바구니 항목 삭제
         // 주문 항목과 일치하는 장바구니 항목 삭제
