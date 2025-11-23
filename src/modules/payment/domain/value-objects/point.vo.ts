@@ -191,6 +191,18 @@ export class Point extends ValueObject<PointProps> {
   }
 
   /**
+   * 잔액 충분 여부 검증
+   * 도메인 예외를 직접 던짐
+   * @param requiredAmount - 필요한 금액
+   * @throws InsufficientBalanceException 잔액 부족 시
+   */
+  validateSufficiency(requiredAmount: number): void {
+    if (!this.hasSufficientBalance(requiredAmount)) {
+      throw new InsufficientBalanceException(this.props.amount, requiredAmount);
+    }
+  }
+
+  /**
    * 0 포인트 여부 확인
    */
   isZero(): boolean {
