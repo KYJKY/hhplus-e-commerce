@@ -77,22 +77,29 @@ export class TestDatabaseHelper {
     await this.prisma.$executeRaw`SET FOREIGN_KEY_CHECKS = 0`;
 
     // 존재하는 테이블만 삭제 시도
-    try {
-      await this.prisma.$executeRaw`TRUNCATE TABLE user_coupons`;
-    } catch (e) {
-      // 테이블이 없으면 무시
-    }
+    // 자식 테이블부터 삭제 (외래키 제약 고려)
+    const tables = [
+      'order_items',
+      'cart_items',
+      'product_options',
+      'product_categories',
+      'user_coupons',
+      'data_transmissions',
+      'payments',
+      'point_transactions',
+      'orders',
+      'products',
+      'categories',
+      'coupons',
+      'users',
+    ];
 
-    try {
-      await this.prisma.$executeRaw`TRUNCATE TABLE coupons`;
-    } catch (e) {
-      // 테이블이 없으면 무시
-    }
-
-    try {
-      await this.prisma.$executeRaw`TRUNCATE TABLE users`;
-    } catch (e) {
-      // 테이블이 없으면 무시
+    for (const table of tables) {
+      try {
+        await this.prisma.$executeRawUnsafe(`TRUNCATE TABLE ${table}`);
+      } catch (e) {
+        // 테이블이 없으면 무시
+      }
     }
 
     await this.prisma.$executeRaw`SET FOREIGN_KEY_CHECKS = 1`;
