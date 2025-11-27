@@ -1,4 +1,5 @@
 services:
+  # MySQL
   mysql:
     image: mysql:8.0
     container_name: hhplus-ecommerce-mysql
@@ -30,9 +31,147 @@ services:
     networks:
       - ecommerce-network
 
+  # Redis Cluster Nodes (1~6)
+  redis-node-1:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis-node-1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 7000
+    ports:
+      - "7000:7000"
+      - "17000:17000" # Cluster Bus Port
+    volumes:
+      - ./docker/redis/redis-node.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-1-data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7000", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-node-2:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis-node-2
+    command: redis-server /usr/local/etc/redis/redis.conf --port 7001
+    ports:
+      - "7001:7001"
+      - "17001:17001"
+    volumes:
+      - ./docker/redis/redis-node.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-2-data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7001", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-node-3:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis-node-3
+    command: redis-server /usr/local/etc/redis/redis.conf --port 7002
+    ports:
+      - "7002:7002"
+      - "17002:17002"
+    volumes:
+      - ./docker/redis/redis-node.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-3-data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7002", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-node-4:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis-node-4
+    command: redis-server /usr/local/etc/redis/redis.conf --port 7003
+    ports:
+      - "7003:7003"
+      - "17003:17003"
+    volumes:
+      - ./docker/redis/redis-node.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-4-data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7003", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-node-5:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis-node-5
+    command: redis-server /usr/local/etc/redis/redis.conf --port 7004
+    ports:
+      - "7004:7004"
+      - "17004:17004"
+    volumes:
+      - ./docker/redis/redis-node.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-5-data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7004", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-node-6:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis-node-6
+    command: redis-server /usr/local/etc/redis/redis.conf --port 7005
+    ports:
+      - "7005:7005"
+      - "17005:17005"
+    volumes:
+      - ./docker/redis/redis-node.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-6-data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "7005", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Cluster 초기화
+  redis-cluster-init:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis-cluster-init
+    depends_on:
+      redis-node-1:
+        condition: service_healthy
+      redis-node-2:
+        condition: service_healthy
+      redis-node-3:
+        condition: service_healthy
+      redis-node-4:
+        condition: service_healthy
+      redis-node-5:
+        condition: service_healthy
+      redis-node-6:
+        condition: service_healthy
+    command: sh -c "/scripts/init-cluster.sh"
+    volumes:
+      - ./docker/redis/init-cluster.sh:/scripts/init-cluster.sh
+    networks:
+      - ecommerce-network
+
 volumes:
   mysql_data:
     driver: local
+  redis-node-1-data:
+  redis-node-2-data:
+  redis-node-3-data:
+  redis-node-4-data:
+  redis-node-5-data:
+  redis-node-6-data:
 
 networks:
   ecommerce-network:
