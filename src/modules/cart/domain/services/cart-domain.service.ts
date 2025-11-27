@@ -213,12 +213,13 @@ export class CartDomainService {
 
     // 2. 주문 항목과 일치하는 장바구니 항목 찾기
     const cartItemIds = orderItems
-      .map((orderItem) =>
-        cartItems.find(
-          (ci) =>
-            ci.productOptionId === orderItem.productOptionId &&
-            ci.quantity === orderItem.quantity,
-        )?.id,
+      .map(
+        (orderItem) =>
+          cartItems.find(
+            (ci) =>
+              ci.productOptionId === orderItem.productOptionId &&
+              ci.quantity === orderItem.quantity,
+          )?.id,
       )
       .filter((id): id is number => id !== undefined);
 

@@ -208,6 +208,40 @@ export class InMemoryProductOptionRepository
   }
 
   /**
+   * 재고 차감 (복수 상품 - Bulk)
+   */
+  async deductStocksBulk(
+    items: Array<{ optionId: number; quantity: number }>,
+    orderId: number,
+  ): Promise<
+    Array<{
+      optionId: number;
+      previousStock: number;
+      deductedQuantity: number;
+      currentStock: number;
+    }>
+  > {
+    const results: Array<{
+      optionId: number;
+      previousStock: number;
+      deductedQuantity: number;
+      currentStock: number;
+    }> = [];
+
+    // 각 아이템에 대해 순차적으로 재고 차감
+    for (const item of items) {
+      const result = await this.deductStock(
+        item.optionId,
+        item.quantity,
+        orderId,
+      );
+      results.push(result);
+    }
+
+    return results;
+  }
+
+  /**
    * 재고 복원
    */
   async restoreStock(

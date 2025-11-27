@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { IProductOptionRepository } from '../../domain/repositories/product-option.repository.interface';
 import { ProductOption } from '../../domain/entities/product-option.entity';
 import { PrismaService } from 'src/common/prisma';
@@ -153,36 +154,122 @@ export class PrismaProductOptionRepository implements IProductOptionRepository {
     deductedQuantity: number;
     currentStock: number;
   }> {
-    const option = await this.prisma.product_options.findUnique({
-      where: { id: BigInt(optionId) },
-    });
+    // Atomic Conditional Update: 재고 확인과 차감을 하나의 원자적 연산으로 처리
+    // 재고가 충분한 경우에만 UPDATE가 실행됨 (Race Condition 방지)
+    const result = await this.prisma.$executeRaw`
+      UPDATE product_options
+      SET stock_quantity = stock_quantity - ${quantity},
+          updated_at = NOW()
+      WHERE id = ${BigInt(optionId)}
+        AND stock_quantity >= ${quantity}
+    `;
 
-    if (!option) {
-      throw new Error(`ProductOption with ID ${optionId} not found`);
-    }
+    // 업데이트된 행이 없으면 실패 (옵션이 없거나 재고 부족)
+    if (result === 0) {
+      // 실패 원인 확인: 옵션이 없는지, 재고가 부족한지 판별
+      const option = await this.prisma.product_options.findUnique({
+        where: { id: BigInt(optionId) },
+      });
 
-    const previousStock = option.stock_quantity;
+      if (!option) {
+        throw new Error(`ProductOption with ID ${optionId} not found`);
+      }
 
-    if (previousStock < quantity) {
       throw new Error(
-        `Insufficient stock for option ${optionId}. Available: ${previousStock}, Requested: ${quantity}`,
+        `Insufficient stock for option ${optionId}. Available: ${option.stock_quantity}, Requested: ${quantity}`,
       );
     }
 
-    const updated = await this.prisma.product_options.update({
+    // 업데이트된 옵션 조회
+    const updated = await this.prisma.product_options.findUnique({
       where: { id: BigInt(optionId) },
-      data: {
-        stock_quantity: { decrement: quantity },
-        updated_at: new Date(),
-      },
     });
+
+    if (!updated) {
+      throw new Error(`ProductOption with ID ${optionId} not found after update`);
+    }
 
     return {
       optionId,
-      previousStock,
+      previousStock: updated.stock_quantity + quantity,
       deductedQuantity: quantity,
       currentStock: updated.stock_quantity,
     };
+  }
+
+  /**
+   * 여러 상품 옵션의 재고를 한 번에 차감 (Atomic Conditional Update)
+   * 각 옵션별로 원자적 업데이트를 수행하여 Race Condition 방지
+   *
+   * @param items - 차감할 상품 옵션 목록 [{ optionId, quantity }]
+   * @param orderId - 주문 ID
+   * @returns 각 옵션별 차감 결과
+   */
+  async deductStocksBulk(
+    items: Array<{ optionId: number; quantity: number }>,
+    orderId: number,
+  ): Promise<
+    Array<{
+      optionId: number;
+      previousStock: number;
+      deductedQuantity: number;
+      currentStock: number;
+    }>
+  > {
+    const results: Array<{
+      optionId: number;
+      previousStock: number;
+      deductedQuantity: number;
+      currentStock: number;
+    }> = [];
+
+    // 각 옵션별로 Atomic Conditional Update 수행
+    for (const item of items) {
+      // 재고 확인과 차감을 하나의 원자적 연산으로 처리
+      const updateResult = await this.prisma.$executeRaw`
+        UPDATE product_options
+        SET stock_quantity = stock_quantity - ${item.quantity},
+            updated_at = NOW()
+        WHERE id = ${BigInt(item.optionId)}
+          AND stock_quantity >= ${item.quantity}
+      `;
+
+      // 업데이트된 행이 없으면 실패 (옵션이 없거나 재고 부족)
+      if (updateResult === 0) {
+        // 실패 원인 확인
+        const option = await this.prisma.product_options.findUnique({
+          where: { id: BigInt(item.optionId) },
+        });
+
+        if (!option) {
+          throw new Error(`ProductOption with ID ${item.optionId} not found`);
+        }
+
+        throw new Error(
+          `Insufficient stock for option ${item.optionId}. Available: ${option.stock_quantity}, Requested: ${item.quantity}`,
+        );
+      }
+
+      // 업데이트된 옵션 조회
+      const updated = await this.prisma.product_options.findUnique({
+        where: { id: BigInt(item.optionId) },
+      });
+
+      if (!updated) {
+        throw new Error(
+          `ProductOption with ID ${item.optionId} not found after update`,
+        );
+      }
+
+      results.push({
+        optionId: item.optionId,
+        previousStock: updated.stock_quantity + item.quantity,
+        deductedQuantity: item.quantity,
+        currentStock: updated.stock_quantity,
+      });
+    }
+
+    return results;
   }
 
   async restoreStock(

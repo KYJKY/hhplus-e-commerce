@@ -105,7 +105,12 @@ export class InventoryDomainService {
 
   /**
    * 여러 재고를 한 번에 차감 (주문 결제 시 사용)
-   * 병렬 처리로 성능 개선
+   * Bulk FOR UPDATE로 원자성 및 Deadlock 방지 보장
+   *
+   * 개선 사항:
+   * - Promise.all 병렬 처리 제거 → Bulk 처리
+   * - 모든 상품을 한 번에 잠금 (정렬된 순서)
+   * - Deadlock 방지 및 Race Condition 완전 해결
    */
   async deductStocks(
     items: Array<{ optionId: number; quantity: number }>,
@@ -118,14 +123,16 @@ export class InventoryDomainService {
       currentStock: number;
     }>
   > {
-    // Promise.all로 병렬 처리
-    // 각 optionId는 독립적이므로 병렬 처리 안전
-    // 한 건이라도 실패하면 전체 롤백 (트랜잭션 내에서 실행)
-    return await Promise.all(
-      items.map((item) =>
-        this.deductStock(item.optionId, item.quantity, orderId),
-      ),
-    );
+    // 수량 검증
+    for (const item of items) {
+      if (item.quantity <= 0) {
+        throw new InvalidQuantityException(item.quantity);
+      }
+    }
+
+    // Repository의 Bulk 메서드 호출
+    // 내부적으로 모든 행을 한 번에 FOR UPDATE로 잠금
+    return await this.productOptionRepository.deductStocksBulk(items, orderId);
   }
 
   /**
