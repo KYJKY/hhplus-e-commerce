@@ -4,6 +4,7 @@ import { CouponTestFixture } from './helpers/coupon-test.fixture';
 import { PrismaCouponRepository } from '../src/modules/coupon/infrastructure/repositories/prisma-coupon.repository';
 import { PrismaUserCouponRepository } from '../src/modules/coupon/infrastructure/repositories/prisma-user-coupon.repository';
 import { CouponDomainService } from '../src/modules/coupon/domain/services/coupon-domain.service';
+import { DistributedLockService } from '../src/common/redis/distributed-lock.service';
 
 /**
  * 쿠폰 발급 동시성 테스트
@@ -15,7 +16,9 @@ import { CouponDomainService } from '../src/modules/coupon/domain/services/coupo
  *
  * 테스트 환경:
  * - TestContainer 기반 실제 MySQL 8.0 환경
+ * - TestContainer 기반 실제 Redis 7 환경
  * - Mock 없이 실제 Prisma + Repository 사용
+ * - 실제 Redis 분산락 사용 (Redlock 알고리즘)
  */
 describe('Coupon Issuance Concurrency (e2e)', () => {
   let prisma: PrismaClient;
@@ -23,9 +26,10 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
   let couponRepository: PrismaCouponRepository;
   let userCouponRepository: PrismaUserCouponRepository;
   let couponDomainService: CouponDomainService;
+  let distributedLockService: DistributedLockService;
 
   beforeAll(async () => {
-    // TestContainer 기반 MySQL 시작
+    // TestContainer 기반 MySQL + Redis 시작
     prisma = await TestDatabaseHelper.setup();
     fixture = new CouponTestFixture(prisma);
 
@@ -39,15 +43,41 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
       client: prisma,
     } as any;
 
+    // Redis 연결 정보 가져오기
+    const redisConfig = TestDatabaseHelper.getRedisConfig();
+
+    // ConfigService 모킹 (Redis 연결 정보 포함)
+    const configService = {
+      get: (key: string, defaultValue?: any) => {
+        if (key === 'REDIS_HOST') {
+          return redisConfig.host;
+        }
+        if (key === 'REDIS_PORT') {
+          return redisConfig.port;
+        }
+        return defaultValue;
+      },
+    } as any;
+
+    // 실제 DistributedLockService 인스턴스화
+    distributedLockService = new DistributedLockService(configService);
+
     // Domain Service 직접 인스턴스화
     couponDomainService = new CouponDomainService(
       couponRepository,
       userCouponRepository,
       prismaService,
+      distributedLockService,
     );
   }, 60000); // 타임아웃 60초
 
   afterAll(async () => {
+    // DistributedLockService 정리
+    if (distributedLockService) {
+      await distributedLockService.onModuleDestroy();
+    }
+
+    // TestContainer 정리
     await TestDatabaseHelper.teardown();
   });
 
@@ -158,7 +188,7 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
       // Given: 발급 한도 100개 중 95개 이미 발급된 쿠폰
       const coupon = await fixture.createCoupon({
         couponName: '거의 마감 쿠폰',
-        couponCode: 'ALMOST_FULL',
+        couponCode: 'ALMOSTFULL',
         issueLimit: 100,
         issuedCount: 95,
       });
@@ -229,7 +259,7 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
       // Given: 발급 한도 100개인 쿠폰과 1명의 사용자
       const coupon = await fixture.createCoupon({
         couponName: '중복 방지 쿠폰',
-        couponCode: 'NO_DUPLICATE',
+        couponCode: 'NODUPLICATE',
         issueLimit: 100,
         issuedCount: 0,
       });
@@ -274,7 +304,7 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
       // Given: 쿠폰과 50명의 사용자
       const coupon = await fixture.createCoupon({
         couponName: '사용자별 1개 제한',
-        couponCode: 'ONE_PER_USER',
+        couponCode: 'ONEPERUSER',
         issueLimit: 100,
         issuedCount: 0,
       });
@@ -328,7 +358,7 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
       // Given: 쿠폰과 사용자들
       const coupon = await fixture.createCoupon({
         couponName: '데이터 정합성 검증',
-        couponCode: 'DATA_CONSISTENCY',
+        couponCode: 'DATACONSISTENCY',
         issueLimit: 50,
         issuedCount: 0,
       });
@@ -368,7 +398,7 @@ describe('Coupon Issuance Concurrency (e2e)', () => {
       // Given: 한도 20개 쿠폰과 30명의 사용자
       const coupon = await fixture.createCoupon({
         couponName: '부분 실패 검증',
-        couponCode: 'PARTIAL_FAILURE',
+        couponCode: 'PARTIALFAILURE',
         issueLimit: 20,
         issuedCount: 0,
       });
