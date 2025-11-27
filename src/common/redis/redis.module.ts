@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import { RedisService } from './redis.service';
+import { CacheService } from './cache.service';
 
 @Global()
 @Module({
@@ -37,7 +38,7 @@ import { RedisService } from './redis.service';
       },
     }),
   ],
-  providers: [RedisService],
-  exports: [RedisService, CacheModule],
+  providers: [RedisService, CacheService],
+  exports: [RedisService, CacheService, CacheModule],
 })
 export class RedisModule {}
