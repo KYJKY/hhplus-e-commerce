@@ -36,33 +36,6 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   LOG_LEVEL: string = 'info';
-
-  @IsString()
-  REDIS_CLUSTER_NODES: string;
-
-  @IsString()
-  @IsOptional()
-  REDIS_PASSWORD?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform(({ value }) => value === 'true')
-  REDIS_ENABLE_READY_CHECK?: boolean = true;
-
-  @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
-  CACHE_TTL_PRODUCT?: number = 300;
-
-  @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
-  CACHE_TTL_POPULAR_PRODUCTS?: number = 60;
-
-  @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
-  CACHE_TTL_USER?: number = 180;
 }
 
 /**

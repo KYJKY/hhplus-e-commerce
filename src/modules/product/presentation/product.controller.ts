@@ -6,7 +6,6 @@ import {
   Query,
   Body,
   ParseIntPipe,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import {
@@ -37,7 +36,6 @@ import {
   GetCategoriesResponse,
   GetCategoryProductCountResponse,
 } from './dto';
-import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 
 @ApiTags('Product')
 @Controller('products')
@@ -208,8 +206,6 @@ export class ProductController {
    * FR-P-008: 인기 상품 조회 (Top 5)
    */
   @Get('popular/top5')
-  @UseInterceptors(CacheInterceptor)
-  @CacheTTL(30 * 60 * 1000) // 30분
   @ApiOperation({ summary: '인기 상품 조회 (Top 5)' })
   @ApiResponse({
     status: 200,
@@ -224,8 +220,6 @@ export class ProductController {
    * FR-P-009: 카테고리 목록 조회
    */
   @Get('categories/list')
-  @UseInterceptors(CacheInterceptor)
-  @CacheTTL(60 * 60 * 1000) // 1시간
   @ApiOperation({ summary: '카테고리 목록 조회' })
   @ApiResponse({
     status: 200,
@@ -240,8 +234,6 @@ export class ProductController {
    * FR-P-010: 카테고리별 상품 수 조회
    */
   @Get('categories/:categoryId/product-count')
-  @UseInterceptors(CacheInterceptor)
-  @CacheTTL(5 * 60 * 1000) // 5분
   @ApiOperation({ summary: '카테고리별 상품 수 조회' })
   @ApiParam({ name: 'categoryId', description: '카테고리 ID', example: 1 })
   @ApiResponse({
