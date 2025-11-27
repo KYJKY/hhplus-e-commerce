@@ -52,6 +52,8 @@ export class CouponTestFixture {
     isActive?: boolean;
   }) {
     const now = new Date();
+    // Set valid_from to 1 hour ago to avoid timing issues with millisecond precision
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const oneMonthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     return await this.prisma.coupons.create({
@@ -64,7 +66,7 @@ export class CouponTestFixture {
         min_order_amount: data?.minOrderAmount ?? 50000,
         issue_limit: data?.issueLimit ?? 100,
         issued_count: data?.issuedCount ?? 0,
-        valid_from: data?.validFrom ?? now,
+        valid_from: data?.validFrom ?? oneHourAgo,
         valid_until: data?.validUntil ?? oneMonthLater,
         is_active: data?.isActive ?? true,
         created_at: now,

@@ -10,6 +10,7 @@ import {
   OptionNotBelongToProductException,
   CategoryNotFoundException,
 } from '../exceptions';
+import { CacheService } from 'src/common/redis';
 
 /**
  * Product Query Service
@@ -20,6 +21,8 @@ import {
  */
 @Injectable()
 export class ProductQueryService {
+  private readonly CACHE_TTL = 30 * 60 * 1000; // 30분
+
   constructor(
     @Inject('IProductRepository')
     private readonly productRepository: IProductRepository,
@@ -29,6 +32,7 @@ export class ProductQueryService {
     private readonly categoryRepository: ICategoryRepository,
     @Inject('IProductCategoryRepository')
     private readonly productCategoryRepository: IProductCategoryRepository,
+    private readonly cacheService: CacheService,
   ) {}
 
   /**
@@ -125,6 +129,8 @@ export class ProductQueryService {
 
   /**
    * FR-P-002: 상품 상세 조회
+   * 캐시 키: product:detail:{productId}
+   * Update 시 삭제할 키: product:detail:{productId}
    */
   async getProductDetail(productId: number): Promise<{
     productId: number;
@@ -144,57 +150,70 @@ export class ProductQueryService {
     }>;
     createdAt: string;
   }> {
-    const product = await this.productRepository.findById(productId);
-    if (!product) {
-      throw new ProductNotFoundException(productId);
-    }
+    const cacheKey = this.cacheService.buildKey('product', 'detail', productId);
 
-    if (product.isDeleted()) {
-      throw new ProductDeletedException(productId);
-    }
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const product = await this.productRepository.findById(productId);
+        if (!product) {
+          throw new ProductNotFoundException(productId);
+        }
 
-    // 조회수 증가
-    await this.productRepository.incrementViewCount(productId);
+        if (product.isDeleted()) {
+          throw new ProductDeletedException(productId);
+        }
 
-    // 옵션 조회
-    const options =
-      await this.productOptionRepository.findByProductId(productId);
+        // 조회수 증가
+        await this.productRepository.incrementViewCount(productId);
 
-    // 카테고리 조회
-    const categoryIds =
-      await this.productCategoryRepository.findCategoriesByProductId(productId);
-    const categories = await Promise.all(
-      categoryIds.map(async (categoryId) => {
-        const category = await this.categoryRepository.findById(categoryId);
+        // 옵션 조회
+        const options =
+          await this.productOptionRepository.findByProductId(productId);
+
+        // 카테고리 조회
+        const categoryIds =
+          await this.productCategoryRepository.findCategoriesByProductId(
+            productId,
+          );
+        const categories = await Promise.all(
+          categoryIds.map(async (categoryId) => {
+            const category =
+              await this.categoryRepository.findById(categoryId);
+            return {
+              categoryId,
+              categoryName: category?.categoryName ?? '',
+            };
+          }),
+        );
+
         return {
-          categoryId,
-          categoryName: category?.categoryName ?? '',
+          productId: product.id,
+          productName: product.productName,
+          productDescription: product.productDescription,
+          thumbnailUrl: product.thumbnailUrl,
+          isActive: product.isActive,
+          viewCount: product.viewCount + 1, // 증가된 조회수
+          categories,
+          options: options.map((opt) => ({
+            optionId: opt.id,
+            optionName: opt.optionName,
+            optionDescription: opt.optionDescription,
+            price: opt.priceAmount,
+            stockQuantity: opt.stockQuantity,
+            isAvailable: opt.isAvailable,
+          })),
+          createdAt: product.createdAt,
         };
-      }),
+      },
+      this.CACHE_TTL,
     );
-
-    return {
-      productId: product.id,
-      productName: product.productName,
-      productDescription: product.productDescription,
-      thumbnailUrl: product.thumbnailUrl,
-      isActive: product.isActive,
-      viewCount: product.viewCount + 1, // 증가된 조회수
-      categories,
-      options: options.map((opt) => ({
-        optionId: opt.id,
-        optionName: opt.optionName,
-        optionDescription: opt.optionDescription,
-        price: opt.priceAmount,
-        stockQuantity: opt.stockQuantity,
-        isAvailable: opt.isAvailable,
-      })),
-      createdAt: product.createdAt,
-    };
   }
 
   /**
    * FR-P-003: 상품 옵션 조회
+   * 캐시 키: product:options:{productId}
+   * Update 시 삭제할 키: product:options:{productId}, product:detail:{productId}
    */
   async getProductOptions(productId: number): Promise<{
     productId: number;
@@ -208,30 +227,40 @@ export class ProductQueryService {
       isAvailable: boolean;
     }>;
   }> {
-    const product = await this.productRepository.findById(productId);
-    if (!product) {
-      throw new ProductNotFoundException(productId);
-    }
+    const cacheKey = this.cacheService.buildKey('product', 'options', productId);
 
-    const options =
-      await this.productOptionRepository.findByProductId(productId);
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const product = await this.productRepository.findById(productId);
+        if (!product) {
+          throw new ProductNotFoundException(productId);
+        }
 
-    return {
-      productId: product.id,
-      productName: product.productName,
-      options: options.map((opt) => ({
-        optionId: opt.id,
-        optionName: opt.optionName,
-        optionDescription: opt.optionDescription,
-        price: opt.priceAmount,
-        stockQuantity: opt.stockQuantity,
-        isAvailable: opt.isAvailable,
-      })),
-    };
+        const options =
+          await this.productOptionRepository.findByProductId(productId);
+
+        return {
+          productId: product.id,
+          productName: product.productName,
+          options: options.map((opt) => ({
+            optionId: opt.id,
+            optionName: opt.optionName,
+            optionDescription: opt.optionDescription,
+            price: opt.priceAmount,
+            stockQuantity: opt.stockQuantity,
+            isAvailable: opt.isAvailable,
+          })),
+        };
+      },
+      this.CACHE_TTL,
+    );
   }
 
   /**
    * FR-P-004: 상품 옵션 상세 조회
+   * 캐시 키: product:option:detail:{productId}:{optionId}
+   * Update 시 삭제할 키: product:option:detail:{productId}:{optionId}, product:options:{productId}, product:detail:{productId}
    */
   async getProductOptionDetail(
     productId: number,
@@ -246,30 +275,44 @@ export class ProductQueryService {
     stockQuantity: number;
     isAvailable: boolean;
   }> {
-    const product = await this.productRepository.findById(productId);
-    if (!product) {
-      throw new ProductNotFoundException(productId);
-    }
+    const cacheKey = this.cacheService.buildKey(
+      'product',
+      'option',
+      'detail',
+      productId,
+      optionId,
+    );
 
-    const option = await this.productOptionRepository.findById(optionId);
-    if (!option) {
-      throw new OptionNotFoundException(optionId);
-    }
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const product = await this.productRepository.findById(productId);
+        if (!product) {
+          throw new ProductNotFoundException(productId);
+        }
 
-    if (option.productId !== productId) {
-      throw new OptionNotBelongToProductException(optionId, productId);
-    }
+        const option = await this.productOptionRepository.findById(optionId);
+        if (!option) {
+          throw new OptionNotFoundException(optionId);
+        }
 
-    return {
-      optionId: option.id,
-      productId: product.id,
-      productName: product.productName,
-      optionName: option.optionName,
-      optionDescription: option.optionDescription,
-      price: option.priceAmount,
-      stockQuantity: option.stockQuantity,
-      isAvailable: option.isAvailable,
-    };
+        if (option.productId !== productId) {
+          throw new OptionNotBelongToProductException(optionId, productId);
+        }
+
+        return {
+          optionId: option.id,
+          productId: product.id,
+          productName: product.productName,
+          optionName: option.optionName,
+          optionDescription: option.optionDescription,
+          price: option.priceAmount,
+          stockQuantity: option.stockQuantity,
+          isAvailable: option.isAvailable,
+        };
+      },
+      this.CACHE_TTL,
+    );
   }
 
   /**

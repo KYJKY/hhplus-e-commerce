@@ -1,7 +1,11 @@
 import { OrderStatus, OrderStatusTransition } from '../enums/order-status.enum';
 import { ShippingAddress } from '../value-objects/shipping-address.vo';
 import { OrderItem } from './order-item.entity';
-import { InvalidStatusTransitionException } from '../exceptions/order.exception';
+import {
+  InvalidStatusTransitionException,
+  InvalidOrderStatusException,
+  OrderAccessDeniedException,
+} from '../exceptions/order.exception';
 
 /**
  * 주문 Entity
@@ -250,5 +254,29 @@ export class Order {
    */
   isOwnedBy(userId: number): boolean {
     return this._userId === userId;
+  }
+
+  /**
+   * 결제 가능 여부 검증 (예외 발생)
+   * - 이미 있는 canPay()는 boolean 반환
+   * - 이 메서드는 검증 실패 시 예외 발생
+   */
+  validateCanPay(): void {
+    if (!this.canPay()) {
+      throw new InvalidOrderStatusException(
+        this._id,
+        this._status,
+        OrderStatus.PENDING,
+      );
+    }
+  }
+
+  /**
+   * 주문 소유권 검증 (예외 발생)
+   */
+  validateOwnership(userId: number): void {
+    if (!this.isOwnedBy(userId)) {
+      throw new OrderAccessDeniedException(this._id, userId);
+    }
   }
 }

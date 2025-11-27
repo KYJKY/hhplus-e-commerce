@@ -157,6 +157,10 @@ export class PrismaUserRepository implements IUserRepository {
         ? new Date(updates.deletedAt)
         : null;
     }
+    // Point 필드 업데이트 추가 (포인트 차감/충전 시 필수)
+    if ('getPoint' in updates && typeof updates.getPoint === 'function') {
+      updateData.point = updates.getPoint();
+    }
 
     updateData.updated_at = new Date();
 

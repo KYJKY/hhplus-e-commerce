@@ -4,6 +4,8 @@ import { UserCoupon, UserCouponStatus } from '../entities/user-coupon.entity';
 import type { ICouponRepository } from '../repositories/coupon.repository.interface';
 import type { IUserCouponRepository } from '../repositories/user-coupon.repository.interface';
 import { PrismaService } from 'src/common/prisma/prisma.service';
+import { DistributedLockService } from 'src/common/redis/distributed-lock.service';
+import { LOCK_KEY_PREFIX } from 'src/common/redis/distributed-lock.config';
 import {
   CouponNotFoundException,
   UserCouponNotFoundException,
@@ -42,6 +44,7 @@ export class CouponDomainService {
     @Inject('IUserCouponRepository')
     private readonly userCouponRepository: IUserCouponRepository,
     private readonly prisma: PrismaService,
+    private readonly distributedLockService: DistributedLockService,
   ) {}
 
   /**
@@ -120,6 +123,8 @@ export class CouponDomainService {
   /**
    * 쿠폰 발급 (비즈니스 규칙 검증 포함)
    * 트랜잭션을 통해 초과 발급 방지 및 데이터 정합성 보장
+   *
+   * Redis 분산 락을 사용하여 다중 서버 환경에서 동시성 제어
    */
   async issueCoupon(userId: number, couponId: number): Promise<UserCoupon> {
     // 1. 쿠폰 조회
@@ -151,7 +156,78 @@ export class CouponDomainService {
       throw new CouponIssueLimitExceededException(couponId);
     }
 
-    // 6-7. 트랜잭션 + 비관락: 발급 수량 증가 + 사용자 쿠폰 생성을 원자적으로 처리
+    // 6. 분산 락을 사용한 쿠폰 발급
+    return await this.issueCouponWithDistributedLock(userId, couponId);
+  }
+
+  /**
+   * 분산 락을 사용한 쿠폰 발급
+   */
+  private async issueCouponWithDistributedLock(
+    userId: number,
+    couponId: number,
+  ): Promise<UserCoupon> {
+    const lockKey = LOCK_KEY_PREFIX.COUPON_ISSUE.replace('{id}', String(couponId));
+
+    return await this.distributedLockService.executeWithLock(
+      lockKey,
+      async () => {
+        return await this.prisma.transaction(async (tx) => {
+          // 1. 쿠폰 조회 (FOR UPDATE 제거)
+          const [couponRow] = await tx.$queryRaw<
+            Array<{ id: bigint; issued_count: number; issue_limit: number }>
+          >`
+            SELECT id, issued_count, issue_limit
+            FROM coupons
+            WHERE id = ${BigInt(couponId)}
+          `;
+
+          if (!couponRow) {
+            throw new CouponNotFoundException(couponId);
+          }
+
+          // 2. 발급 한도 체크
+          if (couponRow.issued_count >= couponRow.issue_limit) {
+            throw new CouponIssueLimitExceededException(couponId);
+          }
+
+          // 3. 발급 카운트 증가
+          await tx.$executeRaw`
+            UPDATE coupons
+            SET issued_count = issued_count + 1, updated_at = NOW()
+            WHERE id = ${BigInt(couponId)}
+          `;
+
+          // 4. 사용자 쿠폰 생성
+          const userCouponRecord = await tx.user_coupons.create({
+            data: {
+              user_id: BigInt(userId),
+              coupon_id: BigInt(couponId),
+              status: 'UNUSED',
+              issued_at: new Date(),
+            },
+          });
+
+          // 엔티티로 변환하여 반환
+          return UserCoupon.create({
+            id: Number(userCouponRecord.id),
+            userId,
+            couponId,
+            status: UserCouponStatus.UNUSED,
+            issuedAt: userCouponRecord.issued_at.toISOString(),
+          });
+        });
+      },
+    );
+  }
+
+  /**
+   * 비관적 락을 사용한 쿠폰 발급 (기존 방식)
+   */
+  private async issueCouponWithPessimisticLock(
+    userId: number,
+    couponId: number,
+  ): Promise<UserCoupon> {
     return await this.prisma.transaction(async (tx) => {
       // 1. SELECT ... FOR UPDATE: 비관락으로 쿠폰 행 잠금
       const [couponRow] = await tx.$queryRaw<

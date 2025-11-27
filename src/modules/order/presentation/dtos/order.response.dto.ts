@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderStatus } from '../../domain/enums/order-status.enum';
+import { DataTransmissionStatus } from '../../domain/enums/data-transmission-status.enum';
 import {
   OrderDto,
   OrderItemDto,
@@ -152,8 +153,8 @@ export class ProcessPaymentResponseDto implements ProcessPaymentResultDto {
   @ApiProperty() remainingBalance: number;
   @ApiProperty({ enum: OrderStatus }) status: OrderStatus;
   @ApiProperty() paidAt: string;
-  @ApiProperty({ enum: ['SUCCESS', 'FAILED', 'PENDING'] })
-  dataTransmissionStatus: 'SUCCESS' | 'FAILED' | 'PENDING';
+  @ApiProperty({ enum: DataTransmissionStatus })
+  dataTransmissionStatus: DataTransmissionStatus;
 
   static from(dto: ProcessPaymentResultDto): ProcessPaymentResponseDto {
     const response = new ProcessPaymentResponseDto();

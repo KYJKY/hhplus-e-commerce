@@ -104,6 +104,38 @@ export class InventoryDomainService {
   }
 
   /**
+   * 여러 재고를 한 번에 차감 (주문 결제 시 사용)
+   * Bulk FOR UPDATE로 원자성 및 Deadlock 방지 보장
+   *
+   * 개선 사항:
+   * - Promise.all 병렬 처리 제거 → Bulk 처리
+   * - 모든 상품을 한 번에 잠금 (정렬된 순서)
+   * - Deadlock 방지 및 Race Condition 완전 해결
+   */
+  async deductStocks(
+    items: Array<{ optionId: number; quantity: number }>,
+    orderId: number,
+  ): Promise<
+    Array<{
+      optionId: number;
+      previousStock: number;
+      deductedQuantity: number;
+      currentStock: number;
+    }>
+  > {
+    // 수량 검증
+    for (const item of items) {
+      if (item.quantity <= 0) {
+        throw new InvalidQuantityException(item.quantity);
+      }
+    }
+
+    // Repository의 Bulk 메서드 호출
+    // 내부적으로 모든 행을 한 번에 FOR UPDATE로 잠금
+    return await this.productOptionRepository.deductStocksBulk(items, orderId);
+  }
+
+  /**
    * FR-P-007: 재고 복원 (내부 API)
    * StockQuantity VO를 활용한 재고 관리
    */

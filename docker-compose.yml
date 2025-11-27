@@ -1,4 +1,5 @@
 services:
+  # MySQL
   mysql:
     image: mysql:8.0
     container_name: hhplus-ecommerce-mysql
@@ -30,8 +31,28 @@ services:
     networks:
       - ecommerce-network
 
+  # Redis (단일 노드)
+  redis:
+    image: redis:7.2-alpine
+    container_name: hhplus-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
 volumes:
   mysql_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

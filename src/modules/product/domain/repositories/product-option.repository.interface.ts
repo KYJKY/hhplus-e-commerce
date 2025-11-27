@@ -11,7 +11,7 @@ export interface IProductOptionRepository extends IRepository<ProductOption> {
   findByProductId(productId: number): Promise<ProductOption[]>;
 
   /**
-   * 재고 차감
+   * 재고 차감 (단일 상품)
    */
   deductStock(
     optionId: number,
@@ -23,6 +23,22 @@ export interface IProductOptionRepository extends IRepository<ProductOption> {
     deductedQuantity: number;
     currentStock: number;
   }>;
+
+  /**
+   * 재고 차감 (복수 상품 - Bulk)
+   * Deadlock 방지 및 원자성 보장
+   */
+  deductStocksBulk(
+    items: Array<{ optionId: number; quantity: number }>,
+    orderId: number,
+  ): Promise<
+    Array<{
+      optionId: number;
+      previousStock: number;
+      deductedQuantity: number;
+      currentStock: number;
+    }>
+  >;
 
   /**
    * 재고 복원

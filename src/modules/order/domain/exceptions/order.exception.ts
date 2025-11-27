@@ -193,25 +193,12 @@ export class InvalidStatusTransitionException extends OrderDomainException {
 }
 
 /**
- * O017: INSUFFICIENT_BALANCE
- */
-export class InsufficientBalanceException extends OrderDomainException {
-  constructor(userId: number, required: number, available: number) {
-    super(
-      'O017',
-      `Insufficient balance for user ${userId}. Required: ${required}, Available: ${available}`,
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-}
-
-/**
- * O018: PAYMENT_FAILED
+ * O017: PAYMENT_FAILED
  */
 export class PaymentFailedException extends OrderDomainException {
   constructor(orderId: number, reason: string) {
     super(
-      'O018',
+      'O017',
       `Payment failed for order ${orderId}: ${reason}`,
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
@@ -219,12 +206,12 @@ export class PaymentFailedException extends OrderDomainException {
 }
 
 /**
- * O019: ORDER_CANNOT_BE_CANCELLED
+ * O018: ORDER_CANNOT_BE_CANCELLED
  */
 export class OrderCannotBeCancelledException extends OrderDomainException {
   constructor(orderId: number, currentStatus: string) {
     super(
-      'O019',
+      'O018',
       `Order ${orderId} cannot be cancelled. Current status: ${currentStatus}`,
       HttpStatus.BAD_REQUEST,
     );
@@ -232,12 +219,12 @@ export class OrderCannotBeCancelledException extends OrderDomainException {
 }
 
 /**
- * O020: STOCK_DEDUCTION_FAILED
+ * O019: STOCK_DEDUCTION_FAILED
  */
 export class StockDeductionFailedException extends OrderDomainException {
   constructor(orderId: number, reason: string) {
     super(
-      'O020',
+      'O019',
       `Stock deduction failed for order ${orderId}: ${reason}`,
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
@@ -245,12 +232,12 @@ export class StockDeductionFailedException extends OrderDomainException {
 }
 
 /**
- * O021: EXTERNAL_API_ERROR
+ * O020: EXTERNAL_API_ERROR
  */
 export class ExternalApiErrorException extends OrderDomainException {
   constructor(orderId: number, reason: string) {
     super(
-      'O021',
+      'O020',
       `External API error for order ${orderId}: ${reason}`,
       HttpStatus.INTERNAL_SERVER_ERROR,
     );

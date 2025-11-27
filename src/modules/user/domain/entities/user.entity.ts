@@ -202,4 +202,14 @@ export class User {
   deductPoint(amount: number): void {
     this._point = this._point.use(amount);
   }
+
+  /**
+   * 결제 잔액 검증
+   * Point VO에 검증 책임 위임 (Tell, Don't Ask)
+   * @param requiredAmount - 필요한 금액
+   * @throws InsufficientBalanceException 잔액 부족 시 (Payment 도메인 예외)
+   */
+  validateBalance(requiredAmount: number): void {
+    this._point.validateSufficiency(requiredAmount);
+  }
 }
