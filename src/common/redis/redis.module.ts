@@ -5,6 +5,7 @@ import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 import { RedisService } from './redis.service';
 import { CacheService } from './cache.service';
+import { DistributedLockService } from './distributed-lock.service';
 
 @Global()
 @Module({
@@ -38,7 +39,7 @@ import { CacheService } from './cache.service';
       },
     }),
   ],
-  providers: [RedisService, CacheService],
-  exports: [RedisService, CacheService, CacheModule],
+  providers: [RedisService, CacheService, DistributedLockService],
+  exports: [RedisService, CacheService, DistributedLockService, CacheModule],
 })
 export class RedisModule {}
