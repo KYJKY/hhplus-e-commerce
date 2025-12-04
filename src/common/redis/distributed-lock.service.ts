@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+import Redis, { RedisOptions } from 'ioredis';
 import Redlock, { Lock } from 'redlock';
 import {
   LockAcquisitionTimeoutException,
@@ -8,6 +8,7 @@ import {
 } from './exceptions';
 import { LockOptions, LockMetadata } from './interfaces';
 import { DISTRIBUTED_LOCK_CONFIG } from './distributed-lock.config';
+import { LockPubSubChannels } from './keys';
 
 @Injectable()
 export class DistributedLockService implements OnModuleDestroy {
@@ -55,7 +56,7 @@ export class DistributedLockService implements OnModuleDestroy {
     const port = this.configService.get<number>('REDIS_PORT', 6379);
     const password = this.configService.get<string>('REDIS_PASSWORD');
 
-    const clientConfig: Redis.RedisOptions = {
+    const clientConfig: RedisOptions = {
       host,
       port,
       password: password || undefined,
@@ -282,9 +283,10 @@ export class DistributedLockService implements OnModuleDestroy {
 
   /**
    * 락 해제 채널명 생성
+   * @example lock:coupon:issue:123 -> pubsub:lock:release:lock-coupon-issue-123
    */
   private getReleaseChannel(lockKey: string): string {
-    return `${lockKey}:release`;
+    return LockPubSubChannels.fromLockKey(lockKey);
   }
 
   /**
