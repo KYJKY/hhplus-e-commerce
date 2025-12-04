@@ -188,3 +188,16 @@ export class CouponNotUsedException extends CouponDomainException {
     );
   }
 }
+
+/**
+ * CP014: 쿠폰 서비스 일시 불가
+ */
+export class CouponServiceUnavailableException extends CouponDomainException {
+  constructor() {
+    super(
+      'CP014',
+      'Coupon service is temporarily unavailable. Please try again later.',
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  }
+}
