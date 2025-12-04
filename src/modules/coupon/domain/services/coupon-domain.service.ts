@@ -5,7 +5,7 @@ import type { ICouponRepository } from '../repositories/coupon.repository.interf
 import type { IUserCouponRepository } from '../repositories/user-coupon.repository.interface';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { DistributedLockService } from 'src/common/redis/distributed-lock.service';
-import { LOCK_KEY_PREFIX } from 'src/common/redis/distributed-lock.config';
+import { CouponLockKeys } from 'src/common/redis';
 import {
   CouponNotFoundException,
   UserCouponNotFoundException,
@@ -167,7 +167,7 @@ export class CouponDomainService {
     userId: number,
     couponId: number,
   ): Promise<UserCoupon> {
-    const lockKey = LOCK_KEY_PREFIX.COUPON_ISSUE.replace('{id}', String(couponId));
+    const lockKey = CouponLockKeys.issue(couponId);
 
     return await this.distributedLockService.executeWithLock(
       lockKey,
