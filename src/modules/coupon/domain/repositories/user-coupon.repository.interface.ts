@@ -76,4 +76,10 @@ export interface IUserCouponRepository {
    * @returns 변경된 쿠폰 수
    */
   expireOldCoupons(currentDate: Date): Promise<number>;
+
+  /**
+   * 쿠폰별 발급받은 사용자 ID 목록 조회
+   * (Redis 동기화용)
+   */
+  getUserIdsByCoupon(couponId: number): Promise<number[]>;
 }

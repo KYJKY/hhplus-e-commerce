@@ -202,4 +202,17 @@ export class PrismaUserCouponRepository implements IUserCouponRepository {
 
     return result.count;
   }
+
+  async getUserIdsByCoupon(couponId: number): Promise<number[]> {
+    const userCoupons = await this.prisma.user_coupons.findMany({
+      where: {
+        coupon_id: BigInt(couponId),
+      },
+      select: {
+        user_id: true,
+      },
+    });
+
+    return userCoupons.map((uc) => Number(uc.user_id));
+  }
 }
