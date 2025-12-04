@@ -5,3 +5,4 @@ export * from './lock.keys';
 export * from './ranking.keys';
 export * from './pubsub.keys';
 export * from './temp.keys';
+export * from './coupon.keys';

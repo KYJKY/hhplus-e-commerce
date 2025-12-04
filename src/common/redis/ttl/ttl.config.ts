@@ -47,6 +47,16 @@ export const RedisTTL = {
     /** 연산용 임시 키 (1분) */
     OPERATION: 60,
   },
+
+  /**
+   * 쿠폰 관련 TTL (초 - Redis EXPIRE 호환)
+   */
+  COUPON: {
+    /** 쿠폰 메타데이터 캐시 (1시간) */
+    META: 60 * 60,
+    /** 쿠폰 재고 및 발급 사용자 데이터 기본 TTL (7일) */
+    STOCK_DATA: 7 * 24 * 60 * 60,
+  },
 } as const;
 
 /**
