@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { IProductRepository } from '../repositories/product.repository.interface';
 import type { IProductOptionRepository } from '../repositories/product-option.repository.interface';
 import type { ICategoryRepository } from '../repositories/category.repository.interface';
 import type { IProductCategoryRepository } from '../repositories/product-category.repository.interface';
+import type { IProductRankingRepository } from '../repositories/product-ranking.repository.interface';
 import {
   ProductNotFoundException,
   ProductDeletedException,
@@ -10,7 +11,11 @@ import {
   OptionNotBelongToProductException,
   CategoryNotFoundException,
 } from '../exceptions';
-import { CacheService } from 'src/common/redis';
+import {
+  CacheService,
+  ProductCacheKeys,
+  RedisTTL,
+} from 'src/common/redis';
 
 /**
  * Product Query Service
@@ -21,7 +26,7 @@ import { CacheService } from 'src/common/redis';
  */
 @Injectable()
 export class ProductQueryService {
-  private readonly CACHE_TTL = 30 * 60 * 1000; // 30분
+  private readonly logger = new Logger(ProductQueryService.name);
 
   constructor(
     @Inject('IProductRepository')
@@ -32,6 +37,8 @@ export class ProductQueryService {
     private readonly categoryRepository: ICategoryRepository,
     @Inject('IProductCategoryRepository')
     private readonly productCategoryRepository: IProductCategoryRepository,
+    @Inject('IProductRankingRepository')
+    private readonly productRankingRepository: IProductRankingRepository,
     private readonly cacheService: CacheService,
   ) {}
 
@@ -129,8 +136,8 @@ export class ProductQueryService {
 
   /**
    * FR-P-002: 상품 상세 조회
-   * 캐시 키: product:detail:{productId}
-   * Update 시 삭제할 키: product:detail:{productId}
+   * 캐시 키: cache:product:detail:{productId}
+   * Update 시 삭제할 키: cache:product:detail:{productId}
    */
   async getProductDetail(productId: number): Promise<{
     productId: number;
@@ -150,7 +157,7 @@ export class ProductQueryService {
     }>;
     createdAt: string;
   }> {
-    const cacheKey = this.cacheService.buildKey('product', 'detail', productId);
+    const cacheKey = ProductCacheKeys.detail(productId);
 
     return await this.cacheService.getOrSet(
       cacheKey,
@@ -206,14 +213,14 @@ export class ProductQueryService {
           createdAt: product.createdAt,
         };
       },
-      this.CACHE_TTL,
+      RedisTTL.CACHE.PRODUCT_DETAIL,
     );
   }
 
   /**
    * FR-P-003: 상품 옵션 조회
-   * 캐시 키: product:options:{productId}
-   * Update 시 삭제할 키: product:options:{productId}, product:detail:{productId}
+   * 캐시 키: cache:product:options:{productId}
+   * Update 시 삭제할 키: cache:product:options:{productId}, cache:product:detail:{productId}
    */
   async getProductOptions(productId: number): Promise<{
     productId: number;
@@ -227,7 +234,7 @@ export class ProductQueryService {
       isAvailable: boolean;
     }>;
   }> {
-    const cacheKey = this.cacheService.buildKey('product', 'options', productId);
+    const cacheKey = ProductCacheKeys.options(productId);
 
     return await this.cacheService.getOrSet(
       cacheKey,
@@ -253,14 +260,14 @@ export class ProductQueryService {
           })),
         };
       },
-      this.CACHE_TTL,
+      RedisTTL.CACHE.PRODUCT_OPTIONS,
     );
   }
 
   /**
    * FR-P-004: 상품 옵션 상세 조회
-   * 캐시 키: product:option:detail:{productId}:{optionId}
-   * Update 시 삭제할 키: product:option:detail:{productId}:{optionId}, product:options:{productId}, product:detail:{productId}
+   * 캐시 키: cache:product:option:{productId}:{optionId}
+   * Update 시 삭제할 키: cache:product:option:{productId}:{optionId}, cache:product:options:{productId}, cache:product:detail:{productId}
    */
   async getProductOptionDetail(
     productId: number,
@@ -275,13 +282,7 @@ export class ProductQueryService {
     stockQuantity: number;
     isAvailable: boolean;
   }> {
-    const cacheKey = this.cacheService.buildKey(
-      'product',
-      'option',
-      'detail',
-      productId,
-      optionId,
-    );
+    const cacheKey = ProductCacheKeys.option(productId, optionId);
 
     return await this.cacheService.getOrSet(
       cacheKey,
@@ -311,7 +312,7 @@ export class ProductQueryService {
           isAvailable: option.isAvailable,
         };
       },
-      this.CACHE_TTL,
+      RedisTTL.CACHE.PRODUCT_OPTIONS,
     );
   }
 
@@ -319,7 +320,9 @@ export class ProductQueryService {
    * FR-P-008: 인기 상품 조회 (Top 5)
    * 최근 3일간 판매량 기준 상위 5개 상품 조회
    *
-   * 주의: InMemory 구현에서는 주문 데이터가 없으므로 조회수 기준으로 대체
+   * Redis SortedSet 기반으로 구현
+   * - 일별 판매 데이터 합산 (ZUNIONSTORE)
+   * - 상위 5개 상품 조회 (ZREVRANGE)
    */
   async getPopularProducts(): Promise<{
     period: string;
@@ -332,31 +335,81 @@ export class ProductQueryService {
       salesAmount: number;
     }>;
   }> {
-    // InMemory 구현에서는 조회수 기준으로 Top 5 조회
-    const allProducts = await this.productRepository.findMany(
-      (p) => p.isActive && p.deletedAt === null,
+    const days = 3;
+    const limit = 5;
+
+    // 기간 계산
+    const now = new Date();
+    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const period = `${startDate.toISOString().split('T')[0]} ~ ${now.toISOString().split('T')[0]}`;
+
+    // 1. Redis에서 인기 상품 랭킹 조회
+    const rankings = await this.productRankingRepository.getTopProducts(
+      days,
+      limit,
     );
 
-    // 조회수 기준 내림차순 정렬
-    const sortedProducts = allProducts
-      .sort((a, b) => b.viewCount - a.viewCount)
-      .slice(0, 5);
+    // 2. 랭킹이 없으면 빈 결과 반환
+    if (rankings.length === 0) {
+      this.logger.debug('No ranking data found, returning empty result');
+      return {
+        period,
+        products: [],
+      };
+    }
 
-    const products = sortedProducts.map((product, index) => ({
-      rank: index + 1,
-      productId: product.id,
-      productName: product.productName,
-      thumbnailUrl: product.thumbnailUrl,
-      salesCount: product.viewCount, // InMemory에서는 조회수를 판매량으로 간주
-      salesAmount: 0, // 실제 구현에서는 order_items 집계 필요
-    }));
+    // 3. 상품 상세 정보 조회 (병렬 처리)
+    const productDetails = await Promise.all(
+      rankings.map(async (ranking, index) => {
+        try {
+          const product = await this.productRepository.findById(
+            ranking.productId,
+          );
 
-    const now = new Date();
-    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+          // 삭제된 상품 필터링
+          if (!product || product.isDeleted()) {
+            this.logger.debug(
+              `Product ${ranking.productId} not found or deleted, skipping`,
+            );
+            return null;
+          }
+
+          // 옵션에서 평균 가격 조회 (salesAmount 계산용)
+          const options = await this.productOptionRepository.findByProductId(
+            ranking.productId,
+          );
+          const avgPrice =
+            options.length > 0
+              ? options.reduce((sum, opt) => sum + opt.priceAmount, 0) /
+                options.length
+              : 0;
+
+          return {
+            rank: index + 1,
+            productId: product.id,
+            productName: product.productName,
+            thumbnailUrl: product.thumbnailUrl,
+            salesCount: ranking.totalSales,
+            salesAmount: Math.round(ranking.totalSales * avgPrice),
+          };
+        } catch (error) {
+          this.logger.error(
+            `Failed to fetch product ${ranking.productId}:`,
+            error,
+          );
+          return null;
+        }
+      }),
+    );
+
+    // 4. null 제거 및 순위 재정렬
+    const validProducts = productDetails
+      .filter((p): p is NonNullable<typeof p> => p !== null)
+      .map((p, index) => ({ ...p, rank: index + 1 }));
 
     return {
-      period: `${threeDaysAgo.toISOString().split('T')[0]} ~ ${now.toISOString().split('T')[0]}`,
-      products,
+      period,
+      products: validProducts,
     };
   }
 }
