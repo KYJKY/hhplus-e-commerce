@@ -3,16 +3,11 @@ import { Coupon } from '../entities/coupon.entity';
 import { UserCoupon, UserCouponStatus } from '../entities/user-coupon.entity';
 import type { ICouponRepository } from '../repositories/coupon.repository.interface';
 import type { IUserCouponRepository } from '../repositories/user-coupon.repository.interface';
-import { PrismaService } from 'src/common/prisma/prisma.service';
-import { DistributedLockService } from 'src/common/redis/distributed-lock.service';
-import { LOCK_KEY_PREFIX } from 'src/common/redis/distributed-lock.config';
 import {
   CouponNotFoundException,
   UserCouponNotFoundException,
   CouponAccessDeniedException,
   CouponNotActiveException,
-  CouponAlreadyIssuedException,
-  CouponIssueLimitExceededException,
   CouponNotStartedException,
   CouponExpiredException,
   CouponAlreadyUsedException,
@@ -31,10 +26,12 @@ export interface CouponValidationResult {
 /**
  * Coupon Domain Service
  *
- * Domain Layer의 비즈니스 로직을 담당
- * - Repository와 직접 상호작용
- * - 도메인 규칙 강제
- * - Use Case에서 호출됨
+ * Domain Layer의 순수 비즈니스 로직을 담당
+ * - 쿠폰 유효성 검증
+ * - 쿠폰 조회
+ * - 쿠폰 사용/복원
+ *
+ * 주의: 인프라 관련 로직(Redis, DB 트랜잭션)은 UseCase에서 처리
  */
 @Injectable()
 export class CouponDomainService {
@@ -43,8 +40,6 @@ export class CouponDomainService {
     private readonly couponRepository: ICouponRepository,
     @Inject('IUserCouponRepository')
     private readonly userCouponRepository: IUserCouponRepository,
-    private readonly prisma: PrismaService,
-    private readonly distributedLockService: DistributedLockService,
   ) {}
 
   /**
@@ -121,16 +116,23 @@ export class CouponDomainService {
   }
 
   /**
-   * 쿠폰 발급 (비즈니스 규칙 검증 포함)
-   * 트랜잭션을 통해 초과 발급 방지 및 데이터 정합성 보장
+   * 쿠폰 발급 유효성 검증 (순수 비즈니스 로직)
    *
-   * Redis 분산 락을 사용하여 다중 서버 환경에서 동시성 제어
+   * UseCase에서 발급 전 호출하여 비즈니스 규칙 검증
+   * - 쿠폰 존재 여부
+   * - 활성화 여부
+   * - 유효 기간
+   *
+   * @throws CouponNotFoundException - 쿠폰 없음
+   * @throws CouponNotActiveException - 비활성화 쿠폰
+   * @throws CouponNotStartedException - 유효기간 미시작
+   * @throws CouponExpiredException - 유효기간 만료
    */
-  async issueCoupon(userId: number, couponId: number): Promise<UserCoupon> {
+  async validateCouponForIssuance(couponId: number): Promise<Coupon> {
     // 1. 쿠폰 조회
     const coupon = await this.findCouponById(couponId);
 
-    // 2. 쿠폰 활성화 여부 확인
+    // 2. 활성화 여부 확인
     if (!coupon.isActive) {
       throw new CouponNotActiveException(couponId);
     }
@@ -144,136 +146,7 @@ export class CouponDomainService {
       throw new CouponExpiredException(coupon.validUntil);
     }
 
-    // 4. 중복 발급 확인 (사용자별 1회 발급)
-    const existingUserCoupon =
-      await this.userCouponRepository.findByUserAndCoupon(userId, couponId);
-    if (existingUserCoupon) {
-      throw new CouponAlreadyIssuedException(couponId);
-    }
-
-    // 5. 발급 가능 여부 확인 (선착순 한정 수량)
-    if (!coupon.canIssue()) {
-      throw new CouponIssueLimitExceededException(couponId);
-    }
-
-    // 6. 분산 락을 사용한 쿠폰 발급
-    return await this.issueCouponWithDistributedLock(userId, couponId);
-  }
-
-  /**
-   * 분산 락을 사용한 쿠폰 발급
-   */
-  private async issueCouponWithDistributedLock(
-    userId: number,
-    couponId: number,
-  ): Promise<UserCoupon> {
-    const lockKey = LOCK_KEY_PREFIX.COUPON_ISSUE.replace('{id}', String(couponId));
-
-    return await this.distributedLockService.executeWithLock(
-      lockKey,
-      async () => {
-        return await this.prisma.transaction(async (tx) => {
-          // 1. 쿠폰 조회 (FOR UPDATE 제거)
-          const [couponRow] = await tx.$queryRaw<
-            Array<{ id: bigint; issued_count: number; issue_limit: number }>
-          >`
-            SELECT id, issued_count, issue_limit
-            FROM coupons
-            WHERE id = ${BigInt(couponId)}
-          `;
-
-          if (!couponRow) {
-            throw new CouponNotFoundException(couponId);
-          }
-
-          // 2. 발급 한도 체크
-          if (couponRow.issued_count >= couponRow.issue_limit) {
-            throw new CouponIssueLimitExceededException(couponId);
-          }
-
-          // 3. 발급 카운트 증가
-          await tx.$executeRaw`
-            UPDATE coupons
-            SET issued_count = issued_count + 1, updated_at = NOW()
-            WHERE id = ${BigInt(couponId)}
-          `;
-
-          // 4. 사용자 쿠폰 생성
-          const userCouponRecord = await tx.user_coupons.create({
-            data: {
-              user_id: BigInt(userId),
-              coupon_id: BigInt(couponId),
-              status: 'UNUSED',
-              issued_at: new Date(),
-            },
-          });
-
-          // 엔티티로 변환하여 반환
-          return UserCoupon.create({
-            id: Number(userCouponRecord.id),
-            userId,
-            couponId,
-            status: UserCouponStatus.UNUSED,
-            issuedAt: userCouponRecord.issued_at.toISOString(),
-          });
-        });
-      },
-    );
-  }
-
-  /**
-   * 비관적 락을 사용한 쿠폰 발급 (기존 방식)
-   */
-  private async issueCouponWithPessimisticLock(
-    userId: number,
-    couponId: number,
-  ): Promise<UserCoupon> {
-    return await this.prisma.transaction(async (tx) => {
-      // 1. SELECT ... FOR UPDATE: 비관락으로 쿠폰 행 잠금
-      const [couponRow] = await tx.$queryRaw<
-        Array<{ id: bigint; issued_count: number; issue_limit: number }>
-      >`
-        SELECT id, issued_count, issue_limit
-        FROM coupons
-        WHERE id = ${BigInt(couponId)}
-        FOR UPDATE
-      `;
-
-      if (!couponRow) {
-        throw new CouponNotFoundException(couponId);
-      }
-
-      // 2. 발급 한도 체크
-      if (couponRow.issued_count >= couponRow.issue_limit) {
-        throw new CouponIssueLimitExceededException(couponId);
-      }
-
-      // 3. 발급 카운트 증가
-      await tx.$executeRaw`
-        UPDATE coupons
-        SET issued_count = issued_count + 1, updated_at = NOW()
-        WHERE id = ${BigInt(couponId)}
-      `;
-
-      // 4. 사용자 쿠폰 생성
-      const userCouponRecord = await tx.user_coupons.create({
-        data: {
-          user_id: BigInt(userId),
-          coupon_id: BigInt(couponId),
-          status: 'UNUSED',
-          issued_at: new Date(),
-        },
-      });
-
-      // 엔티티로 변환하여 반환
-      return UserCoupon.create({
-        id: Number(userCouponRecord.id),
-        userId,
-        couponId,
-        status: UserCouponStatus.UNUSED,
-        issuedAt: userCouponRecord.issued_at.toISOString(),
-      });
-    });
+    return coupon;
   }
 
   /**

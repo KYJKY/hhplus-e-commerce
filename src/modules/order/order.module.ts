@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { OrderController } from './presentation/order.controller';
 import { PrismaOrderRepository } from './infrastructure/repositories/prisma-order.repository';
 import { OrderDomainService } from './domain/services/order-domain.service';
+import { OrderPaymentDomainService } from './domain/services/order-payment-domain.service';
 
 // Application Layer
 import { OrderMapper } from './application/mappers/order.mapper';
 import { ExternalDataTransmissionService } from './application/services/external-data-transmission.service';
+import { PostPaymentService } from './application/services/post-payment.service';
 
 // Use Cases
 import {
@@ -45,9 +47,11 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
 
     // Domain Services
     OrderDomainService,
+    OrderPaymentDomainService,
 
     // Application Services
     ExternalDataTransmissionService,
+    PostPaymentService,
 
     // Mappers
     OrderMapper,

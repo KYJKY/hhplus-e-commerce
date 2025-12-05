@@ -4,9 +4,16 @@ import {
   PrismaCouponRepository,
   PrismaUserCouponRepository,
 } from './infrastructure/repositories';
+import { RedisCouponStockRepository } from './infrastructure/repositories/redis-coupon-stock.repository';
 
 // Domain Services
 import { CouponDomainService } from './domain/services/coupon-domain.service';
+
+// Application Services
+import { CouponIssuanceApplicationService } from './application/services/coupon-issuance-app.service';
+
+// Infrastructure Services
+import { CouponStockSyncService } from './infrastructure/services/coupon-stock-sync.service';
 
 // Use Cases
 import {
@@ -36,9 +43,19 @@ import { CouponMapper } from './application/mappers/coupon.mapper';
       provide: 'IUserCouponRepository',
       useClass: PrismaUserCouponRepository,
     },
+    {
+      provide: 'ICouponStockRepository',
+      useClass: RedisCouponStockRepository,
+    },
 
     // Domain Services
     CouponDomainService,
+
+    // Application Services
+    CouponIssuanceApplicationService,
+
+    // Infrastructure Services
+    CouponStockSyncService,
 
     // Mappers
     CouponMapper,
@@ -57,6 +74,7 @@ import { CouponMapper } from './application/mappers/coupon.mapper';
     CouponDomainService, // For OrderModule to use when validating and using coupons
     ValidateCouponUseCase, // For OrderModule
     UseCouponUseCase, // For OrderModule
+    CouponStockSyncService, // For external modules
   ],
 })
 export class CouponModule {}
