@@ -96,7 +96,10 @@ export class RedisCouponStockRepository implements ICouponStockRepository {
 
     // 2. 재고 확인
     const currentStock = await this.redis.get(stockKey);
-    if (currentStock === null || parseInt(currentStock, 10) <= 0) {
+    if (currentStock === null) {
+      return { status: 'COUPON_NOT_FOUND' };
+    }
+    if (parseInt(currentStock, 10) <= 0) {
       return { status: 'OUT_OF_STOCK', remainingStock: 0 };
     }
 
@@ -124,37 +127,52 @@ export class RedisCouponStockRepository implements ICouponStockRepository {
 }
 ```
 
-#### 3.3 발급 UseCase 개선
+### 3.3 발급 Application Service
+
+UseCase 간 의존성을 제거하고 공통 발급 로직을 분리하기 위해 Application Service 계층을 도입하였다.
 
 ```typescript
-// src/modules/coupon/application/use-cases/issue-coupon.use-case.ts
+// src/modules/coupon/application/services/coupon-issuance-app.service.ts
 @Injectable()
-export class IssueCouponUseCase {
-  async execute(userId: number, couponId: number): Promise<UserCouponWithDetailDto> {
-    // 1. 비즈니스 유효성 검증 (Domain Service - 쿠폰 존재, 활성화, 유효기간)
+export class CouponIssuanceApplicationService {
+  /**
+   * 쿠폰 발급 실행 (공통 로직)
+   * - Redis를 활용한 고성능 쿠폰 발급 처리
+   * - 분산 락 + Redis 재고 관리 + DB 영구 저장
+   */
+  async issueCoupon(userId: number, couponId: number): Promise<UserCoupon> {
+    // 1. 쿠폰 기본 유효성 검증 (Domain Service - 순수 비즈니스 로직)
     const coupon = await this.couponDomainService.validateCouponForIssuance(couponId);
 
-    // 2. Redis 데이터 동기화 확인 (캐시 미스 시 DB → Redis 동기화)
+    // 2. Redis 데이터 존재 확인 (없으면 동기화)
     await this.couponStockSyncService.ensureSynced(couponId);
 
-    // 3. 분산 락 + Redis 발급 + DB 저장
+    // 3. 분산 락을 사용한 발급 처리 (Redis + DB 오케스트레이션)
     return await this.issueWithDistributedLock(userId, couponId, coupon);
   }
 
   private async issueWithDistributedLock(...): Promise<UserCoupon> {
     return await this.distributedLockService.executeWithLock(lockKey, async () => {
-      // Redis 발급 시도 (중복 확인 + 재고 차감)
+      // 1. Redis에서 발급 시도 (중복 확인 + 재고 차감)
       const result = await this.couponStockRepository.tryIssue(userId, couponId);
 
-      if (result.status !== 'SUCCESS') {
-        throw this.mapStatusToException(result.status, couponId);
+      // 2. 결과에 따른 처리
+      switch (result.status) {
+        case 'ALREADY_ISSUED':
+          throw new CouponAlreadyIssuedException(couponId);
+        case 'OUT_OF_STOCK':
+          throw new CouponIssueLimitExceededException(couponId);
+        case 'COUPON_NOT_FOUND':
+          // Redis 데이터 없음 - 동기화 후 재시도 필요
+          await this.couponStockSyncService.syncCoupon(coupon);
+          throw new CouponServiceUnavailableException();
       }
 
-      // DB 영구 저장
+      // 3. DB에 영구 저장
       try {
         return await this.saveToDatabase(userId, couponId);
       } catch (dbError) {
-        // 롤백: Redis 상태 복구
+        // 4. DB 저장 실패 시 Redis 롤백
         await this.couponStockRepository.rollbackIssuance(userId, couponId);
         throw dbError;
       }
@@ -163,7 +181,28 @@ export class IssueCouponUseCase {
 }
 ```
 
-#### 3.4 데이터 동기화 서비스
+### 3.4 발급 UseCase
+
+UseCase는 Application Service에 발급 로직을 위임하고, 결과를 DTO로 변환하여 반환한다.
+
+```typescript
+// src/modules/coupon/application/use-cases/issue-coupon.use-case.ts
+@Injectable()
+export class IssueCouponUseCase {
+  async execute(userId: number, couponId: number): Promise<UserCouponWithDetailDto> {
+    // 1. 발급 실행 (Application Service에 위임)
+    const userCoupon = await this.couponIssuanceService.issueCoupon(userId, couponId);
+
+    // 2. 쿠폰 조회 (DTO 변환용)
+    const coupon = await this.couponDomainService.findCouponById(couponId);
+
+    // 3. DTO 변환
+    return this.couponMapper.toUserCouponWithDetailDto(userCoupon, coupon);
+  }
+}
+```
+
+### 3.5 데이터 동기화 서비스
 
 ```typescript
 // src/modules/coupon/infrastructure/services/coupon-stock-sync.service.ts
@@ -193,11 +232,55 @@ export class CouponStockSyncService implements OnModuleInit {
 
 ## 4. 아키텍처
 
-### 4.1 발급 처리 흐름
+### 4.1 계층 구조
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     IssueCouponUseCase                           │
+│                      Presentation Layer                          │
+│                     (CouponController)                           │
+└───────────────────────────┬─────────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Application Layer                           │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ IssueCouponUseCase                                          ││
+│  │  - Application Service에 발급 위임                           ││
+│  │  - 결과를 DTO로 변환하여 반환                                ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                            │                                     │
+│                            ▼                                     │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ CouponIssuanceApplicationService                            ││
+│  │  - Redis + DB 오케스트레이션                                 ││
+│  │  - 분산 락 관리                                              ││
+│  │  - 트랜잭션 롤백 처리                                        ││
+│  └─────────────────────────────────────────────────────────────┘│
+└───────────────────────────┬─────────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       Domain Layer                               │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ CouponDomainService                                         ││
+│  │  - 순수 비즈니스 로직 (검증, 조회)                           ││
+│  │  - 쿠폰 존재 여부, 활성화 상태, 유효기간 검증                 ││
+│  └─────────────────────────────────────────────────────────────┘│
+└───────────────────────────┬─────────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Infrastructure Layer                          │
+│  ┌────────────────────────┐  ┌────────────────────────────────┐ │
+│  │ RedisCouponStock       │  │ PrismaCouponRepository         │ │
+│  │ Repository             │  │ PrismaUserCouponRepository     │ │
+│  │  - 재고/중복 확인      │  │  - 영구 저장                   │ │
+│  └────────────────────────┘  └────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 4.2 발급 처리 흐름
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│               CouponIssuanceApplicationService                   │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │ 1. 쿠폰 유효성 검증 (CouponDomainService)                  │  │
 │  │    - 쿠폰 존재 여부, 활성화 상태, 유효기간                  │  │
@@ -224,12 +307,12 @@ export class CouponStockSyncService implements OnModuleInit {
 │                                │                                 │
 │            ┌───────────────────┴───────────────────┐            │
 │            ▼ (SUCCESS)                    ▼ (FAIL)              │
-│  ┌──────────────────┐               ┌──────────────────┐        │
-│  │ 5. DB 영구 저장   │               │ Exception 반환   │        │
-│  │    - issued_count │               │ - ALREADY_ISSUED │        │
-│  │    - user_coupons │               │ - OUT_OF_STOCK   │        │
-│  └────────┬─────────┘               └──────────────────┘        │
-│           │                                                      │
+│  ┌──────────────────┐               ┌───────────────────┐       │
+│  │ 5. DB 영구 저장   │               │ Exception 반환    │       │
+│  │    - issued_count │               │ - ALREADY_ISSUED  │       │
+│  │    - user_coupons │               │ - OUT_OF_STOCK    │       │
+│  └────────┬─────────┘               │ - COUPON_NOT_FOUND│       │
+│           │                          └───────────────────┘       │
 │    ┌──────┴──────┐                                              │
 │    ▼ (성공)      ▼ (실패)                                       │
 │  [응답 반환]  [Redis 롤백]                                       │
@@ -238,7 +321,7 @@ export class CouponStockSyncService implements OnModuleInit {
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Redis 키 설계
+### 4.3 Redis 키 설계
 
 | 키 패턴 | 자료구조 | 용도 | TTL |
 |---------|----------|------|-----|
@@ -362,6 +445,7 @@ Coupon Issuance Rollback Scenarios (e2e)
    - 애플리케이션 시작 시 DB → Redis 자동 동기화
 
 3. **관심사 분리**
+   - `IssueCouponUseCase`: 진입점, DTO 변환
+   - `CouponIssuanceApplicationService`: Redis + DB 오케스트레이션, 롤백 처리
    - `CouponDomainService`: 순수 비즈니스 로직 (검증, 조회)
-   - `RedisCouponStockRepository`: 발급 검증 인프라
-   - `IssueCouponUseCase`: 오케스트레이션
+   - `RedisCouponStockRepository`: 발급 검증 인프라 (재고/중복 확인)
