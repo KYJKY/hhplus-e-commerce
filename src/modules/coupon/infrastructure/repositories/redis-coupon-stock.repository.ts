@@ -58,9 +58,7 @@ export class RedisCouponStockRepository
     // SADD는 새로 추가되면 1, 이미 존재하면 0 반환
     const added = await this.redis.sadd(usersKey, String(userId));
     if (added === 0) {
-      this.logger.debug(
-        `User ${userId} already issued coupon ${couponId}`,
-      );
+      this.logger.debug(`User ${userId} already issued coupon ${couponId}`);
       return { status: 'ALREADY_ISSUED' };
     }
 

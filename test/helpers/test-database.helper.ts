@@ -1,10 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { MySqlContainer, StartedMySqlContainer } from '@testcontainers/mysql';
-import {
-  GenericContainer,
-  StartedTestContainer,
-  Wait,
-} from 'testcontainers';
+import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers';
 import { execSync } from 'child_process';
 
 /**

@@ -11,11 +11,7 @@ import {
   OptionNotBelongToProductException,
   CategoryNotFoundException,
 } from '../exceptions';
-import {
-  CacheService,
-  ProductCacheKeys,
-  RedisTTL,
-} from 'src/common/redis';
+import { CacheService, ProductCacheKeys, RedisTTL } from 'src/common/redis';
 
 /**
  * Product Query Service
@@ -185,8 +181,7 @@ export class ProductQueryService {
           );
         const categories = await Promise.all(
           categoryIds.map(async (categoryId) => {
-            const category =
-              await this.categoryRepository.findById(categoryId);
+            const category = await this.categoryRepository.findById(categoryId);
             return {
               categoryId,
               categoryName: category?.categoryName ?? '',

@@ -156,7 +156,11 @@ export class RedisProductRankingRepository
       await this.redis.zunionstore(tempKey, 1, existingKeys[0]);
     } else {
       // 여러 키 합산
-      await this.redis.zunionstore(tempKey, existingKeys.length, ...existingKeys);
+      await this.redis.zunionstore(
+        tempKey,
+        existingKeys.length,
+        ...existingKeys,
+      );
     }
 
     // 5. 상위 N개 조회 (ZREVRANGE with WITHSCORES)
@@ -184,8 +188,14 @@ export class RedisProductRankingRepository
       const cacheTtlSeconds = Math.floor(
         RedisTTL.CACHE.POPULAR_PRODUCTS / 1000,
       );
-      await this.redis.setex(cacheKey, cacheTtlSeconds, JSON.stringify(rankings));
-      this.logger.debug(`Cached top products (days=${days}, count=${rankings.length})`);
+      await this.redis.setex(
+        cacheKey,
+        cacheTtlSeconds,
+        JSON.stringify(rankings),
+      );
+      this.logger.debug(
+        `Cached top products (days=${days}, count=${rankings.length})`,
+      );
     }
 
     return rankings;
@@ -235,7 +245,11 @@ export class RedisProductRankingRepository
     if (existingKeys.length === 1) {
       await this.redis.zunionstore(tempKey, 1, existingKeys[0]);
     } else {
-      await this.redis.zunionstore(tempKey, existingKeys.length, ...existingKeys);
+      await this.redis.zunionstore(
+        tempKey,
+        existingKeys.length,
+        ...existingKeys,
+      );
     }
 
     // ZREVRANK는 0-based 인덱스 반환

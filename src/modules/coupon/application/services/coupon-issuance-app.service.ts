@@ -5,7 +5,10 @@ import { CouponStockSyncService } from '../../infrastructure/services/coupon-sto
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { DistributedLockService } from 'src/common/redis/distributed-lock.service';
 import { CouponLockKeys } from 'src/common/redis';
-import { UserCoupon, UserCouponStatus } from '../../domain/entities/user-coupon.entity';
+import {
+  UserCoupon,
+  UserCouponStatus,
+} from '../../domain/entities/user-coupon.entity';
 import { Coupon } from '../../domain/entities/coupon.entity';
 import {
   CouponAlreadyIssuedException,

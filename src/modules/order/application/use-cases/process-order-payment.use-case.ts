@@ -49,20 +49,19 @@ export class ProcessOrderPaymentUseCase {
 
     try {
       // 3. 결제 완료 처리 (트랜잭션)
-      const paymentResult = await this.orderPaymentDomainService.completePayment(
-        userId,
-        order,
-      );
+      const paymentResult =
+        await this.orderPaymentDomainService.completePayment(userId, order);
 
       // 4. 비동기 후처리 (외부 전송, 랭킹 업데이트)
       const orderItems = order.items.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
       }));
-      const postProcessResult = await this.postPaymentService.executePostPaymentTasks(
-        orderId,
-        orderItems,
-      );
+      const postProcessResult =
+        await this.postPaymentService.executePostPaymentTasks(
+          orderId,
+          orderItems,
+        );
 
       // 5. 결제 완료 응답
       return {

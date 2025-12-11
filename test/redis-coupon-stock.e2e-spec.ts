@@ -51,7 +51,8 @@ describe('RedisCouponStockRepository (e2e)', () => {
 
       await redisCouponStockRepository.syncStock(couponId, remainingStock);
 
-      const stock = await redisCouponStockRepository.getRemainingStock(couponId);
+      const stock =
+        await redisCouponStockRepository.getRemainingStock(couponId);
       expect(stock).toBe(100);
     });
 
@@ -60,7 +61,8 @@ describe('RedisCouponStockRepository (e2e)', () => {
 
       await redisCouponStockRepository.syncStock(couponId, 0);
 
-      const stock = await redisCouponStockRepository.getRemainingStock(couponId);
+      const stock =
+        await redisCouponStockRepository.getRemainingStock(couponId);
       expect(stock).toBe(0);
     });
   });
@@ -147,13 +149,17 @@ describe('RedisCouponStockRepository (e2e)', () => {
       await redisCouponStockRepository.syncStock(couponId, 10);
       await redisCouponStockRepository.syncIssuedUsers(couponId, []);
 
-      const result = await redisCouponStockRepository.tryIssue(userId, couponId);
+      const result = await redisCouponStockRepository.tryIssue(
+        userId,
+        couponId,
+      );
 
       expect(result.status).toBe('SUCCESS');
       expect(result.remainingStock).toBe(9);
 
       // 재고 확인
-      const stock = await redisCouponStockRepository.getRemainingStock(couponId);
+      const stock =
+        await redisCouponStockRepository.getRemainingStock(couponId);
       expect(stock).toBe(9);
 
       // 발급 사용자 확인
@@ -171,7 +177,10 @@ describe('RedisCouponStockRepository (e2e)', () => {
       await redisCouponStockRepository.syncStock(couponId, 10);
       await redisCouponStockRepository.syncIssuedUsers(couponId, [userId]);
 
-      const result = await redisCouponStockRepository.tryIssue(userId, couponId);
+      const result = await redisCouponStockRepository.tryIssue(
+        userId,
+        couponId,
+      );
 
       expect(result.status).toBe('ALREADY_ISSUED');
     });
@@ -183,7 +192,10 @@ describe('RedisCouponStockRepository (e2e)', () => {
       await redisCouponStockRepository.syncStock(couponId, 0);
       await redisCouponStockRepository.syncIssuedUsers(couponId, []);
 
-      const result = await redisCouponStockRepository.tryIssue(userId, couponId);
+      const result = await redisCouponStockRepository.tryIssue(
+        userId,
+        couponId,
+      );
 
       expect(result.status).toBe('OUT_OF_STOCK');
       expect(result.remainingStock).toBe(0);
@@ -193,7 +205,10 @@ describe('RedisCouponStockRepository (e2e)', () => {
       const couponId = 999; // 존재하지 않는 쿠폰
       const userId = 100;
 
-      const result = await redisCouponStockRepository.tryIssue(userId, couponId);
+      const result = await redisCouponStockRepository.tryIssue(
+        userId,
+        couponId,
+      );
 
       expect(result.status).toBe('COUPON_NOT_FOUND');
     });
@@ -213,13 +228,16 @@ describe('RedisCouponStockRepository (e2e)', () => {
       );
 
       const succeeded = results.filter((r) => r.status === 'SUCCESS').length;
-      const outOfStock = results.filter((r) => r.status === 'OUT_OF_STOCK').length;
+      const outOfStock = results.filter(
+        (r) => r.status === 'OUT_OF_STOCK',
+      ).length;
 
       expect(succeeded).toBe(5);
       expect(outOfStock).toBe(5);
 
       // 최종 재고 확인
-      const finalStock = await redisCouponStockRepository.getRemainingStock(couponId);
+      const finalStock =
+        await redisCouponStockRepository.getRemainingStock(couponId);
       expect(finalStock).toBe(0);
     });
   });
@@ -237,7 +255,8 @@ describe('RedisCouponStockRepository (e2e)', () => {
       await redisCouponStockRepository.rollbackIssuance(userId, couponId);
 
       // 재고 복구 확인
-      const stock = await redisCouponStockRepository.getRemainingStock(couponId);
+      const stock =
+        await redisCouponStockRepository.getRemainingStock(couponId);
       expect(stock).toBe(10);
 
       // 발급 사용자 제거 확인
@@ -257,7 +276,10 @@ describe('RedisCouponStockRepository (e2e)', () => {
       await redisCouponStockRepository.syncIssuedUsers(couponId, []);
 
       // 발급
-      const issueResult = await redisCouponStockRepository.tryIssue(userId, couponId);
+      const issueResult = await redisCouponStockRepository.tryIssue(
+        userId,
+        couponId,
+      );
       expect(issueResult.status).toBe('SUCCESS');
       expect(issueResult.remainingStock).toBe(9);
 
@@ -265,7 +287,8 @@ describe('RedisCouponStockRepository (e2e)', () => {
       await redisCouponStockRepository.rollbackIssuance(userId, couponId);
 
       // 원래 상태 확인
-      const stock = await redisCouponStockRepository.getRemainingStock(couponId);
+      const stock =
+        await redisCouponStockRepository.getRemainingStock(couponId);
       expect(stock).toBe(10);
 
       const hasIssued = await redisCouponStockRepository.hasUserIssued(
