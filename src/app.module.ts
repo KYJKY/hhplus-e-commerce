@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { configuration, validate } from './config';
 import { PrismaModule } from './common/prisma';
 import { RedisModule } from './common/redis';
@@ -18,6 +19,7 @@ import { OrderModule } from './modules/order/order.module';
       validate,
       envFilePath: ['.env'],
     }),
+    EventEmitterModule.forRoot(),
     PrismaModule,
     RedisModule,
     UserModule,

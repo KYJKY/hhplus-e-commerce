@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderStatus } from '../../domain/enums/order-status.enum';
+import { DataTransmissionStatus } from '../../domain/enums/data-transmission-status.enum';
 import { PaymentFailedException } from '../../domain/exceptions/order.exception';
+import { PaymentCompletedEvent } from '../../domain/events/payment-completed.event';
 import { ProcessPaymentResultDto } from '../dtos/order.dto';
-import { PostPaymentService } from '../services/post-payment.service';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
 import { OrderDomainService } from '../../domain/services/order-domain.service';
 import { OrderPaymentDomainService } from '../../domain/services/order-payment-domain.service';
@@ -15,13 +17,13 @@ import { OrderPaymentDomainService } from '../../domain/services/order-payment-d
  * 책임:
  * - 주문 조회 및 검증 조율
  * - 결제 완료 처리 위임 (OrderPaymentDomainService)
- * - 비동기 후처리 위임 (PostPaymentService)
+ * - 결제 완료 이벤트 발행 (PaymentCompletedEvent)
  *
  * 처리 순서:
  * 1. 주문 조회 및 검증
  * 2. 사용자 잔액 검증
  * 3. 결제 완료 처리 (트랜잭션) - OrderPaymentDomainService
- * 4. 비동기 후처리 - PostPaymentService
+ * 4. 결제 완료 이벤트 발행 - EventEmitter (비동기 후처리는 이벤트 핸들러에서 처리)
  */
 @Injectable()
 export class ProcessOrderPaymentUseCase {
@@ -31,7 +33,7 @@ export class ProcessOrderPaymentUseCase {
     private readonly orderDomainService: OrderDomainService,
     private readonly orderPaymentDomainService: OrderPaymentDomainService,
     private readonly userDomainService: UserDomainService,
-    private readonly postPaymentService: PostPaymentService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -52,18 +54,30 @@ export class ProcessOrderPaymentUseCase {
       const paymentResult =
         await this.orderPaymentDomainService.completePayment(userId, order);
 
-      // 4. 비동기 후처리 (외부 전송, 랭킹 업데이트)
+      // 4. 결제 완료 이벤트 발행 (트랜잭션 커밋 후)
+      // - 비동기로 처리되므로 결제 응답에 영향 없음
+      // - 이벤트 핸들러에서 외부 전송 및 랭킹 업데이트 처리
       const orderItems = order.items.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
       }));
-      const postProcessResult =
-        await this.postPaymentService.executePostPaymentTasks(
+
+      this.eventEmitter.emit(
+        PaymentCompletedEvent.EVENT_NAME,
+        new PaymentCompletedEvent(
           orderId,
+          userId,
+          paymentResult.paymentId,
+          order.totalAmount,
           orderItems,
-        );
+          new Date(paymentResult.paidAt),
+        ),
+      );
+
+      this.logger.log(`PaymentCompletedEvent emitted for order ${orderId}`);
 
       // 5. 결제 완료 응답
+      // - dataTransmissionStatus는 비동기 처리 중이므로 PENDING 반환
       return {
         orderId,
         paymentId: paymentResult.paymentId,
@@ -71,7 +85,7 @@ export class ProcessOrderPaymentUseCase {
         remainingBalance: paymentResult.remainingBalance,
         status: OrderStatus.PAID,
         paidAt: paymentResult.paidAt,
-        dataTransmissionStatus: postProcessResult.dataTransmissionStatus,
+        dataTransmissionStatus: DataTransmissionStatus.PENDING,
       };
     } catch (error) {
       this.logger.error(`Payment failed for order ${orderId}:`, error);
