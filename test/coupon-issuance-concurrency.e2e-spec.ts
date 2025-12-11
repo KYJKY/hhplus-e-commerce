@@ -6,6 +6,7 @@ import { PrismaUserCouponRepository } from '../src/modules/coupon/infrastructure
 import { RedisCouponStockRepository } from '../src/modules/coupon/infrastructure/repositories/redis-coupon-stock.repository';
 import { CouponDomainService } from '../src/modules/coupon/domain/services/coupon-domain.service';
 import { CouponStockSyncService } from '../src/modules/coupon/infrastructure/services/coupon-stock-sync.service';
+import { CouponIssuanceApplicationService } from '../src/modules/coupon/application/services/coupon-issuance-app.service';
 import { IssueCouponUseCase } from '../src/modules/coupon/application/use-cases/issue-coupon.use-case';
 import { CouponMapper } from '../src/modules/coupon/application/mappers/coupon.mapper';
 import { DistributedLockService } from '../src/common/redis/distributed-lock.service';
@@ -34,6 +35,7 @@ describe('Coupon Issuance Concurrency with Redis (e2e)', () => {
   let couponDomainService: CouponDomainService;
   let couponStockSyncService: CouponStockSyncService;
   let distributedLockService: DistributedLockService;
+  let couponIssuanceService: CouponIssuanceApplicationService;
   let issueCouponUseCase: IssueCouponUseCase;
   let couponMapper: CouponMapper;
 
@@ -88,14 +90,19 @@ describe('Coupon Issuance Concurrency with Redis (e2e)', () => {
     // Mapper 인스턴스화
     couponMapper = new CouponMapper();
 
-    // UseCase 인스턴스화
-    issueCouponUseCase = new IssueCouponUseCase(
+    // Application Service 인스턴스화
+    couponIssuanceService = new CouponIssuanceApplicationService(
       couponDomainService,
-      couponRepository,
       redisCouponStockRepository,
       couponStockSyncService,
       prismaService,
       distributedLockService,
+    );
+
+    // UseCase 인스턴스화
+    issueCouponUseCase = new IssueCouponUseCase(
+      couponIssuanceService,
+      couponDomainService,
       couponMapper,
     );
   }, 60000);
