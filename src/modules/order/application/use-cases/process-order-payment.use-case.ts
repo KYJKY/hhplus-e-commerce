@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderStatus } from '../../domain/enums/order-status.enum';
 import { DataTransmissionStatus } from '../../domain/enums/data-transmission-status.enum';
 import { PaymentFailedException } from '../../domain/exceptions/order.exception';
@@ -8,6 +7,7 @@ import { ProcessPaymentResultDto } from '../dtos/order.dto';
 import { UserDomainService } from '../../../user/domain/services/user-domain.service';
 import { OrderDomainService } from '../../domain/services/order-domain.service';
 import { OrderPaymentDomainService } from '../../domain/services/order-payment-domain.service';
+import { TracedEventEmitter } from '../../../../common/cls';
 
 /**
  * FR-O-005: 주문 결제 처리
@@ -23,7 +23,7 @@ import { OrderPaymentDomainService } from '../../domain/services/order-payment-d
  * 1. 주문 조회 및 검증
  * 2. 사용자 잔액 검증
  * 3. 결제 완료 처리 (트랜잭션) - OrderPaymentDomainService
- * 4. 결제 완료 이벤트 발행 - EventEmitter (비동기 후처리는 이벤트 핸들러에서 처리)
+ * 4. 결제 완료 이벤트 발행 - TracedEventEmitter (비동기 후처리는 이벤트 핸들러에서 처리)
  */
 @Injectable()
 export class ProcessOrderPaymentUseCase {
@@ -33,7 +33,7 @@ export class ProcessOrderPaymentUseCase {
     private readonly orderDomainService: OrderDomainService,
     private readonly orderPaymentDomainService: OrderPaymentDomainService,
     private readonly userDomainService: UserDomainService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly tracedEventEmitter: TracedEventEmitter,
   ) {}
 
   async execute(
@@ -57,24 +57,29 @@ export class ProcessOrderPaymentUseCase {
       // 4. 결제 완료 이벤트 발행 (트랜잭션 커밋 후)
       // - 비동기로 처리되므로 결제 응답에 영향 없음
       // - 이벤트 핸들러에서 외부 전송 및 랭킹 업데이트 처리
+      // - TracedEventEmitter를 통해 자동 로깅 및 Trace ID 전파
       const orderItems = order.items.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
       }));
 
-      this.eventEmitter.emit(
-        PaymentCompletedEvent.EVENT_NAME,
-        new PaymentCompletedEvent(
-          orderId,
-          userId,
-          paymentResult.paymentId,
-          order.totalAmount,
-          orderItems,
-          new Date(paymentResult.paidAt),
-        ),
+      const event = new PaymentCompletedEvent(
+        orderId,
+        userId,
+        paymentResult.paymentId,
+        order.totalAmount,
+        orderItems,
+        new Date(paymentResult.paidAt),
       );
 
-      this.logger.log(`PaymentCompletedEvent emitted for order ${orderId}`);
+      this.tracedEventEmitter.emit(event, {
+        orderNumber: order.orderNumber,
+        paidAmount: order.totalAmount,
+      });
+
+      this.logger.log(
+        `PaymentCompletedEvent emitted for order ${orderId} [traceId=${event.traceId}]`,
+      );
 
       // 5. 결제 완료 응답
       // - dataTransmissionStatus는 비동기 처리 중이므로 PENDING 반환

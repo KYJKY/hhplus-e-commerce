@@ -4,6 +4,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { configuration, validate } from './config';
 import { PrismaModule } from './common/prisma';
 import { RedisModule } from './common/redis';
+import {
+  ClsModule,
+  EventLoggerService,
+  TracedEventEmitter,
+} from './common/cls';
 import { UserModule } from './modules/user/user.module';
 import { ProductModule } from './modules/product/product.module';
 import { PaymentModule } from './modules/payment/payment.module';
@@ -19,6 +24,7 @@ import { OrderModule } from './modules/order/order.module';
       validate,
       envFilePath: ['.env'],
     }),
+    ClsModule,
     EventEmitterModule.forRoot(),
     PrismaModule,
     RedisModule,
@@ -30,6 +36,7 @@ import { OrderModule } from './modules/order/order.module';
     OrderModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [EventLoggerService, TracedEventEmitter],
+  exports: [EventLoggerService, TracedEventEmitter],
 })
 export class AppModule {}

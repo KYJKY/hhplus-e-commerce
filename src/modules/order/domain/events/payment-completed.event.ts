@@ -1,7 +1,10 @@
+import { BaseEvent } from '../../../../common/cls';
+
 /**
  * 결제 완료 이벤트
  *
  * 결제가 성공적으로 완료된 후 발행되는 도메인 이벤트입니다.
+ * BaseEvent를 상속하여 Trace ID가 자동으로 주입됩니다.
  * 트랜잭션 커밋 후에 발행되어야 합니다.
  *
  * 이 이벤트를 구독하여 다음과 같은 부가 작업을 수행할 수 있습니다:
@@ -9,8 +12,9 @@
  * - 상품 판매 랭킹 업데이트
  * - 알림 발송 등
  */
-export class PaymentCompletedEvent {
+export class PaymentCompletedEvent extends BaseEvent {
   static readonly EVENT_NAME = 'payment.completed';
+  readonly eventName = PaymentCompletedEvent.EVENT_NAME;
 
   constructor(
     /** 주문 ID */
@@ -28,5 +32,7 @@ export class PaymentCompletedEvent {
     }>,
     /** 결제 완료 시각 */
     public readonly paidAt: Date,
-  ) {}
+  ) {
+    super(); // Trace ID 자동 주입
+  }
 }
