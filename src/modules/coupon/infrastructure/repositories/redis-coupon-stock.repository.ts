@@ -54,9 +54,10 @@ export class RedisCouponStockRepository
     const stockKey = CouponStockKeys.stock(couponId);
     const usersKey = CouponStockKeys.issuedUsers(couponId);
 
-    // 1. 중복 발급 확인
-    const alreadyIssued = await this.redis.sismember(usersKey, String(userId));
-    if (alreadyIssued === 1) {
+    // 1. 중복 발급 확인 + 사용자 등록 (원자적 SADD)
+    // SADD는 새로 추가되면 1, 이미 존재하면 0 반환
+    const added = await this.redis.sadd(usersKey, String(userId));
+    if (added === 0) {
       this.logger.debug(
         `User ${userId} already issued coupon ${couponId}`,
       );
@@ -66,12 +67,16 @@ export class RedisCouponStockRepository
     // 2. 재고 확인
     const currentStock = await this.redis.get(stockKey);
     if (currentStock === null) {
+      // 롤백: 사용자 등록 취소
+      await this.redis.srem(usersKey, String(userId));
       this.logger.warn(`Stock data not found for coupon ${couponId}`);
       return { status: 'COUPON_NOT_FOUND' };
     }
 
     const stockValue = parseInt(currentStock, 10);
     if (stockValue <= 0) {
+      // 롤백: 사용자 등록 취소
+      await this.redis.srem(usersKey, String(userId));
       this.logger.debug(`Coupon ${couponId} out of stock`);
       return { status: 'OUT_OF_STOCK', remainingStock: 0 };
     }
@@ -82,12 +87,11 @@ export class RedisCouponStockRepository
     // 4. 차감 후 재고가 음수면 롤백
     if (newStock < 0) {
       await this.redis.incr(stockKey);
+      // 롤백: 사용자 등록 취소
+      await this.redis.srem(usersKey, String(userId));
       this.logger.debug(`Coupon ${couponId} out of stock (race condition)`);
       return { status: 'OUT_OF_STOCK', remainingStock: 0 };
     }
-
-    // 5. 발급 사용자 등록
-    await this.redis.sadd(usersKey, String(userId));
 
     this.logger.debug(
       `Coupon ${couponId} issued to user ${userId}, remaining: ${newStock}`,

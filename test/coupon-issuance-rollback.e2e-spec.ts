@@ -6,6 +6,7 @@ import { PrismaUserCouponRepository } from '../src/modules/coupon/infrastructure
 import { RedisCouponStockRepository } from '../src/modules/coupon/infrastructure/repositories/redis-coupon-stock.repository';
 import { CouponDomainService } from '../src/modules/coupon/domain/services/coupon-domain.service';
 import { CouponStockSyncService } from '../src/modules/coupon/infrastructure/services/coupon-stock-sync.service';
+import { CouponIssuanceApplicationService } from '../src/modules/coupon/application/services/coupon-issuance-app.service';
 import { IssueCouponUseCase } from '../src/modules/coupon/application/use-cases/issue-coupon.use-case';
 import { CouponMapper } from '../src/modules/coupon/application/mappers/coupon.mapper';
 import { DistributedLockService } from '../src/common/redis/distributed-lock.service';
@@ -113,14 +114,19 @@ describe('Coupon Issuance Rollback Scenarios (e2e)', () => {
         },
       } as any;
 
-      // 실패하는 UseCase 인스턴스화
-      const failingUseCase = new IssueCouponUseCase(
+      // 실패하는 Application Service 인스턴스화
+      const failingIssuanceService = new CouponIssuanceApplicationService(
         couponDomainService,
-        couponRepository,
         redisCouponStockRepository,
         couponStockSyncService,
         failingPrismaService,
         distributedLockService,
+      );
+
+      // 실패하는 UseCase 인스턴스화
+      const failingUseCase = new IssueCouponUseCase(
+        failingIssuanceService,
+        couponDomainService,
         couponMapper,
       );
 
@@ -174,25 +180,7 @@ describe('Coupon Issuance Rollback Scenarios (e2e)', () => {
       const couponEntity = await couponRepository.findById(Number(coupon.id));
       await couponStockSyncService.syncCoupon(couponEntity!);
 
-      // 정상 PrismaService
-      const normalPrismaService = {
-        transaction: async <T>(fn: (tx: any) => Promise<T>): Promise<T> => {
-          return await prisma.$transaction(fn);
-        },
-      } as any;
-
-      // 정상 UseCase
-      const normalUseCase = new IssueCouponUseCase(
-        couponDomainService,
-        couponRepository,
-        redisCouponStockRepository,
-        couponStockSyncService,
-        normalPrismaService,
-        distributedLockService,
-        couponMapper,
-      );
-
-      // 2번째 사용자부터 실패하는 PrismaService
+      // 첫 2번 호출만 성공하는 PrismaService
       let callCount = 0;
       const partialFailPrismaService = {
         transaction: async <T>(fn: (tx: any) => Promise<T>): Promise<T> => {
@@ -204,24 +192,29 @@ describe('Coupon Issuance Rollback Scenarios (e2e)', () => {
         },
       } as any;
 
-      const partialFailUseCase = new IssueCouponUseCase(
+      // 부분 실패 Application Service
+      const partialFailIssuanceService = new CouponIssuanceApplicationService(
         couponDomainService,
-        couponRepository,
         redisCouponStockRepository,
         couponStockSyncService,
         partialFailPrismaService,
         distributedLockService,
+      );
+
+      const partialFailUseCase = new IssueCouponUseCase(
+        partialFailIssuanceService,
+        couponDomainService,
         couponMapper,
       );
 
-      // When: 첫 2명은 정상, 나머지 3명은 실패
-      const results = await Promise.allSettled([
-        normalUseCase.execute(Number(users[0].id), Number(coupon.id)),
-        normalUseCase.execute(Number(users[1].id), Number(coupon.id)),
-        partialFailUseCase.execute(Number(users[2].id), Number(coupon.id)),
-        partialFailUseCase.execute(Number(users[3].id), Number(coupon.id)),
-        partialFailUseCase.execute(Number(users[4].id), Number(coupon.id)),
-      ]);
+      // When: 첫 2명은 성공, 나머지 3명은 실패 (순차 실행으로 callCount 순서 보장)
+      const results: PromiseSettledResult<any>[] = [];
+      for (const user of users) {
+        const result = await Promise.allSettled([
+          partialFailUseCase.execute(Number(user.id), Number(coupon.id)),
+        ]);
+        results.push(result[0]);
+      }
 
       // Then: 성공/실패 확인
       const succeeded = results.filter((r) => r.status === 'fulfilled').length;
@@ -248,8 +241,13 @@ describe('Coupon Issuance Rollback Scenarios (e2e)', () => {
         Number(users[1].id),
         Number(coupon.id),
       );
+      const user2Issued = await redisCouponStockRepository.hasUserIssued(
+        Number(users[2].id),
+        Number(coupon.id),
+      );
       expect(user0Issued).toBe(true);
       expect(user1Issued).toBe(true);
+      expect(user2Issued).toBe(false); // 롤백되어야 함
     }, 30000);
   });
 
@@ -283,13 +281,18 @@ describe('Coupon Issuance Rollback Scenarios (e2e)', () => {
         },
       } as any;
 
-      const retryUseCase = new IssueCouponUseCase(
+      // 재시도용 Application Service
+      const retryIssuanceService = new CouponIssuanceApplicationService(
         couponDomainService,
-        couponRepository,
         redisCouponStockRepository,
         couponStockSyncService,
         retryPrismaService,
         distributedLockService,
+      );
+
+      const retryUseCase = new IssueCouponUseCase(
+        retryIssuanceService,
+        couponDomainService,
         couponMapper,
       );
 
@@ -313,7 +316,7 @@ describe('Coupon Issuance Rollback Scenarios (e2e)', () => {
         Number(coupon.id),
       );
       expect(result).toBeDefined();
-      expect(result.userCoupon.userId).toBe(Number(user.id));
+      expect(result.userId).toBe(Number(user.id));
 
       // 최종 상태 확인
       const finalStock = await redisCouponStockRepository.getRemainingStock(
