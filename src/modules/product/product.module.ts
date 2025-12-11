@@ -1,10 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ProductController } from './presentation/product.controller';
 import {
-  InMemoryProductRepository,
-  InMemoryProductOptionRepository,
-  InMemoryCategoryRepository,
-  InMemoryProductCategoryRepository,
   PrismaProductRepository,
   PrismaProductOptionRepository,
   PrismaCategoryRepository,
@@ -40,31 +36,19 @@ import {
     // Repositories
     {
       provide: 'IProductRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryProductRepository
-          : PrismaProductRepository,
+      useClass: PrismaProductRepository,
     },
     {
       provide: 'IProductOptionRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryProductOptionRepository
-          : PrismaProductOptionRepository,
+      useClass: PrismaProductOptionRepository,
     },
     {
       provide: 'ICategoryRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryCategoryRepository
-          : PrismaCategoryRepository,
+      useClass: PrismaCategoryRepository,
     },
     {
       provide: 'IProductCategoryRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryProductCategoryRepository
-          : PrismaProductCategoryRepository,
+      useClass: PrismaProductCategoryRepository,
     },
     {
       provide: 'IProductRankingRepository',

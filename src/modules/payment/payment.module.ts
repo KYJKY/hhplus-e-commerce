@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PaymentController } from './presentation/payment.controller';
 import {
-  InMemoryPointTransactionRepository,
-  InMemoryPaymentRepository,
   PrismaPointTransactionRepository,
   PrismaPaymentRepository,
 } from './infrastructure/repositories';
@@ -31,17 +29,11 @@ import {
     // Repositories
     {
       provide: 'IPointTransactionRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryPointTransactionRepository
-          : PrismaPointTransactionRepository,
+      useClass: PrismaPointTransactionRepository,
     },
     {
       provide: 'IPaymentRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryPaymentRepository
-          : PrismaPaymentRepository,
+      useClass: PrismaPaymentRepository,
     },
 
     // Domain Services
