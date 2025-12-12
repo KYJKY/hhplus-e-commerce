@@ -1,9 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CartController } from './presentation/cart.controller';
-import {
-  InMemoryCartItemRepository,
-  PrismaCartItemRepository,
-} from './infrastructure/repositories';
+import { PrismaCartItemRepository } from './infrastructure/repositories';
 
 // Domain Services
 import { CartDomainService } from './domain/services/cart-domain.service';
@@ -39,10 +36,7 @@ import { ProductModule } from '../product/product.module';
     // Repositories
     {
       provide: 'ICartItemRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryCartItemRepository
-          : PrismaCartItemRepository,
+      useClass: PrismaCartItemRepository,
     },
 
     // Domain Services

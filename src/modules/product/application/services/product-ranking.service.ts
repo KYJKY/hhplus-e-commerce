@@ -30,9 +30,7 @@ export class ProductRankingService {
     }
 
     await this.productRankingRepository.incrementScoreBatch(items);
-    this.logger.debug(
-      `Product ranking updated: ${items.length} products`,
-    );
+    this.logger.debug(`Product ranking updated: ${items.length} products`);
   }
 
   /**
@@ -54,7 +52,10 @@ export class ProductRankingService {
    * @param productId 상품 ID
    * @param days 조회 기간
    */
-  async getProductRank(productId: number, days?: number): Promise<number | null> {
+  async getProductRank(
+    productId: number,
+    days?: number,
+  ): Promise<number | null> {
     return await this.productRankingRepository.getProductRank(productId, days);
   }
 }

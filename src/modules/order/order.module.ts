@@ -7,7 +7,9 @@ import { OrderPaymentDomainService } from './domain/services/order-payment-domai
 // Application Layer
 import { OrderMapper } from './application/mappers/order.mapper';
 import { ExternalDataTransmissionService } from './application/services/external-data-transmission.service';
-import { PostPaymentService } from './application/services/post-payment.service';
+
+// Event Handlers
+import { PaymentCompletedHandler } from './application/event-handlers/payment-completed.handler';
 
 // Use Cases
 import {
@@ -51,7 +53,9 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
 
     // Application Services
     ExternalDataTransmissionService,
-    PostPaymentService,
+
+    // Event Handlers
+    PaymentCompletedHandler,
 
     // Mappers
     OrderMapper,

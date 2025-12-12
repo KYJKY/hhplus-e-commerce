@@ -1,7 +1,3 @@
-export * from './in-memory-product.repository';
-export * from './in-memory-product-option.repository';
-export * from './in-memory-category.repository';
-export * from './in-memory-product-category.repository';
 export * from './prisma-product.repository';
 export * from './prisma-product-option.repository';
 export * from './prisma-category.repository';

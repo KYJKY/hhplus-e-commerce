@@ -186,7 +186,9 @@ export class PrismaProductOptionRepository implements IProductOptionRepository {
     });
 
     if (!updated) {
-      throw new Error(`ProductOption with ID ${optionId} not found after update`);
+      throw new Error(
+        `ProductOption with ID ${optionId} not found after update`,
+      );
     }
 
     return {

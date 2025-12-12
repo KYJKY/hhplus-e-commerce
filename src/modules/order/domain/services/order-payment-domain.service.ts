@@ -113,13 +113,14 @@ export class OrderPaymentDomainService {
       this.logger.debug(`Order status changed to PAID`);
 
       // 6. 장바구니 항목 삭제
-      const deletedCount = await this.cartDomainService.deleteCartItemsByOrderItems(
-        userId,
-        order.items.map((item) => ({
-          productOptionId: item.optionId,
-          quantity: item.quantity,
-        })),
-      );
+      const deletedCount =
+        await this.cartDomainService.deleteCartItemsByOrderItems(
+          userId,
+          order.items.map((item) => ({
+            productOptionId: item.optionId,
+            quantity: item.quantity,
+          })),
+        );
       this.logger.debug(`Cart items deleted: ${deletedCount}`);
 
       return {

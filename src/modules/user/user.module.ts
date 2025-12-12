@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './presentation/user.controller';
 import {
-  InMemoryUserRepository,
-  InMemoryUserAddressRepository,
   PrismaUserRepository,
   PrismaUserAddressRepository,
 } from './infrastructure/repositories';
@@ -34,17 +32,11 @@ import {
     // Repositories
     {
       provide: 'IUserRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryUserRepository
-          : PrismaUserRepository,
+      useClass: PrismaUserRepository,
     },
     {
       provide: 'IUserAddressRepository',
-      useClass:
-        process.env.USE_IN_MEMORY_DB === 'true'
-          ? InMemoryUserAddressRepository
-          : PrismaUserAddressRepository,
+      useClass: PrismaUserAddressRepository,
     },
 
     // Domain Services
