@@ -9,6 +9,7 @@ import { OrderMapper } from './application/mappers/order.mapper';
 
 // Event Handlers
 import { PaymentCompletedHandler } from './application/event-handlers/payment-completed.handler';
+import { OrderCompletedConsumer } from './application/event-handlers/order-completed.consumer';
 
 // Use Cases
 import {
@@ -53,6 +54,7 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
 
     // Event Handlers
     PaymentCompletedHandler,
+    OrderCompletedConsumer,
 
     // Mappers
     OrderMapper,
