@@ -6,7 +6,6 @@ import { OrderPaymentDomainService } from './domain/services/order-payment-domai
 
 // Application Layer
 import { OrderMapper } from './application/mappers/order.mapper';
-import { ExternalDataTransmissionService } from './application/services/external-data-transmission.service';
 
 // Event Handlers
 import { PaymentCompletedHandler } from './application/event-handlers/payment-completed.handler';
@@ -20,6 +19,7 @@ import {
   ProcessOrderPaymentUseCase,
   CompleteOrderUseCase,
   GetOrderStatisticsUseCase,
+  TransmitOrderDataUseCase,
 } from './application/use-cases';
 
 // External module dependencies
@@ -51,9 +51,6 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
     OrderDomainService,
     OrderPaymentDomainService,
 
-    // Application Services
-    ExternalDataTransmissionService,
-
     // Event Handlers
     PaymentCompletedHandler,
 
@@ -68,6 +65,7 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
     ProcessOrderPaymentUseCase,
     CompleteOrderUseCase,
     GetOrderStatisticsUseCase,
+    TransmitOrderDataUseCase,
   ],
   exports: [
     // 다른 모듈에서 사용할 수 있도록 export
