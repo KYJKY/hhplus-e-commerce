@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ClsModule as NestClsModule } from 'nestjs-cls';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { Request } from 'express';
 import { CLS_KEYS } from './cls.constants';
 import { EventLoggerService } from './event-logger.service';
@@ -27,7 +27,7 @@ import { TracedEventEmitter } from './traced-event-emitter';
           return (
             (Array.isArray(existingTraceId)
               ? existingTraceId[0]
-              : existingTraceId) ?? uuidv4()
+              : existingTraceId) ?? randomUUID()
           );
         },
         setup: (cls, req: Request) => {
