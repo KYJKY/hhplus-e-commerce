@@ -1,5 +1,5 @@
 import { ClsServiceManager } from 'nestjs-cls';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { CLS_KEYS } from './cls.constants';
 
 /**
@@ -34,7 +34,7 @@ export abstract class BaseEvent {
   abstract readonly eventName: string;
 
   constructor() {
-    this.eventId = uuidv4();
+    this.eventId = randomUUID();
     this.occurredAt = new Date();
 
     // CLS에서 Trace ID 가져오기 (없으면 새로 생성)
@@ -49,10 +49,10 @@ export abstract class BaseEvent {
     try {
       const cls = ClsServiceManager.getClsService();
       const traceId = cls?.get<string>(CLS_KEYS.TRACE_ID);
-      return traceId ?? uuidv4();
+      return traceId ?? randomUUID();
     } catch {
       // CLS 컨텍스트가 없는 경우 (테스트, 스케줄러 등)
-      return uuidv4();
+      return randomUUID();
     }
   }
 }

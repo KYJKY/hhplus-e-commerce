@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ClsService } from 'nestjs-cls';
 import { PaymentCompletedEvent } from '../../domain/events/payment-completed.event';
-import { ExternalDataTransmissionService } from '../services/external-data-transmission.service';
+import { TransmitOrderDataUseCase } from '../use-cases/transmit-order-data.use-case';
 import { ProductRankingService } from '../../../product/application/services/product-ranking.service';
 import {
   TracedEventListener,
@@ -26,7 +26,7 @@ export class PaymentCompletedHandler extends TracedEventListener {
   constructor(
     clsService: ClsService,
     eventLogger: EventLoggerService,
-    private readonly externalDataTransmissionService: ExternalDataTransmissionService,
+    private readonly transmitOrderDataUseCase: TransmitOrderDataUseCase,
     private readonly productRankingService: ProductRankingService,
   ) {
     super(clsService, eventLogger);
@@ -62,8 +62,7 @@ export class PaymentCompletedHandler extends TracedEventListener {
    */
   private async transmitExternalData(orderId: number): Promise<void> {
     try {
-      const result =
-        await this.externalDataTransmissionService.transmitOrderData(orderId);
+      const result = await this.transmitOrderDataUseCase.execute(orderId);
       this.logger.debug(
         `External data transmission completed for order ${orderId}: ${result.transmissionStatus} [traceId=${this.getTraceId()}]`,
       );

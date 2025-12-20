@@ -4,6 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { configuration, validate } from './config';
 import { PrismaModule } from './common/prisma';
 import { RedisModule } from './common/redis';
+import { KafkaModule } from './common/kafka';
 import {
   ClsModule,
   EventLoggerService,
@@ -28,6 +29,7 @@ import { OrderModule } from './modules/order/order.module';
     EventEmitterModule.forRoot(),
     PrismaModule,
     RedisModule,
+    KafkaModule,
     UserModule,
     ProductModule,
     PaymentModule,
